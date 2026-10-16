@@ -24,7 +24,24 @@ jobs:
       - name: packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libgpiod-dev libcurl4-openssl-dev
+          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev pkg-config
+      - name: libgpiod 2, built from source
+        # Ubuntu noble's libgpiod-dev is 1.6.3, and this repository's GPIO backend is
+        # written against the v2 API that the bench has: Debian trixie carries 2.2.1 on
+        # the Raspberry Pi. No Ubuntu LTS archive has a v2 package, so installing
+        # libgpiod-dev here gave "libgpiod>=2.0 not found" and the configure stopped.
+        # Building the bench's own version is both the fix and the honest one: CI then
+        # compiles the backend against the same API the board runs. Takes about a minute.
+        run: |
+          base=https://mirrors.edge.kernel.org/pub/software/libs/libgpiod
+          curl -sL "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
+          tar -C /tmp -xf /tmp/libgpiod.tar.gz
+          cd /tmp/libgpiod-2.2.1
+          ./configure --prefix=/usr --enable-tools=no --enable-bindings-cxx=no
+          make -j"$(nproc)"
+          sudo make install
+          sudo ldconfig
+          pkg-config --modversion libgpiod
       - name: submodule sits at the pinned tag
         run: |
           tag=$(sed -n 's/^set(LLAMA_CPP_TAG "\(.*\)")$/\1/p' cmake/llama_tag.cmake)
@@ -59,7 +76,19 @@ jobs:
       - name: packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libgpiod-dev
+          sudo apt-get install -y cmake ninja-build pkg-config
+      - name: libgpiod 2, built from source
+        # See the same step in the host job: Ubuntu has no v2 package and the backend is
+        # written against v2, which is what the bench runs.
+        run: |
+          base=https://mirrors.edge.kernel.org/pub/software/libs/libgpiod
+          curl -sL "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
+          tar -C /tmp -xf /tmp/libgpiod.tar.gz
+          cd /tmp/libgpiod-2.2.1
+          ./configure --prefix=/usr --enable-tools=no --enable-bindings-cxx=no
+          make -j"$(nproc)"
+          sudo make install
+          sudo ldconfig
       - name: configure against the submodule
         run: |
           cmake -S . -B build-engine -G Ninja -DEDGELLM_BUILD_LLAMA_TOOLS=OFF \
@@ -109,11 +138,21 @@ jobs:
     # nothing a bench build would not say sooner. The job exists so that a broken
     # recipe is seen on the push that broke it; the image build is skyhorizon's job.
     continue-on-error: true
-    container:
-      image: crops/poky:ubuntu-22.04
-      options: --user root
+    # No container. The crops/poky image was run with --user root and BitBake refuses
+    # that outright: "Do not use Bitbake as root", which is the whole of why this job
+    # was red on Friday 16 October 2026, after every layer had already been added and
+    # accepted. The runner's own user is not root, so dropping the container removes the
+    # problem rather than working around it, and the host packages below are the subset
+    # of the Yocto quick-start list that a parse needs. A parse compiles nothing.
     steps:
       - uses: actions/checkout@v4
+      - name: packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gawk diffstat unzip texinfo chrpath cpio xz-utils \
+            debianutils iputils-ping python3-git python3-jinja2 python3-pexpect \
+            python3-subunit zstd liblz4-tool file locales libacl1
+          sudo locale-gen en_US.UTF-8
       - name: layers at the bench release
         run: |
           git clone --depth 1 -b scarthgap https://git.yoctoproject.org/poky /tmp/poky
@@ -123,6 +162,9 @@ jobs:
             /tmp/meta-raspberrypi
       - name: parse
         shell: bash
+        env:
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
         run: |
           cd /tmp/poky
           source oe-init-build-env /tmp/build

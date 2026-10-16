@@ -153,8 +153,17 @@ mod tests {
     fn the_six_cases_and_the_window() {
         let rule = E05Rule;
         expect(&rule, &rest(15), &ev(1.0, 0.0, 0.0, G), 0, "at rest is NONE");
-        expect(&rule, &rest(15), &ev(1.0, 1.99 * G, 0.0, 0.0), 0, "1.99 g is NONE");
-        expect(&rule, &rest(15), &ev(1.0, 2.01 * G, 0.0, 0.0), 1, "2.01 g is TAP");
+        // Both of these probe the TAP threshold and nothing else, so the acceleration sits
+        // on the resting axis. The first version of the pair put it on x while rest() is
+        // z up, which is a 90 degree change of orientation as well as a magnitude: the
+        // rule answered TILT for the 1.99 g case and was right to, and the case was
+        // wrong. A test vector that moves two conditions at once cannot tell which one
+        // the answer came from. Corrected Friday 16 October 2026, after the first
+        // workflow run.
+        expect(&rule, &rest(15), &ev(1.0, 0.0, 0.0, 1.99 * G), 0,
+               "1.99 g on the resting axis is NONE");
+        expect(&rule, &rest(15), &ev(1.0, 0.0, 0.0, 2.01 * G), 1,
+               "2.01 g on the resting axis is TAP");
         expect(&rule, &rest(15), &ev(1.0, 0.0, 0.0, 0.31 * G), 0, "0.31 g is NONE");
         expect(&rule, &rest(15), &ev(1.0, 0.0, 0.0, 0.29 * G), 3, "0.29 g is FREEFALL");
         expect(&rule, &rest(15), &tilted_by(29.0), 0, "29 degrees is NONE");
