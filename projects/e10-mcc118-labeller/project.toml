@@ -24,7 +24,7 @@ command = "cmake --build build --target edgellm-e10 rules_test oracle_check"
 test    = "ctest --test-dir build -R 'rules_test|edgellm-e10-oracle' --output-on-failure"
 
 [run]
-replay = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --replay projects/e10-mcc118-labeller/replay/stimuli_300.csv --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e10.state --log projects/e10-mcc118-labeller/evidence/e10_replay.csv"
+replay = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --replay projects/e10-mcc118-labeller/replay/stimuli_300.csv --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e10.state --log projects/e10-mcc118-labeller/evidence/e10_replay.csv"
 stub   = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --replay projects/e10-mcc118-labeller/replay/stimuli_300.csv --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --log /tmp/e10_stub.csv --stub"
 live   = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --live mcc118 0:0:2 --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e10.state --log projects/e10-mcc118-labeller/evidence/e10_live_step_2.000V.csv"
 

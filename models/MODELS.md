@@ -120,11 +120,22 @@ bundles, are recorded by the e15 and e05 authors beside their manifests: to veri
 
 ## Downloading by hand
 
-A model file never enters the repository (`*.gguf` is ignored). On a board or on the
-build host, with the repository and file name from the lists above:
+A model file never enters the repository (`*.gguf` is ignored). **It is not downloaded into
+the repository either: the models live in `~/models/`**, outside the tree. On a board or on
+the build host, with the repository and file name from the lists above:
 
-    curl -L -o models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    mkdir -p ~/models
+    curl -L -o ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
       https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/<file>
-    sha256sum models/SmolLM2-360M-Instruct-Q4_K_M.gguf
+    sha256sum ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf
 
 and compare with the list before the first run.
+
+This file used to say `models/`, inside the tree, while all twenty `wiring.md` files said
+`~/models/`, and sixteen manifests disagreed with their own projects' wiring. Corrected on
+Friday 16 October 2026 after e01's first run put the file in `~/models/` and e02's manifest
+turned out to name a path that was not there. One location outside the tree serves every
+clone, survives a clean that would delete an ignored file, and keeps a 491 MB download from
+being made twice on a board with one card. Everything else in those commands stays relative
+to the repository root, because that is where they are run from; the model is the single
+exception, because it is the single thing that does not live in the repository.

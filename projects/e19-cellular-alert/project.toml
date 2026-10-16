@@ -20,12 +20,12 @@ command = "cmake --build build --target edgellm-e19 e19_compose_check_test rules
 test    = "ctest --test-dir build -R 'rules_test|e19_compose_check|edgellm-e19-oracle' --output-on-failure"
 
 [run]
-replay = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay projects/e19-cellular-alert/replay/alerts_50.csv --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e19.state --log projects/e19-cellular-alert/evidence/e19_run.csv --alerts projects/e19-cellular-alert/evidence/e19_alerts.csv"
+replay = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay projects/e19-cellular-alert/replay/alerts_50.csv --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e19.state --log projects/e19-cellular-alert/evidence/e19_run.csv --alerts projects/e19-cellular-alert/evidence/e19_alerts.csv"
 stub   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay projects/e19-cellular-alert/replay/alerts_50.csv --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --log /tmp/e19_stub.csv --alerts /tmp/e19_stub_alerts.csv --stub"
 # The live run needs the IIO device of the Linux volume's project 5 overlay and, for a
 # send, the modem's AT device and a destination number. Without --modem the loop
 # composes and checks and sends nothing, which is the state until a SIM is fitted.
-live   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --live iio /sys/bus/iio/devices/iio:device0:0.1 --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --modem /dev/ttyUSB2:115200 --sms-to +4300000000000 --log projects/e19-cellular-alert/evidence/e19_live.csv --alerts projects/e19-cellular-alert/evidence/e19_live_alerts.csv"
+live   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --live iio /sys/bus/iio/devices/iio:device0:0.1 --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --modem /dev/ttyUSB2:115200 --sms-to +4300000000000 --log projects/e19-cellular-alert/evidence/e19_live.csv --alerts projects/e19-cellular-alert/evidence/e19_live_alerts.csv"
 
 [oracle]
 expected = "tests/oracle/e19.expected.csv"

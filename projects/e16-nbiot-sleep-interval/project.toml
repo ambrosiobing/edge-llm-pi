@@ -23,7 +23,7 @@ test    = "ctest --test-dir build -R 'rules_test|e16_battery_test|edgellm-e16-or
 [run]
 # The scenarios are always the replayed profile summaries (modelled); the measurement is
 # the capture that produced them, and the decision is taken offline on the result.
-replay = "build/projects/e16-nbiot-sleep-interval/edgellm-e16 --project e16 --replay projects/e16-nbiot-sleep-interval/replay/profiles_100.csv --grammar projects/e16-nbiot-sleep-interval/grammar.gbnf --prompt projects/e16-nbiot-sleep-interval/prompt.txt --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --n-predict 64 --temperature 0.3 --state /tmp/e16.state --log projects/e16-nbiot-sleep-interval/evidence/e16_run.csv"
+replay = "build/projects/e16-nbiot-sleep-interval/edgellm-e16 --project e16 --replay projects/e16-nbiot-sleep-interval/replay/profiles_100.csv --grammar projects/e16-nbiot-sleep-interval/grammar.gbnf --prompt projects/e16-nbiot-sleep-interval/prompt.txt --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --n-predict 64 --temperature 0.3 --state /tmp/e16.state --log projects/e16-nbiot-sleep-interval/evidence/e16_run.csv"
 stub   = "build/projects/e16-nbiot-sleep-interval/edgellm-e16 --project e16 --replay projects/e16-nbiot-sleep-interval/replay/profiles_100.csv --grammar projects/e16-nbiot-sleep-interval/grammar.gbnf --prompt projects/e16-nbiot-sleep-interval/prompt.txt --n-predict 64 --temperature 0.3 --log /tmp/e16_stub.csv --stub"
 plan   = "build/projects/e16-nbiot-sleep-interval/edgellm-e16 --at-plan"
 live   = "build/projects/e16-nbiot-sleep-interval/edgellm-e16 --at /dev/ttyAMA0:115200"

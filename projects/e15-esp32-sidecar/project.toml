@@ -20,10 +20,10 @@ command = "python -m pip install -e common/python/edgellm; python -m pip install
 test    = "python -m pytest common/python/edgellm projects/e15-esp32-sidecar"
 
 [run]
-replay = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv"
+replay = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv"
 stub   = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --log /tmp/e15_stub.csv --stub"
 # The bench run: the same replay, plus the serial link to the ESP32 (the by-id path is read on the Pi).
-live   = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv --serial /dev/serial/by-id/<the Renkforce cable>"
+live   = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv --serial /dev/serial/by-id/<the Renkforce cable>"
 
 [oracle]
 expected = "tests/oracle/e15.expected.csv"

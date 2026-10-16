@@ -22,7 +22,7 @@ test    = "cargo test --manifest-path projects/e13-can-honesty/Cargo.toml"
 bench   = "cargo build --release --manifest-path projects/e13-can-honesty/Cargo.toml --no-default-features --features engine,live"
 
 [run]
-replay = "cargo run --manifest-path projects/e13-can-honesty/Cargo.toml --no-default-features --features engine -- --replay projects/e13-can-honesty/replay/heartbeats_1000.csv --grammar projects/e13-can-honesty/grammar.gbnf --prompt projects/e13-can-honesty/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e13.state --periods 1000 --log projects/e13-can-honesty/evidence/e13_run.csv"
+replay = "cargo run --manifest-path projects/e13-can-honesty/Cargo.toml --no-default-features --features engine -- --replay projects/e13-can-honesty/replay/heartbeats_1000.csv --grammar projects/e13-can-honesty/grammar.gbnf --prompt projects/e13-can-honesty/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e13.state --periods 1000 --log projects/e13-can-honesty/evidence/e13_run.csv"
 stub   = "cargo run --manifest-path projects/e13-can-honesty/Cargo.toml -- --replay projects/e13-can-honesty/replay/heartbeats_1000.csv --grammar projects/e13-can-honesty/grammar.gbnf --prompt projects/e13-can-honesty/prompt.txt --periods 1000 --stub --log /tmp/e13_stub.csv"
 live   = "edgellm-e13 --live --periods 1000 --grammar /usr/share/edgellm/e13/grammar.gbnf --prompt /usr/share/edgellm/e13/prompt.txt --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log /var/lib/edgellm/e13.csv"
 

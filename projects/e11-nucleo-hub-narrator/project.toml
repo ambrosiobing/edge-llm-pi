@@ -23,10 +23,10 @@ command = "cmake --build build --target edgellm-e11 rules_test oracle_check"
 test    = "ctest --test-dir build -R 'rules_test|edgellm-e11-oracle' --output-on-failure"
 
 [run]
-replay = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --replay projects/e11-nucleo-hub-narrator/replay/hub_60s.csv --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_replay.csv"
+replay = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --replay projects/e11-nucleo-hub-narrator/replay/hub_60s.csv --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_replay.csv"
 stub   = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --replay projects/e11-nucleo-hub-narrator/replay/hub_60s.csv --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --n-predict 64 --log /tmp/e11_stub.csv --stub"
 # The frame layer owns the port; the by-id name is read from ls -l /dev/serial/by-id on the Pi.
-live   = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --live cdc /dev/serial/by-id/usb-STMicroelectronics_STLINK-V3_<serial>-if02:921600 --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_run.csv"
+live   = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --live cdc /dev/serial/by-id/usb-STMicroelectronics_STLINK-V3_<serial>-if02:921600 --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_run.csv"
 
 [oracle]
 expected = "tests/oracle/e11.expected.csv"

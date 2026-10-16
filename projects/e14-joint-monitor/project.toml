@@ -25,7 +25,7 @@ bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Carg
 [run]
 # Two processes. The daemon first, then the service; the service reconnects by itself if
 # the order is the other way round or if the daemon is restarted under it.
-daemon = "target/release/edgellm-e14-engine-daemon --socket /run/edgellm/e14-engine.sock --grammar projects/e14-joint-monitor/grammar.gbnf --prompt projects/e14-joint-monitor/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --n-ctx 512 --threads 4"
+daemon = "target/release/edgellm-e14-engine-daemon --socket /run/edgellm/e14-engine.sock --grammar projects/e14-joint-monitor/grammar.gbnf --prompt projects/e14-joint-monitor/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --n-ctx 512 --threads 4"
 replay = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /run/edgellm/e14-engine.sock --log projects/e14-joint-monitor/evidence/e14_run.csv"
 stub   = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /tmp/e14-engine.sock --log /tmp/e14_stub.csv --timeout-ms 2000"
 live   = "target/release/edgellm-e14 --project e14 --live can0 --iio /sys/bus/iio/devices/iio:device0 --socket /run/edgellm/e14-engine.sock --minute-s 60 --sample-hz 50 --log projects/e14-joint-monitor/evidence/e14_run.csv"

@@ -24,8 +24,8 @@ engine  = "cargo build --release --manifest-path projects/e05-adxl345-events/Car
 
 [run]
 stub   = "projects/e05-adxl345-events/target/debug/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --log /tmp/e05_stub.csv --stub"
-replay = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_replay.csv"
-live   = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --live iio /sys/bus/iio/devices/iio:device0:0.02 --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_run.csv"
+replay = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_replay.csv"
+live   = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --live iio /sys/bus/iio/devices/iio:device0:0.02 --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_run.csv"
 
 [oracle]
 expected = "tests/oracle/e05.expected.csv"

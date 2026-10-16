@@ -24,7 +24,7 @@ test    = "ctest --test-dir build -R 'rules_test|e17-at-parser|edgellm-e17-oracl
 [run]
 # The events are status samples, one a minute: the modelled day on the host, the day the
 # sampler wrote on the bench. The loop cannot tell which file it is reading.
-replay = "build/projects/e17-cellular-summariser/edgellm-e17 --project e17 --replay projects/e17-cellular-summariser/replay/day_1440.csv --grammar projects/e17-cellular-summariser/grammar.gbnf --prompt projects/e17-cellular-summariser/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --temperature 0.3 --state /tmp/e17.state --log projects/e17-cellular-summariser/evidence/e17_run.csv"
+replay = "build/projects/e17-cellular-summariser/edgellm-e17 --project e17 --replay projects/e17-cellular-summariser/replay/day_1440.csv --grammar projects/e17-cellular-summariser/grammar.gbnf --prompt projects/e17-cellular-summariser/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --temperature 0.3 --state /tmp/e17.state --log projects/e17-cellular-summariser/evidence/e17_run.csv"
 stub   = "build/projects/e17-cellular-summariser/edgellm-e17 --project e17 --replay projects/e17-cellular-summariser/replay/day_1440.csv --grammar projects/e17-cellular-summariser/grammar.gbnf --prompt projects/e17-cellular-summariser/prompt.txt --n-predict 64 --temperature 0.3 --log /tmp/e17_stub.csv --stub"
 sampler = "build/projects/e17-cellular-summariser/edgellm-e17 --modem /dev/ttyAMA0:115200 --sample-interval 60 --max-samples 1440 --sample-log ~/e17_bench_day.csv"
 live   = "the sampler command above for 24 h, then the replay command with --replay ~/e17_bench_day.csv; the binary and the loop are the same, only the file changes"
