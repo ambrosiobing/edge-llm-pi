@@ -27,6 +27,27 @@ runner was changed the same evening to transliterate instead of substitute, so t
 day's file will read `+/-`; this one is left as it was written, because an evidence file is
 a record and not a draft.
 
+## A deviation from the chapter's procedure, recorded rather than smoothed over
+
+The chapter builds the reference twice on purpose. Steps 3 to 5 clone llama.cpp on its own
+into `~/llama.cpp` at tag v0.6.0 and build `llama-bench` there, because this project's chosen
+variant is the upstream tools built as they ship, and step 7 uses the repository's submodule
+build for the harness. **This run used the repository's submodule build for both.** There is
+no `~/llama.cpp` on the board; the reference binary was `build/bin/llama-bench` from the same
+configure that produced the harness.
+
+The two are expected to agree, because the repository changes only which llama.cpp targets
+are built and switches off curl and openssl, while the compiler flags ggml settles on are the
+native ones either way, and the configure log shows the same
+`-mcpu=cortex-a72+crc+nodotprod+noi8mm+nosve+nosme` for this build. Expected is not measured.
+Nothing in this file should be read as the upstream-as-shipped figure until somebody builds
+the standalone clone and runs the same command against it.
+
+That comparison is worth doing once rather than assumed forever: if the two builds agree
+inside the noise, the chapter can prescribe one build and save an hour of compiling and about
+450 MB on every board; if they differ, the volume has learned something about its own
+reference and this table needs the other build's numbers beside it.
+
 ## The board
 
 Raspberry Pi 4 Model B Rev 1.4, card `eplepi`, user `bing`, Raspberry Pi OS Debian 13 trixie.
