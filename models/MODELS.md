@@ -8,9 +8,15 @@ it. A cell reading "to verify" was not fetched and must be before it is quoted.
 - llama.cpp release tag: `v0.6.0`, read from
   `https://api.github.com/repos/ggml-org/llama.cpp/releases/latest`.
 - Release date: Sunday 5 October 2026 (`published_at`).
-- Commit the tag points at: `8345f333951c661d166b00e6f9362e553768f292`
-  (`target_commitish`; the annotated tag object itself is
-  `69ecae922d2b60c1fa8c590279f4e2099af75111`).
+- Commit the tag points at: `d81235049384534c167caea52b85a694f6103d14`, read with
+  `git rev-parse v0.6.0^{commit}` in a clone, which is the only authority for this.
+  The annotated tag object itself is `69ecae922d2b60c1fa8c590279f4e2099af75111`.
+- **Not** `target_commitish` from the releases API, which for this release is
+  `8345f333951c661d166b00e6f9362e553768f292`, a different commit entirely. That field
+  names the branch or commit a release was cut from, not the commit the tag carries.
+  It was recorded here as the pin on Wednesday 14 October 2026 and corrected on Friday
+  16 October 2026, after the first workflow run failed its tag check on every job that
+  reads the submodule.
 - Newest build tag the same day: `b11617`, Wednesday 14 October 2026, from
   `https://api.github.com/repos/ggml-org/llama.cpp/releases`.
 - Where the pin lives: `cmake/llama_tag.cmake` (compiled into

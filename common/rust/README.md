@@ -41,7 +41,7 @@ A binary built with one feature refuses the other's command line before anything
 | crate | `llama-cpp-2 = "=0.1.159"`, MIT OR Apache-2.0, published Wednesday 7 October 2026 | crates.io API, Wednesday 14 October 2026 |
 | sys crate | `llama-cpp-sys-2 0.1.159`, bindgen 0.72.1 and the cmake crate at build time | the crate's own Cargo.toml on docs.rs, Wednesday 14 October 2026 |
 | bundled llama.cpp | the binding's repository (`utilityai/llama-cpp-rs`, main branch) pins the submodule at commit `26394b4e`, Monday 21 September 2026; main was already at 0.1.160, so the commit inside the 0.1.159 crate is to verify from `~/.cargo/registry/src/*/llama-cpp-sys-2-0.1.159/llama.cpp` after the first build | GitHub contents API, Wednesday 14 October 2026 |
-| the C projects' engine | tag `v0.6.0`, commit `8345f333`, Sunday 5 October 2026 (`cmake/llama_tag.cmake`) | `models/MODELS.md` |
+| the C projects' engine | tag `v0.6.0`, commit `d8123504`, Sunday 5 October 2026 (`cmake/llama_tag.cmake`) | `models/MODELS.md` |
 
 The two are not the same build of the engine. A tokens per second figure from a Rust
 project is therefore reported beside the C figure on the same board as two builds of the

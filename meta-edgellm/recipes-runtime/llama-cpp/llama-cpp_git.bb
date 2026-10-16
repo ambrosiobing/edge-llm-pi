@@ -18,7 +18,10 @@ SRC_URI = "git://github.com/ggml-org/llama.cpp;protocol=https;branch=master"
 # from the GitHub API on Wednesday 14 October 2026. Confirm on the build host with
 #   git -C third_party/llama.cpp rev-parse v0.6.0^{commit}
 # before the first image build; the tag object itself is 69ecae92.
-SRCREV = "8345f333951c661d166b00e6f9362e553768f292"
+# The commit v0.6.0 points at, from "git rev-parse v0.6.0^{commit}" and not from
+# the releases API's target_commitish, which named a different commit and was the
+# pin here until Friday 16 October 2026. See cmake/llama_tag.cmake.
+SRCREV = "d81235049384534c167caea52b85a694f6103d14"
 PV = "0.6.0+git${SRCPV}"
 
 S = "${WORKDIR}/git"
