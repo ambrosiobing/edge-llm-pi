@@ -73,6 +73,12 @@ jobs:
         run: python3 tools/no_trace_scan.py
       - name: no authoring files
         run: python3 tools/no_authoring_files.py
+      - name: every grammar's two copies still agree
+        # Each grammar lives in the project folder, where the oracle test reads it, and
+        # under grammars/, where the chapter cites it. Three readers, two files, and until
+        # this step nothing compared them: an edit to one would leave the test passing
+        # against the old rules while the book printed the new ones.
+        run: python3 tools/grammar_pairs.py
       - name: ASCII and 99 columns
         run: python3 tools/line_check.py
       - name: python tools compile
