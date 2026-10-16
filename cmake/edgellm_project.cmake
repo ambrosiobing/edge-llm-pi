@@ -74,6 +74,23 @@ function(edgellm_add_oracle_test name)
     foreach(v REPLAY GRAMMAR PROMPT EXPECTED)
         get_filename_component(T_${v} "${T_${v}}" ABSOLUTE)
     endforeach()
+    # ARGS is a CMake list, so "-DEXTRA=${T_ARGS}" would hand run_oracle.cmake the string
+    # "--n-predict;64;--temperature;0.3", and the separate_arguments() there splits on
+    # whitespace, not on semicolons: the whole thing arrived as ONE argument. Every project
+    # that uses the shared main then printed its usage and exited 2, which is what e03,
+    # e16, e17 and e19 did the first time these tests were ever registered; e08 and e09
+    # have their own main() and silently ignored the token instead, which is worse.
+    # Joining with spaces here is what separate_arguments expects. The constraint it buys:
+    # no single ARGS entry may contain a space. None does, and they are flags and numbers.
+    # Found Friday 16 October 2026.
+    string(JOIN " " T_ARGS_LINE ${T_ARGS})
+    foreach(a IN LISTS T_ARGS)
+        if(a MATCHES " ")
+            message(FATAL_ERROR
+                "edgellm_add_oracle_test(${name}): the ARGS entry '${a}' contains a space, "
+                "which the oracle runner cannot carry; pass it another way")
+        endif()
+    endforeach()
     add_test(NAME ${name}-oracle
              COMMAND ${CMAKE_COMMAND}
                      -DBIN=$<TARGET_FILE:${name}>
@@ -84,6 +101,6 @@ function(edgellm_add_oracle_test name)
                      -DPROMPT=${T_PROMPT}
                      -DEXPECTED=${T_EXPECTED}
                      -DLOG=${CMAKE_CURRENT_BINARY_DIR}/${name}.log.csv
-                     "-DEXTRA=${T_ARGS}"
+                     "-DEXTRA=${T_ARGS_LINE}"
                      -P "${EDGELLM_ROOT}/cmake/run_oracle.cmake")
 endfunction()
