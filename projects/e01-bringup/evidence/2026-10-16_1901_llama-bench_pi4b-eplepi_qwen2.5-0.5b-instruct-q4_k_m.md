@@ -40,9 +40,11 @@ built on this board. Every ARM feature probe failed at configure time and ggml s
 no half-precision vector arithmetic. That is correct for a Cortex-A72 and is the reason a
 Raspberry Pi 5 is faster at this work than a clock comparison predicts.
 
-**Not recorded, and it should have been:** whether a HAT was seated on the header during this
-run. `wiring.md` asks for a bare header or an explicit note, and neither was written down at
-the time. Record it on the second day's run.
+**The header was bare: no HAT seated for this run**, which is what `wiring.md` asks for.
+Confirmed by Joseph on Friday 16 October 2026, shortly after the run, from his own
+observation of the bench rather than from a note written at the time. The distinction is
+worth keeping in a record even when the answer is the expected one. Write it down during the
+second day's run instead of afterwards.
 
 ## The harness, same board, same sitting, same model file
 
