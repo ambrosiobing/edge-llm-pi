@@ -67,6 +67,20 @@ if(NOT EDGELLM_STUB_MODEL)
     endif()
 endif()
 
+# enable_testing() BEFORE any add_subdirectory, and this order is load bearing. CMake
+# writes a CTestTestfile.cmake for a directory only if testing was enabled when that
+# directory was processed, so an add_test() in a subdirectory added earlier is dropped
+# without a word. This file used to call enable_testing() further down, just before
+# add_subdirectory(tests), and the effect was that twelve per-project oracle tests and
+# five unit tests registered in projects/*/CMakeLists.txt never existed: ctest reported
+# "100% tests passed, 0 tests failed out of 4" and the four were the ones in tests/.
+# A green run that silently omits most of the suite is worse than a red one. Found on
+# Friday 16 October 2026 on the first build in skyhorizon's WSL, by noticing that four
+# is too few for twenty projects.
+if(EDGELLM_BUILD_TESTS)
+    enable_testing()
+endif()
+
 add_subdirectory(common/c)
 
 if(EDGELLM_BUILD_PROJECTS)
@@ -79,6 +93,5 @@ if(EDGELLM_BUILD_PROJECTS)
 endif()
 
 if(EDGELLM_BUILD_TESTS AND EXISTS "${EDGELLM_ROOT}/tests/CMakeLists.txt")
-    enable_testing()
     add_subdirectory(tests)
 endif()

@@ -56,6 +56,17 @@ jobs:
             -DEDGELLM_IO_SERIAL=ON -DEDGELLM_IO_CAN=ON
       - name: build
         run: cmake --build build
+      - name: the suite is not silently short
+        # "0 tests failed out of 4" was a green run for three pushes while twelve oracle
+        # tests and five unit tests did not exist, because enable_testing() was called
+        # after the projects were added and CMake dropped their add_test() calls without
+        # a word. A suite that can shrink to nothing and still pass is not a check, so
+        # the count is asserted before it is trusted. Raise the floor when projects gain
+        # tests; never lower it to make a run go green.
+        run: |
+          n=$(ctest --test-dir build -N | sed -n 's/^Total Tests: //p')
+          echo "ctest registered $n tests"
+          test "${n:-0}" -ge 15
       - name: ctest
         run: ctest --test-dir build --output-on-failure
       - name: attribution scan over the tree and the history
