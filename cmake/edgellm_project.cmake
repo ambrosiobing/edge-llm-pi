@@ -83,14 +83,16 @@ function(edgellm_add_oracle_test name)
     # Joining with spaces here is what separate_arguments expects. The constraint it buys:
     # no single ARGS entry may contain a space. None does, and they are flags and numbers.
     # Found Friday 16 October 2026.
+    # The constraint this leaves, and it is narrower than it first looks: no single
+    # ARGUMENT may contain a space, because the runner splits the line on whitespace. An
+    # ARGS entry that contains a space is fine and common, because it is two arguments
+    # written as one entry, which is how e08 passes "--daemon $<TARGET_FILE:...>"; that
+    # round-trips exactly. A guard here that refused any entry with a space was added
+    # and removed the same hour: it could not tell those two cases apart and rejected the
+    # legitimate one. What would break is a path containing a space, and no build
+    # directory in this project has one. Generator expressions survive, because add_test
+    # expands them in every argument.
     string(JOIN " " T_ARGS_LINE ${T_ARGS})
-    foreach(a IN LISTS T_ARGS)
-        if(a MATCHES " ")
-            message(FATAL_ERROR
-                "edgellm_add_oracle_test(${name}): the ARGS entry '${a}' contains a space, "
-                "which the oracle runner cannot carry; pass it another way")
-        endif()
-    endforeach()
     add_test(NAME ${name}-oracle
              COMMAND ${CMAKE_COMMAND}
                      -DBIN=$<TARGET_FILE:${name}>
