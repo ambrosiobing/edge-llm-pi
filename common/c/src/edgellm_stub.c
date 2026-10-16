@@ -27,7 +27,7 @@
 
 #define STUB_DEPTH 8
 
-struct edgellm {
+struct edgellm_s {
     char answer[512];
 };
 

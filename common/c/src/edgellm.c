@@ -25,7 +25,7 @@
 #define EDGELLM_LLAMA_TAG "untagged"
 #endif
 
-struct edgellm {
+struct edgellm_s {
     struct llama_model       *model;
     struct llama_context     *ctx;
     const struct llama_vocab *vocab;

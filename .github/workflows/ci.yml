@@ -153,6 +153,12 @@ jobs:
             debianutils iputils-ping python3-git python3-jinja2 python3-pexpect \
             python3-subunit zstd liblz4-tool file locales libacl1
           sudo locale-gen en_US.UTF-8
+      - name: let BitBake use user namespaces
+        # Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor, and
+        # BitBake needs them: "User namespaces are not usable by BitBake, possibly due to
+        # AppArmor". This is the workaround the release notes themselves give, and it is
+        # a runner-only setting that touches nothing in this repository.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: layers at the bench release
         run: |
           git clone --depth 1 -b scarthgap https://git.yoctoproject.org/poky /tmp/poky

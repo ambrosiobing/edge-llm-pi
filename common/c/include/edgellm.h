@@ -17,7 +17,13 @@
 extern "C" {
 #endif
 
-typedef struct edgellm edgellm_t;
+/* The tag is edgellm_s and not edgellm on purpose. A C struct tag is a class name in C++,
+ * so "struct edgellm" and the wrapper's "namespace edgellm" in common/cpp/edgellm.hpp are
+ * two different kinds of entity under one name, which C++ refuses: every C++ project
+ * failed to compile with "namespace edgellm redeclared as different kind of entity" and a
+ * cascade of errors under it. Renamed Friday 16 October 2026. Callers are unaffected:
+ * edgellm_t is the name they all use, and it has not changed. */
+typedef struct edgellm_s edgellm_t;
 
 typedef struct edgellm_config {
     const char *model_path;      /* GGUF file; ignored by the stub */

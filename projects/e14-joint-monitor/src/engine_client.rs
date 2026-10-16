@@ -121,7 +121,17 @@ impl EngineClient {
     /// dropped and one fresh connection is tried, so a daemon restarted between minutes
     /// costs one minute's answer at most.
     pub fn ask(&mut self, request: &str) -> Result<Reply, Unavailable> {
-        let line = one_line(request);
+        // one_line() must not touch the tab that separates the verb from the user text:
+        // it is the only thing the daemon splits on. Running it over the whole request
+        // turned "decide<TAB>nodes 2 of 3 present..." into one field and the daemon
+        // answered "unknown request decide nodes 2 of 3 present...", every minute of
+        // every run, so the model column was empty for all one hundred of them and the
+        // oracle test failed on the first. Found by that test on Friday 16 October 2026.
+        // Sanitise the text, never the frame.
+        let line = match request.split_once('\t') {
+            Some((op, text)) => format!("{}\t{}", op, one_line(text)),
+            None => one_line(request),
+        };
         for attempt in 0..2 {
             if self.conn.is_none() {
                 if let Err(e) = self.connect() {
@@ -229,5 +239,20 @@ mod tests {
     #[test]
     fn a_request_is_forced_onto_one_line() {
         assert_eq!(one_line("a\tb\nc"), "a b c");
+    }
+
+    /// The frame survives sanitising and the text does not keep its tabs. The request
+    /// built here is the one main.rs builds, and the split is the one the daemon does.
+    #[test]
+    fn the_verbs_separator_survives_but_the_text_is_flattened() {
+        let built = format!("decide\t{}", "two\tfields\nand a line");
+        let sent = match built.split_once('\t') {
+            Some((op, text)) => format!("{}\t{}", op, one_line(text)),
+            None => one_line(&built),
+        };
+        let mut fields = sent.splitn(2, '\t');
+        assert_eq!(fields.next(), Some("decide"), "the daemon must see the verb alone");
+        assert_eq!(fields.next(), Some("two fields and a line"));
+        assert_eq!(sent.matches('\t').count(), 1, "exactly one separator leaves here");
     }
 }
