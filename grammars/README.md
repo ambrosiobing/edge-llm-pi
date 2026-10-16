@@ -37,7 +37,7 @@ back out and compares it with the rule column letter for letter.
 
 ## Checking a grammar before a run
 
-    ./build/llama.cpp/bin/llama-gbnf-validator grammars/e06_too_close.gbnf sample.txt
+    ./build/bin/llama-gbnf-validator grammars/e06_too_close.gbnf sample.txt
 
 is the upstream check (built when `EDGELLM_BUILD_LLAMA_TOOLS` is on); the stub run in
 `ctest` is the cheaper one and fails when `root` is missing.

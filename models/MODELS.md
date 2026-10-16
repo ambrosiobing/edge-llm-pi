@@ -99,7 +99,15 @@ File names and SHA256, in the same order (the recipe names in parentheses):
 
 Rung rule: the file must fit under 60 percent of `MemAvailable` from `free -m` on the
 headless board after boot, with `n_ctx` 512, or a tokens-per-second figure is SD-card
-paging. The Pi 4's RAM is not recorded; e01 reads it.
+paging. The bench Pi 4 Model B Rev 1.4, card `eplepi`, was read on Friday 16 October 2026:
+MemTotal 8,007,396 kB, MemAvailable 7,789,840 kB after boot, so the ceiling on that board is
+about 4.67 GB and every rung below is admissible, Phi-3-mini included. The Pi 3 boards and
+the NanoPi are unchanged and still govern their own chapters.
+
+Measured on that board on Friday 16 October 2026, Qwen2.5-0.5B-Instruct Q4_K_M at `n_ctx`
+512: resident set 542,648 kB, about 530 MiB, against a 463 MiB file. The file is 6.16 bits
+per weight rather than the 4.8 a Q4_K_M usually costs, because Qwen's own GGUF keeps 133
+tensors at q5_0 and 13 at q8_0; read the type histogram rather than assuming the label.
 
 ## Host-side packages
 

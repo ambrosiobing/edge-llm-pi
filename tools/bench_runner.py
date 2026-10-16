@@ -51,8 +51,14 @@ def main():
     started = datetime.datetime.now()
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    except FileNotFoundError:
-        raise SystemExit("bench_runner: %s not found" % args.llama_bench)
+    except OSError as exc:
+        # OSError, not FileNotFoundError. A path that exists but cannot be executed raises
+        # PermissionError instead, and the commonest way to reach that is to pass
+        # build/llama.cpp/tools/llama-bench, which is the build tree's mirror of the source
+        # FOLDER of that name rather than the binary; the binary is build/bin/llama-bench.
+        # With only FileNotFoundError caught, that mistake printed a twenty-line traceback
+        # instead of one line saying which path failed. Friday 16 October 2026.
+        raise SystemExit("bench_runner: cannot run %s (%s)" % (args.llama_bench, exc))
     except subprocess.CalledProcessError as exc:
         raise SystemExit("bench_runner: llama-bench exited %d\n%s" % (exc.returncode,
                                                                        exc.stderr))
@@ -73,8 +79,14 @@ def main():
         fh.write("- throttled after: %s\n" % after)
         fh.write("- instrument: upstream llama-bench; the volume's harness is priced "
                  "against this table and published only within 10 percent of it\n\n")
-        fh.write(result.stdout)
-        if not result.stdout.endswith("\n"):
+        # llama-bench prints the spread as U+00B1. The file is ASCII, because the repository
+        # refuses a non-ASCII byte in anything a person edits, and errors="replace" turned
+        # every one of those into a question mark: the first run's evidence file reads
+        # "6.87 ? 0.00", which loses the meaning of the column. Transliterate rather than
+        # substitute. Found by reading e01's own evidence on Friday 16 October 2026.
+        table = result.stdout.replace("\u00b1", "+/-")
+        fh.write(table)
+        if not table.endswith("\n"):
             fh.write("\n")
     print(result.stdout)
     print("bench_runner: written %s" % path)

@@ -69,8 +69,14 @@ def main():
                     problems.append("%s:%d: non-ASCII byte" % (rel, number))
                 # A system prompt is one paragraph the model reads, and a manifest's command
                 # strings cannot be wrapped without changing them; both keep the ASCII rule only.
+                # An evidence file is the same case and a stronger one: a measuring tool wrote
+                # it, its header records the exact command line that produced the numbers, and
+                # reflowing that line to fit a style rule would corrupt the record the chapter
+                # cites. The ASCII rule still applies, so a file that cannot be read in a plain
+                # editor is still refused. Added Friday 16 October 2026 with e01's first run.
+                in_evidence = "/evidence/" in rel.replace("\\", "/")
                 table_row = name.lower().endswith(".md") and line.lstrip().startswith(b"|")
-                exempt = table_row or name in ("prompt.txt", "project.toml")
+                exempt = table_row or in_evidence or name in ("prompt.txt", "project.toml")
                 if len(line) > LIMIT and not exempt:
                     problems.append("%s:%d: %d columns" % (rel, number, len(line)))
                 if b"\t" in line and name.lower().endswith(NO_TABS_EXT) and \

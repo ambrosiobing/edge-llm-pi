@@ -12,7 +12,7 @@
 
 > **Key facts**
 >
-> - **Board:** Raspberry Pi 4 Model B (RAM read in step 1), Raspberry Pi 3 Model B Plus (1 GB), Raspberry Pi 3 Model B Rev 1.2 (1 GB), NanoPi NEO Air (512 MB, armv7)
+> - **Board:** Raspberry Pi 4 Model B Rev 1.4 (8 GB, read in step 1 on Friday 16 October 2026), Raspberry Pi 3 Model B Plus (1 GB), Raspberry Pi 3 Model B Rev 1.2 (1 GB), NanoPi NEO Air (512 MB, armv7)
 > - **HAT slot:** empty on every board for the whole chapter
 > - **Parts:** the four boards, two SD cards, the eMMC of the NanoPi, the Renkforce USB/TTL cable
 > - **Interface:** SSH to every board; the serial console on the Pi 4B only
@@ -30,13 +30,13 @@ Every number in the nineteen chapters that follow is a number from this one. A d
 
 ## Origin and what changed
 
-New, because no draft idea measures the instrument first, and because the Pi 4 Model B's RAM is unknown: Joseph quoted the 1, 2, 4 and 8 GB variants on Wednesday 14 October 2026, not his board. The draft treated speed as something to look up. The reference figures that exist for these boards were taken on other people's boards with other versions of the engine and other prompt lengths, so they are the shape to expect and nothing more. What changed is that the speed table became a project with an acceptance test that can fail, and that reading the Pi 4's memory with `free -m` became step 1 of the whole volume: the model ladder's upper rungs for the Pi 4 are decided by that one reading, and [Project 2](../../chapters/02-the-decision-loop.md) and every later Pi 4 chapter inherit the result.
+New, because no draft idea measures the instrument first, and because the Pi 4 Model B's RAM was unknown when this chapter was written: Joseph quoted the 1, 2, 4 and 8 GB variants on Wednesday 14 October 2026, not his board. Step 1 read it on Friday 16 October 2026 and the answer is the top of the range, a Rev 1.4 with 8 GB, MemTotal 8,007,396 kB and MemAvailable 7,789,840 kB after boot. That retires the open item and it changes two later chapters: every rung of the model ladder is admissible on this board, Phi-3-mini at 2.2 GB included, and project e20's fall back to a model held on skyhorizon becomes a choice rather than a necessity. The draft treated speed as something to look up. The reference figures that exist for these boards were taken on other people's boards with other versions of the engine and other prompt lengths, so they are the shape to expect and nothing more. What changed is that the speed table became a project with an acceptance test that can fail, and that reading the Pi 4's memory with `free -m` became step 1 of the whole volume: the model ladder's upper rungs for the Pi 4 are decided by that one reading, and [Project 2](../../chapters/02-the-decision-loop.md) and every later Pi 4 chapter inherit the result.
 
 ## Parts and interface
 
 | **Part** | **Role** | **Interface** | **Address or pin** |
 | --- | --- | --- | --- |
-| Raspberry Pi 4 Model B | the fastest board; its RAM is read, not assumed | SSH, or the Renkforce USB/TTL cable at 115200 | header pins 6 (GND), 8 (GPIO14 TXD), 10 (GPIO15 RXD) |
+| Raspberry Pi 4 Model B | the fastest board; 8 GB, read on Friday 16 October 2026, not assumed | SSH, or the Renkforce USB/TTL cable at 115200 | header pins 6 (GND), 8 (GPIO14 TXD), 10 (GPIO15 RXD) |
 | Raspberry Pi 3 Model B Plus | 1 GB; the serial console is dead on this board (GPIO14 is never muxed because `disable-bt` leaves `uart0_pins` empty) | SSH only | none on the header |
 | Raspberry Pi 3 Model B Rev 1.2 | 1 GB; the SmolLM2 board of later chapters | SSH | none on the header |
 | NanoPi NEO Air | 512 MB, Allwinner H3, four Cortex-A7 cores, armv7; the floor of the ladder | SSH over Wi-Fi; no 40-pin header, no `vcgencmd` | none |
@@ -108,7 +108,7 @@ The generation loop includes the greedy sample in its timing, which the referenc
 
 ![Figure 1.1. The instrument.](../../figures/e01_arch.svg)
 
-*Figure 1.1. The instrument. Along the top, four solid blocks: the GGUF model ladder with the yellow model outline, the upstream llama-bench and the C++ harness in user-space green, and the tokens per second table in grey. A solid arrow carries the model file from the ladder to llama-bench, a dashed stop-coloured arrow from llama-bench to the harness carries the 10 percent rule, and a solid arrow from the harness to the table says that both columns are written. Below, inside a dashed layer labelled as the bench, four solid hardware blocks: the Pi 4 Model B with its RAM marked read it, the Pi 3 Model B Plus with SSH only, the Pi 3 Model B, and the NanoPi NEO Air with 512 MB and armv7; to their right a dotted grey block for the absent Pi 5 and accelerator. At the bottom, a solid kernel-blue block for vcgencmd, read before and after every run, and a solid grey block for skyhorizon's WSL side, which cross builds the armv7 binary and copies it to the NanoPi.*
+*Figure 1.1. The instrument. Along the top, four solid blocks: the GGUF model ladder with the yellow model outline, the upstream llama-bench and the C++ harness in user-space green, and the tokens per second table in grey. A solid arrow carries the model file from the ladder to llama-bench, a dashed stop-coloured arrow from llama-bench to the harness carries the 10 percent rule, and a solid arrow from the harness to the table says that both columns are written. Below, inside a dashed layer labelled as the bench, four solid hardware blocks: the Pi 4 Model B with its 8 GB marked as read, the Pi 3 Model B Plus with SSH only, the Pi 3 Model B, and the NanoPi NEO Air with 512 MB and armv7; to their right a dotted grey block for the absent Pi 5 and accelerator. At the bottom, a solid kernel-blue block for vcgencmd, read before and after every run, and a solid grey block for skyhorizon's WSL side, which cross builds the armv7 binary and copies it to the NanoPi.*
 
 Read the figure as two instruments and one gate. The reference instrument is built from the engine's own tree and never edited. The harness links the same library and reproduces the two tests in the simplest code that can do so, so that any disagreement between the two columns is a fact about the harness and can be found by reading forty lines. The gate is the kernel block at the bottom: a throttle bit set at either reading means the clock was not what the table assumes, and the run leaves nothing behind.
 
@@ -309,10 +309,14 @@ Quantity: `tg 32` tokens per second at 4 threads (1 to 4 on the NanoPi), per boa
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~/edge-llm-pi; python tools/bench_runner.py --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+cd ~/edge-llm-pi
+python3 tools/bench_runner.py \
+  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --board pi4b-eplepi --evidence projects/e01-bringup/evidence \
-  --llama-bench build/llama.cpp/bin/llama-bench
+  --llama-bench build/bin/llama-bench
 ```
+
+Two spellings in that one command were wrong when it was first written and were corrected on Friday 16 October 2026 by running it. It is `python3`, because Debian trixie does not guarantee the unsuffixed name and this image carries only `/usr/bin/python3`. And the reference binary is `build/bin/llama-bench`, because llama.cpp's own `CMakeLists.txt` sets `CMAKE_RUNTIME_OUTPUT_DIRECTORY` to `${CMAKE_BINARY_DIR}/bin`, and `CMAKE_BINARY_DIR` names the top-level build directory even when llama.cpp is added as a subdirectory of another project. The path `build/llama.cpp/tools/llama-bench` looks right and is a directory: the build tree mirrors the source tree, and llama.cpp's source folder for that tool carries the tool's name. Handing it to the runner raises `PermissionError` on exec, which is the signature of trying to execute a folder.
 
 ## Agreement table
 
@@ -326,18 +330,23 @@ Not applicable: this chapter is the instrument, and there is no model column to 
 
 | **Board** | **Model, Q4\_K\_M** | **pp 64** | **tg 32** | **Threads** | **Instrument** |
 | --- | --- | --- | --- | --- | --- |
-| Pi 4 Model B | Qwen2.5-0.5B | not measured | not measured | 4 | not run yet; board RAM unread |
-| Pi 4 Model B | TinyLlama-1.1B | not measured | not measured | 4 | not run yet; admitted only if the RAM reading allows |
+| Pi 4 Model B | Qwen2.5-0.5B | 6.87, 13.62, 20.04, 25.58 | 4.85, 8.39, 9.47, 8.70 | 1, 2, 3, 4 | llama-bench, engine v0.6.0 built on the board, Friday 16 October 2026 |
+| Pi 4 Model B | Qwen2.5-0.5B | 19.99, 24.70 | 9.26, 9.18 | 3, 4 | the e01 harness, same sitting; agrees to 2.2 percent on tg and 0.25 percent on pp at 3 threads |
+| Pi 4 Model B | TinyLlama-1.1B | not measured | not measured | 1, 2, 3, 4 | not run yet; the 8 GB reading admits it, and it is the control for the bend below |
 | Pi 3 Model B Plus | SmolLM2-360M | not measured | not measured | 4 | not run yet |
 | Pi 3 Model B | SmolLM2-360M | not measured | not measured | 4 | not run yet |
 | NanoPi NEO Air | SmolLM2-135M | not measured | not measured | 1, 2, 3, 4 | not run yet; cross build pending |
 | Pi 4 Model B 4 GB, theirs | TinyLlama-1.1B | 3.24, 6.44, 9.51, 12.49 at pp 512 | 2.79, 5.47, 5.82, 5.55 at tg 128 | 1, 2, 3, 4 | pi-llm-bench, build b10991; a hypothesis, not this bench |
 
-The last row is the reference point, from [github.com/yosefdenham/pi-llm-bench](https://github.com/yosefdenham/pi-llm-bench) (verified Wednesday 14 October 2026): a Raspberry Pi 4 Model B with 4 GB, TinyLlama 1.1B Q4\_K\_M, llama.cpp build b10991, CPU only, tests pp 512 and tg 128. Its generation figure stops rising after two threads, which that page attributes to memory bandwidth; whether this bench's Pi 4B shows the same bend at the same place is the first hypothesis the table tests. Its prompt length and generation length are eight and four times this protocol's, so the two are the same shape and not the same number even on the same board.
+The last row is the reference point, from [github.com/yosefdenham/pi-llm-bench](https://github.com/yosefdenham/pi-llm-bench) (verified Wednesday 14 October 2026): a Raspberry Pi 4 Model B with 4 GB, TinyLlama 1.1B Q4\_K\_M, llama.cpp build b10991, CPU only, tests pp 512 and tg 128. Its generation figure stops rising after two threads, which that page attributes to memory bandwidth; whether this bench's Pi 4B shows the same bend at the same place was the first hypothesis the table tests. Its prompt length and generation length are eight and four times this protocol's, so the two are the same shape and not the same number even on the same board.
+
+That hypothesis now has an answer, from the run of Friday 16 October 2026. The bend is there and it is not in the same place: generation on this board rises to three threads and falls back at four, where theirs stops after two. Prompt processing meanwhile scales 3.72 times over four cores, nearly linearly, which is the distinction the chapter exists to draw. Reading a prompt is compute bound and the fourth core helps; writing tokens is bound by the memory bus and the fourth core does not, so four cores buy less than two cores’ worth of generation. The obvious suspect for the different knee is the model: theirs is 1.1 B and saturates the bus sooner than this 0.5 B, and the 8 GB reading now admits TinyLlama-1.1B on this same board, which turns that suspicion into a control rather than an argument. If the knee moves to two threads when only the model changes, the bandwidth explanation holds on this bench's own hardware; if it does not, the explanation was borrowed and should be dropped. One observation of a bend is not a mechanism for it.
+
+The same run says something about the processor that is worth more than either number. Every ARM feature probe failed at configure time: no `dotprod`, no `i8mm`, no `sve`, no `sme`, no half-precision vector arithmetic, and ggml settled on `-mcpu=cortex-a72+crc+nodotprod+noi8mm+nosve+nosme`. That is correct for a Cortex-A72, which is ARMv8-A without the ARMv8.2 dot-product extension, and it is the honest reason the published Raspberry Pi 5 figures are so much higher: the A76 in a Pi 5 has `dotprod` and takes a quantised matmul kernel this board cannot. The difference is an instruction set, not a generation of marketing, and a reader with a Pi 4 can check it in one line of their own configure output.
 
 ![Figure 1.5. Tokens per second against thread count, drawn with TikZ axes.](../../figures/e01_data.svg)
 
-*Figure 1.5. Tokens per second against thread count, drawn with TikZ axes. Two dashed lines with small filled markers are the pi-llm-bench reference rows on a Pi 4 Model B with 4 GB and TinyLlama Q4\_K\_M: generation at 2.79, 5.47, 5.82 and 5.55 tokens per second at 1 to 4 threads, flat after two, and prompt processing at 3.24, 6.44, 9.51 and 12.49, rising to four. They are dashed because they are hypotheses from another bench, at pp 512 and tg 128 rather than this protocol's 64 and 32. The legend's hollow marker stands for every board and model of this bench, not measured yet and not plotted. A note repeats that the 4 GB is their board and that the bench Pi 4B's RAM is read in step 1.*
+*Figure 1.5. Tokens per second against thread count, drawn with TikZ axes. Two solid lines with filled markers are this bench's Pi 4 Model B Rev 1.4 with 8 GB running Qwen2.5-0.5B Q4\_K\_M on engine v0.6.0, measured on Friday 16 October 2026: prompt processing at 6.87, 13.62, 20.04 and 25.58 tokens per second at 1 to 4 threads, rising almost linearly, and generation at 4.85, 8.39, 9.47 and 8.70, peaking at three threads and falling back at four. Four open markers are the e01 harness at 3 and 4 threads, 19.99 and 24.70 for prompt processing and 9.26 and 9.18 for generation, drawn on top of the measured line rather than beside it because the point is that they coincide. Two dashed lines with small filled markers are the pi-llm-bench reference rows on a Pi 4 Model B with 4 GB and TinyLlama Q4\_K\_M: generation at 2.79, 5.47, 5.82 and 5.55, flat after two threads, and prompt processing at 3.24, 6.44, 9.51 and 12.49, rising to four. They stay dashed because they are hypotheses from another bench, at pp 512 and tg 128 rather than this protocol's 64 and 32. A note repeats that the 4 GB is their board, that the two protocols are the same shape and not the same number, and that the bend appears on both boards in different places.*
 
 ## Pitfalls
 

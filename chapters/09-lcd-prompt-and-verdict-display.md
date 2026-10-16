@@ -298,7 +298,7 @@ cd ~/edge-llm-pi; cmake -S . -B build -DGGML_NATIVE=ON -DEDGELLM_IO_IIO=ON \
 
 ```bash
 # Raspberry Pi 3 Model B, card eplepi
-cd ~/edge-llm-pi; P=projects/e09-lcd-verdict-display; build/llama.cpp/bin/llama-tokenize \
+cd ~/edge-llm-pi; P=projects/e09-lcd-verdict-display; build/bin/llama-tokenize \
   -m ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf -f $P/prompt.txt | tail -1
 ```
 
