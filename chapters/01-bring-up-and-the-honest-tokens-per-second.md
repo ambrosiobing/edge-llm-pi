@@ -303,7 +303,7 @@ cd ~/bench/edge-llm-pi; kas build meta-edgellm/kas/edgellm-pi4.yml
 
 ## Acceptance test
 
-Quantity: `tg 32` tokens per second at 4 threads (1 to 4 on the NanoPi), per board and per admitted model, from two instruments. Instrument: `llama-bench` at tag `v0.6.0` built on the board, and `e01_bench_harness` from the same library, with `vcgencmd get_throttled` as the gate. Pass: the harness mean within 10 percent of the reference mean on every board, `0x0` at both readings, and the second day's reference mean within 15 percent of the first. Fail: any of the three, in which case the cell keeps the words not measured and the failure is written beside it with its reading. The runner executes the reference with the gate before and after and writes the dated evidence file; the harness run of step 7 is pasted below it, and the division beside both:
+Quantity: `tg 32` tokens per second at 4 threads (1 to 4 on the NanoPi), per board and per admitted model, from two instruments. Instrument: `llama-bench` at tag `v0.6.0` built on the board, and `e01_bench_harness` from the same library, with `vcgencmd get_throttled` as the gate. Pass: the harness mean within 10 percent of the reference mean on every board, `0x0` at both readings, and the second day's reference mean within 15 percent of the first. Fail: any of the three, in which case the cell keeps the words not measured and the failure is written beside it with its reading. The runner executes the reference with the gate before and after, runs the harness itself, and writes the dated evidence file with both tables, the division between them and the verdict. It exits non-zero when the run does not pass, so the sitting is one command:
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
@@ -311,8 +311,13 @@ cd ~/edge-llm-pi
 python3 tools/bench_runner.py \
   --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --board pi4b-eplepi --evidence projects/e01-bringup/evidence \
-  --llama-bench build/bin/llama-bench
+  --llama-bench build/bin/llama-bench \
+  --harness build/projects/e01-bringup/e01_bench_harness \
+  --prompt projects/e01-bringup/prompt.txt \
+  --hat "bare header, no HAT"
 ```
+
+It did not start that way. On the first run the protocol said the harness table was to be pasted into the evidence file by hand and the division written beside it, which is eight figures transcribed twice per board and a pass-or-fail decision taken in someone's head. Both were moved into the runner the same evening, and because a measuring tool that decides anything has to be measured itself, the parser and the gate carry their own tests in `tools/tests`: the fixture is that first real run, the expected percentages were worked out by hand before the parser existed, and two of the cases exist to fail, a harness figure twenty percent out and a missing figure. A gate that has never refused anything is not known to work. `--hat` is in the command for a smaller reason that cost something real: the chapter asks for a bare header or an explicit note, and on the first run nobody wrote it down, so the runner now asks while somebody is still looking at the board.
 
 Two spellings in that one command were wrong when it was first written and were corrected on Friday 16 October 2026 by running it. It is `python3`, because Debian trixie does not guarantee the unsuffixed name and this image carries only `/usr/bin/python3`. And the reference binary is `build/bin/llama-bench`, because llama.cpp's own `CMakeLists.txt` sets `CMAKE_RUNTIME_OUTPUT_DIRECTORY` to `${CMAKE_BINARY_DIR}/bin`, and `CMAKE_BINARY_DIR` names the top-level build directory even when llama.cpp is added as a subdirectory of another project. The path `build/llama.cpp/tools/llama-bench` looks right and is a directory: the build tree mirrors the source tree, and llama.cpp's source folder for that tool carries the tool's name. Handing it to the runner raises `PermissionError` on exec, which is the signature of trying to execute a folder.
 

@@ -49,15 +49,20 @@ On the NanoPi there is no `vcgencmd`; read `/sys/class/thermal/thermal_zone0/tem
 
 ## The acceptance command
 
-    python3 tools/bench_runner.py --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    python3 tools/bench_runner.py \
+      --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
       --board pi4b-eplepi --evidence projects/e01-bringup/evidence \
-      --llama-bench build/bin/llama-bench
-    build/projects/e01-bringup/e01_bench_harness \
-      --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
-      --prompt projects/e01-bringup/prompt.txt -p 64 -n 32 -t 3 -r 5
-    build/projects/e01-bringup/e01_bench_harness \
-      --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
-      --prompt projects/e01-bringup/prompt.txt -p 64 -n 32 -t 4 -r 5
+      --llama-bench build/bin/llama-bench \
+      --harness build/projects/e01-bringup/e01_bench_harness \
+      --prompt projects/e01-bringup/prompt.txt \
+      --hat "bare header, no HAT"
+
+One command, and it exits non-zero if the run does not pass. It reads the throttle register,
+runs the reference at 1, 2, 3 and 4 threads, runs the harness at 3 and 4, reads the register
+again, writes the dated evidence file with both tables and the division between them, and
+prints the verdict. `--hat` is not decoration: `wiring.md` asks for a bare header or an
+explicit note, and on the first run nobody wrote it down, so the runner now asks at the only
+moment anyone is looking at the board.
 
 `python3`, not `python`: Debian trixie does not guarantee the unsuffixed name, and the
 Raspberry Pi OS image this bench runs carries the interpreter only as `/usr/bin/python3`.
@@ -68,9 +73,14 @@ top-level build directory even when llama.cpp is added as a subdirectory. The pa
 name, a directory, and handing it to the runner gives a `PermissionError` on exec.
 
 The runner executes `llama-bench -p 64 -n 32 -t 1,2,3,4 -r 5 -o md` with the throttle gate
-before and after and writes the table into a dated file under `evidence/`; the harness
-table, its VmRSS line and its system line are pasted into the same file by hand, and the
-division is written beside them. Pass: the harness tg within 10 percent of llama-bench tg
+before and after and writes the table into a dated file under `evidence/`, then the harness
+at each of `--harness-threads` with its own table, VmRSS line and system line, then the
+division and the verdict. None of that is transcribed by hand any more. It was on the first
+run, on Friday 16 October 2026, which meant eight figures copied twice and the arithmetic
+that decides pass or fail done in someone's head; the parser and the gate now have their own
+tests under `tools/tests`, with the first real run as the fixture and a deliberately wrong
+harness figure as the case that must fail. Pass: the harness tg within 10 percent of
+llama-bench tg
 **at 3 threads**; throttle bits `0x0` before and after; a second day's run within 15 percent
 of the first. The 4-thread pair is recorded beside it and is not the gate.
 
