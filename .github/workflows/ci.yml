@@ -134,8 +134,14 @@ jobs:
         # bench_runner.py decides whether a measured run passes or fails, so it is measured
         # here. The fixtures are e01's first real run and the expected percentages were
         # worked out by hand before the parser existed. Needs no board and no model file.
+        #
+        # pytest alone, not requirements.txt, although the step below installs that anyway:
+        # these tests import one stdlib-only module and depend on nothing in it, while that
+        # file pulls llama-cpp-python, which compiles from source and takes minutes. Putting
+        # the cheap check behind the expensive install buys nothing and means a failure in
+        # the install hides the result of a test that had no stake in it.
         run: |
-          python -m pip install -r requirements.txt
+          python -m pip install pytest
           python -m pytest tools/tests
       - name: pytest in every Python project
         run: |
