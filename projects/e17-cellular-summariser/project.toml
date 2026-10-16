@@ -1,0 +1,35 @@
+# projects/e17-cellular-summariser/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e17"
+title    = "Cellular status summariser"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 3 Model B Plus, card eplepi"
+hat      = "Waveshare SIM7070G Cat-M/NB-IoT/GPRS HAT, one HAT on the header; host logic voltage set by a 0 ohm resistor, read it on the board before power"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e17_status.gbnf"
+prompt   = "projects/e17-cellular-summariser/prompt.txt"
+rule     = "projects/e17-cellular-summariser/src/rules_e17.c"
+binary   = "edgellm-e17"
+io       = "serial"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The bench
+# build adds -DEDGELLM_IO_SERIAL=ON or --modem is refused by the backend.
+command = "cmake --build build --target edgellm-e17 e17_at_parser_test rules_test oracle_check"
+# The six rule cases and the eleven parser cases run as two ctest entries; the oracle test
+# exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|e17-at-parser|edgellm-e17-oracle' --output-on-failure"
+
+[run]
+# The events are status samples, one a minute: the modelled day on the host, the day the
+# sampler wrote on the bench. The loop cannot tell which file it is reading.
+replay = "build/projects/e17-cellular-summariser/edgellm-e17 --project e17 --replay projects/e17-cellular-summariser/replay/day_1440.csv --grammar projects/e17-cellular-summariser/grammar.gbnf --prompt projects/e17-cellular-summariser/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --temperature 0.3 --state /tmp/e17.state --log projects/e17-cellular-summariser/evidence/e17_run.csv"
+stub   = "build/projects/e17-cellular-summariser/edgellm-e17 --project e17 --replay projects/e17-cellular-summariser/replay/day_1440.csv --grammar projects/e17-cellular-summariser/grammar.gbnf --prompt projects/e17-cellular-summariser/prompt.txt --n-predict 64 --temperature 0.3 --log /tmp/e17_stub.csv --stub"
+sampler = "build/projects/e17-cellular-summariser/edgellm-e17 --modem /dev/ttyAMA0:115200 --sample-interval 60 --max-samples 1440 --sample-log ~/e17_bench_day.csv"
+live   = "the sampler command above for 24 h, then the replay command with --replay ~/e17_bench_day.csv; the binary and the loop are the same, only the file changes"
+
+[oracle]
+expected = "tests/oracle/e17.expected.csv"
+compare  = "build/tests/oracle_check projects/e17-cellular-summariser/evidence/e17_run.csv tests/oracle/e17.expected.csv"
+table    = "python projects/e17-cellular-summariser/tools/hallucination_check.py projects/e17-cellular-summariser/evidence/e17_run.csv --operators A1,Magenta --md"

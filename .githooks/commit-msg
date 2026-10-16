@@ -1,0 +1,44 @@
+#!/bin/sh
+# Refuses a commit message that carries any line of tools/no_trace_words.txt
+# (case-insensitive substring), which includes the trailer that names a second author.
+# The words live in that file, not here, so this script passes its own check.
+#
+# No grep, deliberately. The first version asked grep for "-i -q -F --", and the grep
+# that Git for Windows ships aborts on that combination with signal 6, on a word that
+# is present just as readily as on one that is not. The hook read the abort as "not
+# found" and so passed every message: a guard that always says yes is worse than none,
+# because it is trusted. Found and replaced on Friday 16 October 2026 by running the
+# hook by hand against a message known to be bad. The matching below is "tr" and the
+# shell's own "case", which have no flags to get wrong.
+#
+# One constraint this buys: a word in the list is a literal, and the shell's case
+# patterns treat *, ? and [ as wildcards, so the list must carry none of the three.
+# Every word in it today is letters, spaces and hyphens.
+msg="$1"
+root=$(git rev-parse --show-toplevel)
+words="$root/tools/no_trace_words.txt"
+if [ ! -r "$words" ]; then
+    echo "commit-msg: $words is missing; refusing to commit blind" >&2
+    exit 1
+fi
+# The carriage returns are stripped from both sides, and that is not fussiness: the
+# word list is edited on Windows and is stored with CRLF, so every word read from it
+# ends in a carriage return. Matched against a message that has none in that position,
+# nothing ever matched, and the hook passed a message carrying the trailer verbatim.
+# That was the second of the two faults found on Friday 16 October 2026.
+CR=$(printf '\r')
+lower=$(tr -d "$CR" < "$msg" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')
+status=0
+while IFS= read -r w || [ -n "$w" ]; do
+    w=${w%"$CR"}
+    case "$w" in
+        ''|'#'*) continue ;;
+    esac
+    case "$lower" in
+        *"$w"*)
+            echo "commit-msg: the message contains '$w'; remove it and commit again" >&2
+            status=1
+            ;;
+    esac
+done < "$words"
+exit $status

@@ -1,0 +1,48 @@
+# projects/e13-can-honesty/Cargo.toml
+#
+# Two dependencies, and the shape of them is the shape of this project rather than an
+# accident:
+#
+#   edgellm   the shared crate of common/rust/edgellm, by path, which owns the engine over
+#             the llama-cpp-2 binding, the nine column log writer, the chat template, the
+#             Rule trait and the replay reader. Its own two features are forwarded, so this
+#             project's `stub` is its `stub` and this project's `engine` is its `engine`,
+#             and there is one place where that choice is made.
+#   socketcan 4.0.0, MIT, read from crates.io on Wednesday 14 October 2026. Behind the
+#             `live` feature, so a host build needs no SocketCAN headers, the CI manifests
+#             job never compiles the bench half, and the rule, the replay path, the oracle
+#             test and every number this project publishes are independent of it.
+#
+# Build and test on a host, which is what CI and a first read do:
+#     cargo test --manifest-path projects/e13-can-honesty/Cargo.toml
+# Build for the bench, in skyhorizon's WSL or on the Pi 4 Model B:
+#     cargo build --release --no-default-features --features engine,live
+#
+# Nothing compiles on the authoring laptop by rule, so the first build of this manifest is
+# Joseph's in skyhorizon's WSL.
+
+[package]
+name = "edgellm-e13"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+description = "e13, the CAN honesty agent: per node PRESENT, MODELLED or ABSENT"
+publish = false
+
+[[bin]]
+name = "edgellm-e13"
+path = "src/main.rs"
+
+[features]
+default = ["stub"]
+stub = ["edgellm/stub"]
+engine = ["edgellm/engine"]
+live = ["dep:socketcan"]
+
+[dependencies]
+edgellm = { path = "../../common/rust/edgellm", default-features = false }
+socketcan = { version = "4.0", optional = true }
+
+[profile.release]
+opt-level = 2

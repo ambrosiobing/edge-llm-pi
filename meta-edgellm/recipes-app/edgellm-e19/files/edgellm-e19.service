@@ -1,0 +1,41 @@
+[Unit]
+Description=edge-llm-pi e19, the event driven cellular alert composer on the SIM7070G
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The AT character device of the modem over the HAT USB cable. The unit waits for it
+# rather than for the module to be registered: registration is the send path's own
+# check, and a message armed while the modem is still attaching is queued, not blocked.
+After=dev-ttyUSB2.device
+Wants=dev-ttyUSB2.device
+# The accelerometer, bound by the overlay of the Linux volume's project 5. With no
+# device the unit does not start, which is better than a service that runs with no
+# event source and an empty log.
+ConditionPathExists=/sys/bus/iio/devices/iio:device0
+
+[Service]
+Type=simple
+# The live run: the accelerometer behind the iio backend at 10 Hz, the modem's AT device
+# and the destination number for the send path. --sms-to carries no real number here;
+# the field is set per board in a drop-in file, because a number in a recipe is a number
+# in every image. Without --modem the loop composes, checks and sends nothing, which is
+# the state of the bench until a SIM is fitted.
+ExecStart=/usr/bin/edgellm-e19 --project e19 \
+    --live iio /sys/bus/iio/devices/iio:device0:0.1 \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e19/grammar.gbnf \
+    --prompt /usr/share/edgellm/e19/prompt.txt \
+    --log /var/lib/edgellm/e19.csv \
+    --alerts /var/lib/edgellm/e19_alerts.csv \
+    --modem /dev/ttyUSB2:115200 --sms-to 00000000000 \
+    --threads 4 --n-predict 64 --temperature 0.3 --state /run/edgellm/e19.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A composer that stops is restarted: the log and the ledger are flushed per row, so a
+# restart loses no decision. Nothing is retried on a restart, because the queue is in
+# memory on purpose: an alert about an event from before the restart is late enough to
+# be misleading.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

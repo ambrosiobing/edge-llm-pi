@@ -1,0 +1,14 @@
+# e18_drift.gbnf: the two literals of rust/src/rules.rs, letter for letter, in the
+# house shape extended by one key. The "decision" key keeps the house name so that
+# tools/agreement.py reads it unchanged, and the "summary" key holds one sentence of
+# 10 to 160 characters that ends in a full stop, so the end of generation token is
+# reachable only after a complete sentence. The class admits no quote, no brace and
+# no newline, so the object always closes and the log's CSV quoting stays simple.
+# NOMINAL is first because the stub answers the first literal on every path, in CI
+# and in the Rust stub of rust/src/abi.rs, which must agree byte for byte with
+# common/c/src/edgellm_stub.c on this grammar: {"decision":"NOMINAL","summary":"."}.
+# ws admits spaces and tabs only, never a newline.
+root ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"summary\"" ws ":" ws summary ws "}"
+decision ::= "\"NOMINAL\"" | "\"DRIFT\""
+summary ::= "\"" [A-Za-z0-9 ,.%]{9,159} "." "\""
+ws ::= [ \t]*

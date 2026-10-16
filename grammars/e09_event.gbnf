@@ -1,0 +1,8 @@
+# e09_event.gbnf: the four literals of rules_e09.c, letter for letter, in the house
+# shape: one JSON object with one "decision" key. The order is the rule's name table,
+# NONE first, so the CI stub answers {"decision":"NONE"} on every row it is asked. ws
+# admits spaces and tabs only, never a newline, so the longest answer, FREEFALL, stays
+# inside the n_predict of 8 tokens; the chapter's pitfall on tokenizers says how to count.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
+decision ::= "\"NONE\"" | "\"TAP\"" | "\"TILT\"" | "\"FREEFALL\""
+ws       ::= [ \t]*

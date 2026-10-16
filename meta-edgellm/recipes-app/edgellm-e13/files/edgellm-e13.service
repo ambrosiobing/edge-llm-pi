@@ -1,0 +1,36 @@
+[Unit]
+Description=edge-llm-pi e13, the CAN honesty agent on the WS-28164 bus
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# No After= on a named interface. sys-subsystem-net-devices-can0.device would bind this
+# service to one boot's probe order, and on this HAT the two controllers swap names
+# between boots. The service binds each node to its controller's driver instead, by
+# reading /sys/class/net/<iface>/device/driver, and refuses to start when a driver is
+# missing. systemd-networkd brings the links up; this unit only needs them to exist.
+After=systemd-networkd.service
+Wants=systemd-networkd.service
+
+[Service]
+Type=simple
+# --live binds by driver and then reads every bound interface. The vcan node is a
+# declaration, not a device: if vcan0 is absent the service reports that node ABSENT and
+# keeps running, which is the honest behaviour and is what the chapter says.
+ExecStart=/usr/bin/edgellm-e13 --live --periods 86400 \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e13/grammar.gbnf \
+    --prompt /usr/share/edgellm/e13/prompt.txt \
+    --log /var/lib/edgellm/e13.csv \
+    --threads 4 --n-predict 64 --period 1.0 --state /run/edgellm/e13.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# The service reports; it drives nothing. It needs no device access beyond the CAN
+# sockets, so the usual hardening applies without an exception.
+Restart=on-failure
+RestartSec=5
+Nice=5
+ProtectHome=yes
+ProtectSystem=strict
+NoNewPrivileges=yes
+AmbientCapabilities=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,41 @@
+# projects/e19-cellular-alert/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e19"
+title    = "Event-driven cellular alert composer"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 3 Model B Plus, card eplepi"
+hat      = "Waveshare SIM7070G Cat-M, NB-IoT and GPRS HAT, with the ADXL345 on header pins 3 and 5"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e19_message.gbnf"
+prompt   = "projects/e19-cellular-alert/prompt.txt"
+rule     = "projects/e19-cellular-alert/src/rules_e19.c"
+binary   = "edgellm-e19"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON].
+command = "cmake --build build --target edgellm-e19 e19_compose_check_test rules_test oracle_check"
+# Three tests: the six classification cases inside the shared harness, this project's
+# own nineteen checks on the field checker and the send gate, and the replay oracle.
+test    = "ctest --test-dir build -R 'rules_test|e19_compose_check|edgellm-e19-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay projects/e19-cellular-alert/replay/alerts_50.csv --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e19.state --log projects/e19-cellular-alert/evidence/e19_run.csv --alerts projects/e19-cellular-alert/evidence/e19_alerts.csv"
+stub   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay projects/e19-cellular-alert/replay/alerts_50.csv --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --log /tmp/e19_stub.csv --alerts /tmp/e19_stub_alerts.csv --stub"
+# The live run needs the IIO device of the Linux volume's project 5 overlay and, for a
+# send, the modem's AT device and a destination number. Without --modem the loop
+# composes and checks and sends nothing, which is the state until a SIM is fitted.
+live   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --live iio /sys/bus/iio/devices/iio:device0:0.1 --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --modem /dev/ttyUSB2:115200 --sms-to +4300000000000 --log projects/e19-cellular-alert/evidence/e19_live.csv --alerts projects/e19-cellular-alert/evidence/e19_live_alerts.csv"
+
+[oracle]
+expected = "tests/oracle/e19.expected.csv"
+compare  = "build/tests/oracle_check projects/e19-cellular-alert/evidence/e19_run.csv tests/oracle/e19.expected.csv"
+# The acceptance numbers are the program's own summary line and the alert ledger; the
+# rule and model columns of the main log are what the oracle compares.
+table    = "python tools/agreement.py projects/e19-cellular-alert/evidence/e19_run.csv --md"
+
+[replay]
+generate = "python projects/e19-cellular-alert/tools/make_replay.py"
+# Fifty events, one per second: 37 NONE, 5 TAP, 6 TILT, 2 FREEFALL, of which the send
+# rule arms 4 and the minimum interval of 10 s blocks 3.
+events   = 50

@@ -1,0 +1,46 @@
+# projects/e20-scorecard/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e20"
+title    = "What should I measure next, and the scorecard"
+language = "Python"
+variant  = "P and R8"
+board    = "Raspberry Pi 4 Model B, card eplepi, no HAT, bench LAN to skyhorizon"
+hat      = "none: this project reads files and the network, nothing on the header"
+model    = "qwen2.5-1.5b-instruct-q4_k_m.gguf, served by llama-server in skyhorizon's WSL; the stated fallback is qwen2.5-0.5b-instruct-q4_k_m.gguf on the board itself"
+grammar  = "grammars/e20_next.gbnf"
+prompt   = "projects/e20-scorecard/prompt.txt"
+rule     = "projects/e20-scorecard/edgellm_e20/rank.py"
+package  = "edgellm_e20"
+remote   = "yes: this is the one project in the volume whose inference is not local, and the chapter says why"
+
+[build]
+# No compiler. The shared package is installed by path first, then this project; the
+# second command alone is what CI's manifests job runs, and the tests of this project
+# that need the shared package find the in-tree copy when it is not installed.
+command = "python -m pip install -e common/python/edgellm"
+install = "python -m pip install -e projects/e20-scorecard"
+test    = "python -m pytest projects/e20-scorecard"
+
+[run]
+# The replay run is scored against the dated snapshot beside it, so it does not move
+# when another chapter lands its software; --live ranks the repository as it is now.
+generate = "python projects/e20-scorecard/tools/make_replay.py"
+table    = "python -m edgellm_e20.scorecard --repo . --md"
+ranking  = "python -m edgellm_e20.rank"
+stub     = "python -m edgellm_e20.main --stub --log /tmp/e20_stub.csv --proposals /tmp/e20_proposals.csv"
+replay   = "python -m edgellm_e20.main --server http://skyhorizon.lan:8080 --log projects/e20-scorecard/evidence/e20_run.csv --proposals projects/e20-scorecard/evidence/e20_proposals.csv --require 0.80"
+live     = "python -m edgellm_e20.main --live --server http://skyhorizon.lan:8080 --log projects/e20-scorecard/evidence/e20_live.csv --proposals projects/e20-scorecard/evidence/e20_live_proposals.csv"
+fallback = "python -m edgellm_e20.main --server http://skyhorizon.lan:8080 --fallback-model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e20-scorecard/evidence/e20_fallback.csv"
+server   = "llama-server -m ~/models/qwen2.5-1.5b-instruct-q4_k_m.gguf --host 0.0.0.0 --port 8080 -c 1024 -t 8"
+
+[oracle]
+expected = "tests/oracle/e20.expected.csv"
+compare  = "python -m pytest projects/e20-scorecard/tests/test_oracle.py"
+table    = "python tools/agreement.py projects/e20-scorecard/evidence/e20_run.csv --md"
+
+[units]
+# One unit, installed by meta-edgellm/recipes-app/edgellm-e20. It is a timer-driven
+# one-shot and not a loop: the scorecard changes when a bench run lands, not every
+# minute. The server is not on this board and has no unit here.
+client = "meta-edgellm/recipes-app/edgellm-e20/files/edgellm-e20.service"
+timer  = "meta-edgellm/recipes-app/edgellm-e20/files/edgellm-e20.timer"

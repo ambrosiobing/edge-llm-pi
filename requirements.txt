@@ -1,0 +1,10 @@
+# Host-side Python only: tools/ and the two Python projects. Versions read from
+# https://pypi.org/pypi/<name>/json on Wednesday 14 October 2026 (models/MODELS.md).
+# Python 3.11 or newer (matplotlib 3.11 requires it).
+matplotlib==3.11.2
+ppk2-api==0.9.2
+pyserial==3.5
+pytest==9.1.1
+# Builds llama.cpp from source at install time; the llama.cpp commit it bundles is
+# recorded by the e15 author beside the project manifest (to verify).
+llama-cpp-python==0.3.36

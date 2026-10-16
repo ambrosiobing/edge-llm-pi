@@ -1,0 +1,46 @@
+# projects/e20-scorecard/pyproject.toml: e20, the scorecard and the ranking rule.
+#
+# The shared package of the volume is a dependency by path, not from an index. There is
+# no portable way to write a relative path dependency in this file, so it is installed
+# first and this project declares none:
+#
+#     python -m pip install -e common/python/edgellm
+#     python -m pip install -e projects/e20-scorecard
+#
+# The second command alone is what CI's manifests job runs, so nothing in this project
+# may fail at import when the shared package is absent: the scorecard and the ranking
+# rule import from the standard library only, and the loop finds the in-tree copy of
+# the shared package itself (edgellm_e20.main.load_shared). The path is recorded in
+# [tool.edgellm] below so that a tool does not have to guess it.
+#
+# llama-cpp-python is not here either. This project's engine is remote, a llama-server
+# in skyhorizon's WSL reached over the bench LAN with urllib from the standard library,
+# and the stated local fallback runs through the shared package's engine module, which
+# is where the volume keeps llama-cpp-python. So the stub path, which is what CI runs,
+# needs nothing beyond the interpreter.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgellm-e20"
+version = "0.1.0"
+description = "The twenty-row scorecard, the ranking rule and the remote client of e20"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1"]
+
+[project.scripts]
+edgellm-e20 = "edgellm_e20.main:main"
+edgellm-e20-scorecard = "edgellm_e20.scorecard:main"
+edgellm-e20-rank = "edgellm_e20.rank:main"
+
+[tool.setuptools]
+packages = ["edgellm_e20"]
+
+[tool.edgellm]
+shared = "../../common/python/edgellm"
+spine = "edgellm_e20/scorecard.py, SPINE: the twenty rows this project cannot drop"

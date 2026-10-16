@@ -1,0 +1,43 @@
+# projects/e14-joint-monitor/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e14"
+title    = "Joint monitor: CAN plus accelerometer"
+language = "Rust"
+variant  = "R2"
+board    = "Raspberry Pi 4 Model B, card B (the spare Verbatim 32 GB)"
+hat      = "Waveshare WS-28164, classic CAN only, two jumper wires; DFRobot SEN0032 ADXL345 at 0x53 on header pins 3 and 5"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e14_inspect.gbnf"
+prompt   = "projects/e14-joint-monitor/prompt.txt"
+rule     = "projects/e14-joint-monitor/src/rules.rs"
+binary   = "edgellm-e14"
+daemon   = "edgellm-e14-engine-daemon"
+io       = "can, iio: SocketCAN behind the live feature, the ADXL345 through sysfs IIO"
+
+[build]
+# No CMake: this project is cargo only, and CI's manifests job builds it by this file.
+# Default features on purpose: no socketcan, no llama.cpp, the stub answers from the
+# grammar and the oracle test still crosses the process boundary.
+command = "cargo build --manifest-path projects/e14-joint-monitor/Cargo.toml"
+test    = "cargo test --manifest-path projects/e14-joint-monitor/Cargo.toml"
+bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Cargo.toml --features live,engine"
+
+[run]
+# Two processes. The daemon first, then the service; the service reconnects by itself if
+# the order is the other way round or if the daemon is restarted under it.
+daemon = "target/release/edgellm-e14-engine-daemon --socket /run/edgellm/e14-engine.sock --grammar projects/e14-joint-monitor/grammar.gbnf --prompt projects/e14-joint-monitor/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --n-ctx 512 --threads 4"
+replay = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /run/edgellm/e14-engine.sock --log projects/e14-joint-monitor/evidence/e14_run.csv"
+stub   = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /tmp/e14-engine.sock --log /tmp/e14_stub.csv --timeout-ms 2000"
+live   = "target/release/edgellm-e14 --project e14 --live can0 --iio /sys/bus/iio/devices/iio:device0 --socket /run/edgellm/e14-engine.sock --minute-s 60 --sample-hz 50 --log projects/e14-joint-monitor/evidence/e14_run.csv"
+
+[oracle]
+expected = "tests/oracle/e14.expected.csv"
+compare  = "cargo test --manifest-path projects/e14-joint-monitor/Cargo.toml --test oracle"
+table    = "python tools/agreement.py projects/e14-joint-monitor/evidence/e14_run.csv --md"
+
+[comparison]
+# The three numbers this project exists to produce, against project e13 on the same bus
+# and the same model. Both halves of the pair report VmRSS from /proc/self/status.
+resident = "cat /proc/$(pidof edgellm-e14)/status /proc/$(pidof edgellm-e14-engine-daemon)/status | grep VmRSS"
+latency  = "the round_trip_ms and socket_ms columns of the log, against e13's prompt_ms plus generate_ms"
+recovery = "systemctl kill --signal=SIGKILL edgellm-e14-daemon.service, then the service's own log: the first minute with engine unavailable and the first minute answered again"

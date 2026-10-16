@@ -1,0 +1,8 @@
+# e10_shape.gbnf: the three literals of rules_e10.c, letter for letter and in the same
+# order, in the house shape: one JSON object with one "decision" key. The quiet label
+# NOISE comes first, so the CI stub answers {"decision":"NOISE"} on every window. ws
+# admits spaces and tabs only, never a newline, so the longest answer stays inside the
+# n_predict of 8 tokens on every tokenizer in the ladder.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
+decision ::= "\"NOISE\"" | "\"RAMP\"" | "\"STEP\""
+ws       ::= [ \t]*

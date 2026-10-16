@@ -1,0 +1,27 @@
+[Unit]
+Description=edge-llm-pi e17 sampler: the SIM7070G AT dialogue, one status sample a minute
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+
+[Service]
+Type=simple
+# The sampler half of the same binary: four queries a minute through the termios backend,
+# every unsolicited line counted and dropped by the AT parser, one row written per sample
+# in the replay CSV shape. --max-samples 1440 ends the service after one day, which is the
+# acceptance quantity; leave it out for a service that samples until it is stopped.
+# AT+CMNB must have locked the radio access technology before this starts, by hand, as
+# wiring.md records: nothing here configures the modem.
+ExecStart=/usr/bin/edgellm-e17 \
+    --modem /dev/ttyAMA0:115200 \
+    --sample-interval 60 \
+    --query-timeout 2 \
+    --max-samples 1440 \
+    --sample-log /var/lib/edgellm/e17_day.csv
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+SupplementaryGroups=dialout
+Restart=on-failure
+RestartSec=30
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

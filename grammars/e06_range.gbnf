@@ -1,0 +1,12 @@
+# e06_range.gbnf: the three literals of rules_e06.c, letter for letter and in the rule's
+# order, in the house shape, plus one bounded sentence under the key "beam" saying what is
+# probably in front of the sensor. The decision comes first so that the literal is sampled
+# inside the first eight tokens; the sentence is 8 to 120 characters without quotes or
+# backslashes, so the object stays valid JSON, and it ends with a literal full stop so the
+# end-of-generation token is reachable only after one. The stub in CI expands the first
+# alternative of every rule and the character class to nothing, so it answers
+# {"decision":"CLEAR","beam":"."}, which tests/oracle/e06.expected.csv carries in every row.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"beam\"" ws ":" ws beam ws "}"
+decision ::= "\"CLEAR\"" | "\"APPROACHING\"" | "\"TOO_CLOSE\""
+beam     ::= "\"" [A-Za-z0-9 ,%-]{8,120} ".\""
+ws       ::= [ \t]*

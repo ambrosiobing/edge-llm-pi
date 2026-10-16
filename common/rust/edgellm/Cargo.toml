@@ -1,0 +1,29 @@
+# common/rust/edgellm/Cargo.toml: the shared Rust crate of the repository, written for e05
+# and reused by e13, e14 and e18's service. One engine behind two cargo features: "engine"
+# links llama.cpp through the llama-cpp-2 binding into the one executable (catalogue variant
+# R7); "stub", the default and what CI builds, answers from the grammar alone the way
+# common/c/src/edgellm_stub.c does, so the loop, the log and every oracle test run on a host
+# with no model file and no C++ toolchain.
+[package]
+name = "edgellm"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+description = "The decision loop over a grammar-constrained local model, in Rust"
+publish = false
+
+[features]
+default = ["stub"]
+stub = []
+engine = ["dep:llama-cpp-2"]
+
+[dependencies]
+# Pinned on Wednesday 14 October 2026: 0.1.159 is the newest release on crates.io, published
+# Wednesday 7 October 2026, MIT OR Apache-2.0. The binding builds its own copy of llama.cpp
+# through llama-cpp-sys-2 at the same version number; that copy is NOT the C projects'
+# v0.6.0 tag, see common/rust/README.md for the commit and what it means for a tokens per
+# second figure. default-features = false drops the "common" feature (the JSON schema to
+# grammar helper and its libcommon.a) and the OpenMP default; the loop needs neither, and
+# ggml's own thread pool serves the four threads of a Pi.
+llama-cpp-2 = { version = "=0.1.159", optional = true, default-features = false }

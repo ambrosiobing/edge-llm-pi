@@ -1,0 +1,29 @@
+# e19_message.gbnf: one SMS body with the three fields project e19 requires, the event
+# type, the peak value and the time. The skeleton is fixed and the model fills four
+# slots, so the shape the field checker in projects/e19-cellular-alert/src/compose_check.c
+# validates is the shape the grammar guarantees. This is not the house enum shape: the
+# answer is the message itself, not a JSON object, because the message is what may leave
+# the board and a second encoding layer between the model and the modem would be one
+# more place for a field to change.
+#
+# etype carries only the two literals the rule can arm, in the order of the name table
+# in rules_e19.c (TAP then FREEFALL); NONE and TILT never reach a message because the
+# send rule never arms on them. Every character is in the single-septet subset of the
+# GSM 7 bit default alphabet that compose_check.h admits, so the body never forces UCS-2
+# and the 160 character count of a single message holds.
+#
+# Maximum length, which is the arithmetic the chapter publishes: 6 + 8 + 6 + 4 + 8 + 8
+# + 2 + 64 + 1 = 107 characters. The checker's own limit is 160, and the gap is the
+# token budget: n_predict is 64 for one message, and a 107 character body stays inside
+# it on the Qwen2.5 tokenizer.
+#
+# The stub expands the first alternative of every rule and a character class to nothing,
+# so in CI the answer is "ALERT TAP peak . g at t+::. ." and the field checker refuses
+# it for a missing peak value. No message is ever sent in CI, and the oracle file
+# tests/oracle/e19.expected.csv holds that refusal on every armed row.
+root  ::= "ALERT " etype " peak " peak " g at t+" stamp ". " note "."
+etype ::= "TAP" | "FREEFALL"
+peak  ::= dig "." dig dig
+stamp ::= dig dig ":" dig dig ":" dig dig
+note  ::= [A-Za-z0-9 ,.:;!?()/+-]{4,64}
+dig   ::= [0-9]

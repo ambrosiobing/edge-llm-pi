@@ -1,0 +1,26 @@
+[Unit]
+Description=edge-llm-pi e15, the ESP32 sidecar pattern proposal over its replay file
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The serial cable to the ESP32 must exist; the by-id path is read on the board and
+# written here (ls -l /dev/serial/by-id/) before the unit is enabled.
+After=dev-serial-by\x2did-<the-Renkforce-cable>.device
+
+[Service]
+Type=simple
+# The replay run ends by itself. --stub is dropped once python3-llama-cpp-python is in
+# the image (see the recipe); with --stub the log's engine column reads stub.
+ExecStart=/usr/bin/edgellm-e15 --project e15 \
+    --replay /usr/share/edgellm/e15/replay/budgets_200.csv \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e15/grammar.gbnf \
+    --prompt /usr/share/edgellm/e15/prompt.txt \
+    --log /var/lib/edgellm/e15.csv \
+    --threads 4 --n-predict 8 \
+    --serial /dev/serial/by-id/<the-Renkforce-cable>
+StateDirectory=edgellm
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

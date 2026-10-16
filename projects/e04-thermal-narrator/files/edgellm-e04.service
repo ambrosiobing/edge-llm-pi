@@ -1,0 +1,30 @@
+[Unit]
+Description=edge-llm-pi e04, the thermal and throttle narrator over llama-server
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The server must be up before the client: Requires= pulls it in and After= orders the
+# start. Ordering is not readiness; the client's own /health wait covers the seconds
+# the model takes to load.
+Requires=edgellm-llama-server.service
+After=edgellm-llama-server.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/edgellm-e04 --project e04 \
+    --live sysfs /sys/class/thermal/thermal_zone0/temp:60 \
+    --server http://127.0.0.1:8080 \
+    --grammar /usr/share/edgellm/e04/grammar.gbnf \
+    --prompt /usr/share/edgellm/e04/prompt.txt \
+    --log /var/lib/edgellm/e04.csv \
+    --rtt /var/lib/edgellm/e04_rtt.csv \
+    --n-predict 64 --temperature 0.3 --wait-s 120
+StateDirectory=edgellm
+# vcgencmd opens the firmware mailbox /dev/vcio, which the video group owns on
+# Raspberry Pi OS; the service runs unprivileged with that one group added.
+DynamicUser=yes
+SupplementaryGroups=video
+Restart=on-failure
+RestartSec=10
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+[Unit]
+Description=edgellm e14 engine daemon, the model in its own process
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# BindsTo points at the monitor, not the other way round, and the direction is the whole
+# argument of the chapter: this daemon exists only to answer the monitor, so when the
+# monitor stops the engine stops with it and no model sits resident on a 4 GB board for
+# nothing. The monitor only Wants this unit, so a stopped engine never stops the
+# monitoring. The two directions are not symmetric and swapping them would make the
+# model a dependency of a measurement, which the volume's safety rule refuses.
+BindsTo=edgellm-e14.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/edgellm-e14-engine-daemon \
+    --socket /run/edgellm/e14-engine.sock \
+    --grammar /usr/share/edgellm/e14/grammar.gbnf \
+    --prompt /usr/share/edgellm/e14/prompt.txt \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --n-predict 64 --n-ctx 512 --threads 4
+# Stopped with signal 9 the process leaves its socket file behind; the daemon removes a
+# stale socket file at start, so the restart below needs no cleanup unit. RestartSec is
+# 1 s and the model load is what the recovery time of the acceptance test measures.
+Restart=always
+RestartSec=1
+RuntimeDirectory=edgellm
+RuntimeDirectoryPreserve=yes
+# The engine answers one request at a time and needs no privilege at all: no device, no
+# network, no write anywhere but the socket.
+PrivateNetwork=yes
+ProtectSystem=strict
+ProtectHome=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

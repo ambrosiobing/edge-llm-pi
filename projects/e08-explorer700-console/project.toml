@@ -1,0 +1,41 @@
+# projects/e08-explorer700-console/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e08"
+title    = "Explorer700 console with a model"
+language = "C"
+variant  = "O"
+board    = "Raspberry Pi 3 Model B Plus, card eplepi"
+hat      = "JOY-iT RB-Explorer700, the only HAT on this header for the whole sitting"
+model    = "SmolLM2-360M-Instruct-Q4_K_M.gguf"
+grammar  = "grammars/e08_answer.gbnf"
+prompt   = "projects/e08-explorer700-console/prompt.txt"
+rule     = "projects/e08-explorer700-console/src/rules_e08.c"
+binary   = "edgellm-e08-console"
+daemon   = "edgellm-e08-daemon"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]; the
+# bench build adds -DEDGELLM_IO_GPIO=ON for the live half of the console.
+command = "cmake --build build --target edgellm-e08-console edgellm-e08-daemon rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test exists in a stub build
+# and starts the daemon itself on a socket in a temporary directory.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e08-console-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e08-explorer700-console/edgellm-e08-console --project e08 --replay projects/e08-explorer700-console/replay/console_120.csv --grammar projects/e08-explorer700-console/grammar.gbnf --prompt projects/e08-explorer700-console/prompt.txt --daemon build/projects/e08-explorer700-console/edgellm-e08-daemon --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e08-explorer700-console/evidence/e08_replay.csv"
+stub   = "build/projects/e08-explorer700-console/edgellm-e08-console --project e08 --replay projects/e08-explorer700-console/replay/console_120.csv --grammar projects/e08-explorer700-console/grammar.gbnf --prompt projects/e08-explorer700-console/prompt.txt --daemon build/projects/e08-explorer700-console/edgellm-e08-daemon --log /tmp/e08_stub.csv --stub"
+live   = "build/projects/e08-explorer700-console/edgellm-e08-console --project e08 --live --grammar projects/e08-explorer700-console/grammar.gbnf --prompt projects/e08-explorer700-console/prompt.txt --socket /run/edgellm/e08.sock --log projects/e08-explorer700-console/evidence/e08_live.csv"
+
+[daemon]
+# Under systemd the daemon is its own unit with Restart=on-failure and RestartSec=1; the
+# console connects to its socket and survives it being stopped with signal 9.
+service = "build/projects/e08-explorer700-console/edgellm-e08-daemon --socket /run/edgellm/e08.sock --grammar projects/e08-explorer700-console/grammar.gbnf --prompt projects/e08-explorer700-console/prompt.txt --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --threads 4 --n-predict 64 --temperature 0.3"
+units   = "projects/e08-explorer700-console/files/edgellm-e08-daemon.service projects/e08-explorer700-console/files/edgellm-e08-console.service"
+
+[oracle]
+expected = "tests/oracle/e08.expected.csv"
+compare  = "build/tests/oracle_check /tmp/e08_stub.csv tests/oracle/e08.expected.csv"
+# The answer check is the acceptance instrument: every answer must carry the reading the
+# question asked for within 1 percent of the sysfs value the console logged with it.
+check    = "python projects/e08-explorer700-console/tools/answer_check.py projects/e08-explorer700-console/evidence/e08_live.csv"
+table    = "python tools/agreement.py projects/e08-explorer700-console/evidence/e08_live.csv --md"

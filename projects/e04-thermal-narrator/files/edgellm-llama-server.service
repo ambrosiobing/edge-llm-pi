@@ -1,0 +1,22 @@
+[Unit]
+Description=edge-llm-pi llama-server for e04, SmolLM2-360M on 127.0.0.1:8080
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+After=local-fs.target
+
+[Service]
+Type=simple
+# Loopback only: nothing off the board may reach the engine. -c 512 is the context of
+# every decision loop in the volume, -t 4 the Pi 4B thread count of e01's table. The
+# grammar is not a server setting; the client sends it with every request.
+ExecStart=/usr/bin/llama-server \
+    -m /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --host 127.0.0.1 --port 8080 -c 512 -t 4
+# The model loads in seconds; the client waits on /health, so no readiness protocol is
+# needed here. A server that dies is restarted and loses nothing: the client holds the
+# state, which is one CSV row per minute.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+# e15_pattern.gbnf: the four literals of edgellm_e15/rules.py, letter for letter, in the
+# house shape: one JSON object with one "decision" key. PATTERN_A (steady) is first, so
+# the stub answers {"decision":"PATTERN_A"} in CI. ws admits spaces and tabs only, never
+# a newline, so the longest answer stays inside the n_predict of 8 tokens on the Qwen
+# tokenizer; PATTERN_D is the longest literal and is counted in the chapter's pitfalls.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
+decision ::= "\"PATTERN_A\"" | "\"PATTERN_B\"" | "\"PATTERN_C\"" | "\"PATTERN_D\""
+ws       ::= [ \t]*

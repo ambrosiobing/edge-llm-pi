@@ -1,0 +1,34 @@
+# edgellm-image for the Raspberry Pi 3 Model B Plus (1 GB). Same 64-bit machine as
+# the Pi 3 Model B in meta-raspberrypi (raspberrypi3-64), which is what the bench's
+# kas/bench-rpi3.yml selects; the two files here differ only in the default model
+# list and exist so that a card is labelled by the board it was built for.
+#
+#   cd ~/bench/edge-llm-pi        (skyhorizon, WSL)
+#   kas build meta-edgellm/kas/edgellm-pi3bp.yml
+header:
+  version: 14
+  includes:
+    - repo: bench
+      file: kas/bench-rpi3.yml
+
+repos:
+  edgellm:
+    layers:
+      meta-edgellm:
+
+  bench:
+    url: https://github.com/ambrosiobing/embedded-linux.git
+    branch: main
+    layers:
+      meta-bench:
+
+target: edgellm-image
+
+local_conf_header:
+  edgellm: |
+    # 1 GB board: the 360M model is the default rung; the 0.5B one is the upper rung
+    # and is added only when e01's MemAvailable reading admits it under the 60
+    # percent rule.
+    EDGELLM_MODELS = "model-smollm2-360m"
+    EDGELLM_APPS = "edgellm-e02"
+    RM_WORK_EXCLUDE += "llama-cpp"

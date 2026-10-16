@@ -1,0 +1,32 @@
+[Unit]
+Description=edge-llm-pi e11, the Nucleo CDC sensor hub narrator over the live USB CDC link
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The udev rule in this package names the hub's ST-LINK virtual COM port /dev/edgellm-hub
+# and tags it for systemd, so the service follows the device: it starts when the Nucleo
+# is plugged and stops when it is unplugged. On Raspberry Pi OS the same run uses the
+# /dev/serial/by-id name by hand, see projects/e11-nucleo-hub-narrator/wiring.md.
+BindsTo=dev-edgellm\x2dhub.device
+After=dev-edgellm\x2dhub.device
+
+[Service]
+Type=simple
+# --live cdc is handled by the project's own main(): the frame layer decodes the hub's
+# CBOR frames and feeds the shared loop. --n-predict 64 because the answer carries one
+# line beside the enum. A sequence gap on the wire ends the run with exit status 3, which
+# Restart=on-failure turns into a fresh run and the journal keeps the gap line.
+ExecStart=/usr/bin/edgellm-e11 --project e11 \
+    --live cdc /dev/edgellm-hub:921600 \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e11/grammar.gbnf \
+    --prompt /usr/share/edgellm/e11/prompt.txt \
+    --log /var/lib/edgellm/e11.csv \
+    --threads 4 --n-predict 64 --state /run/edgellm/e11.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+SupplementaryGroups=dialout
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

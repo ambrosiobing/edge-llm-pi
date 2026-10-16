@@ -1,0 +1,32 @@
+# projects/e05-adxl345-events/Cargo.toml: project e05 as one binary over the shared crate.
+# `cargo test` (the default feature, stub) runs the rule's unit tests and the oracle test on
+# any host with no model file and no C++ toolchain, which is what CI does. The bench build
+# is `cargo build --release --no-default-features --features engine`, which compiles
+# llama.cpp inside the llama-cpp-2 binding and links it into this one executable.
+[package]
+name = "edgellm-e05"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+description = "e05, the ADXL345 event reporter: one executable over the shared edgellm crate"
+publish = false
+
+[[bin]]
+name = "edgellm-e05"
+path = "src/main.rs"
+
+[features]
+default = ["stub"]
+stub = ["edgellm/stub"]
+engine = ["edgellm/engine"]
+
+[dependencies]
+edgellm = { path = "../../common/rust/edgellm", default-features = false }
+
+[profile.release]
+# One binary with the engine inside: symbols stripped and link-time optimisation across the
+# crate boundary, so that the size the chapter reports is the size of the deployable.
+strip = true
+lto = true
+codegen-units = 1

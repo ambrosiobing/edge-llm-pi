@@ -1,0 +1,11 @@
+# e04_thermal.gbnf: the three literals of rules_e04.c, letter for letter, in the house
+# shape extended by one key: the "decision" key keeps the house name so that
+# tools/agreement.py reads it unchanged, and the "summary" key holds one sentence of
+# 10 to 160 characters that ends in a full stop, so the end-of-generation token is
+# reachable only after a complete sentence. The class admits no quote, no brace and no
+# newline, so the object always closes and the log's CSV quoting stays simple. ws
+# admits spaces and tabs only, never a newline.
+root ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"summary\"" ws ":" ws summary ws "}"
+decision ::= "\"COOL\"" | "\"WARM\"" | "\"THROTTLED\""
+summary ::= "\"" [A-Za-z0-9 ,.%]{9,159} "." "\""
+ws ::= [ \t]*

@@ -1,0 +1,27 @@
+[Unit]
+Description=edge-llm-pi e07, the IKS4A1 climate and motion narrator
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The six IIO devices appear after the overlay's drivers probe; sysfs is populated by
+# then, and the binary itself refuses to start if a device name is missing.
+After=sysinit.target systemd-modules-load.service
+
+[Service]
+Type=simple
+# One sensor read every 60 s, the model every 60 events, 1440 events and then exit:
+# one 24 hour day per start, with the log flushed per row.
+ExecStart=/usr/bin/edgellm-e07 --project e07 \
+    --live iio /sys/bus/iio/devices --interval 60 --every 60 --max-events 1440 \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e07/grammar.gbnf \
+    --prompt /usr/share/edgellm/e07/prompt.txt \
+    --log /var/lib/edgellm/e07.csv \
+    --threads 4 --n-predict 64 --temperature 0.3 --state /run/edgellm/e07.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A model that dies is restarted; the log is flushed per row so nothing is lost.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

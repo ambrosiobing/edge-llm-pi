@@ -1,0 +1,24 @@
+[Unit]
+Description=edge-llm-pi e02, the decision loop over its replay file
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+
+[Service]
+Type=simple
+# The replay run ends by itself; a live project (e03 onwards) replaces --replay with
+# --live <backend> <spec> and adds After= for the device its overlay creates.
+ExecStart=/usr/bin/edgellm-e02 --project e02 \
+    --replay /usr/share/edgellm/e02/replay/synthetic_1000.csv \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e02/grammar.gbnf \
+    --prompt /usr/share/edgellm/e02/prompt.txt \
+    --log /var/lib/edgellm/e02.csv \
+    --threads 4 --n-predict 8 --state /run/edgellm/e02.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A model that dies is restarted; the log is flushed per row so nothing is lost.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

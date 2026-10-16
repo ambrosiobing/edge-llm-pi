@@ -1,0 +1,17 @@
+# e17_status.gbnf: the three literals of rules_e17.c, letter for letter, and the three
+# sentence field report beside them. The key is named "state" and not the house name
+# "decision" on purpose, because the state of a modem is what the chapter calls it;
+# the cost is that tools/agreement.py, which reads a "decision" key, does not apply to
+# this project and projects/e17-cellular-summariser/tools/hallucination_check.py reads
+# the "state" key instead and prints the agreement table itself. The report is 40 to
+# 400 characters from letters, digits, space, comma, full stop, percent, plus and
+# minus, so it can carry neither a quote nor a brace nor a newline, and it ends with a
+# full stop, so the end of generation token is reachable only after a complete
+# sentence. The stub expands the first alternative on every path and a character class
+# to nothing, so in CI the answer is {"state":"OK","report":"."}, which
+# tests/oracle/e17.expected.csv expects on every model answered row. ws admits spaces
+# and tabs, never a newline.
+root   ::= "{" ws "\"state\"" ws ":" ws state ws "," ws "\"report\"" ws ":" ws report ws "}"
+state  ::= "\"OK\"" | "\"DEGRADED\"" | "\"DOWN\""
+report ::= "\"" [A-Za-z0-9 ,.%+-]{39,399} "." "\""
+ws     ::= [ \t]*

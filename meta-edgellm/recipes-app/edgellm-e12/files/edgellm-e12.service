@@ -1,0 +1,30 @@
+[Unit]
+Description=edge-llm-pi e12, the STWIN.box vibration band reporter on the CDC port
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The probe's CDC-ACM node; a by-id name is preferred once it has been read on the
+# bench (ls /dev/serial/by-id) and is to verify.
+After=dev-ttyACM0.device
+BindsTo=dev-ttyACM0.device
+
+[Service]
+Type=simple
+# 100 windows per run: 50 baseline on the resting mounting, then 50 with the excitation.
+# The run ends by itself and is restarted only on failure.
+ExecStart=/usr/bin/edgellm-e12 --project e12 \
+    --live serial /dev/ttyACM0:921600 \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e12/grammar.gbnf \
+    --prompt /usr/share/edgellm/e12/prompt.txt \
+    --log /var/lib/edgellm/e12.csv \
+    --threads 4 --n-predict 96 --baseline-windows 50 --max-events 100 \
+    --state /run/edgellm/e12.state
+StandardOutput=tty
+TTYPath=/dev/tty1
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+# e08_answer.gbnf: one sentence of about twenty words for the Explorer700 OLED, in the
+# house shape for a sentence: one JSON object with one "answer" key. The value is 20 to
+# 160 characters from a class that admits letters, digits, space, comma, full stop,
+# colon, percent, plus and minus, and it ends with a literal full stop, so the end of
+# generation is reachable only after a complete sentence. No newline and no quote can
+# be sampled, so the reply fits one line of the socket protocol and one CSV cell. The
+# stub expands the class to nothing and answers {"answer":"."}, which the oracle file
+# expects in every row of a CI run.
+root   ::= "{" ws "\"answer\"" ws ":" ws "\"" answer "\"" ws "}"
+answer ::= [A-Za-z0-9 ,.:%+-]{19,159} "."
+ws     ::= [ \t]*

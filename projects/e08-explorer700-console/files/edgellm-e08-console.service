@@ -1,0 +1,25 @@
+[Unit]
+Description=edge-llm-pi e08, the Explorer700 console
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# Wants= and After=, not BindsTo=. The console must outlive the daemon: with BindsTo=
+# and After= together, systemd stops this unit whenever the daemon is not active, and
+# a daemon in its one-second auto-restart is not active, so the console would be
+# stopped by the very event it is meant to survive and the recovery figure, taken by
+# the console's own clock, could never be measured. Wants= starts the daemon with the
+# console and leaves the console running while the daemon is away.
+Wants=edgellm-e08-daemon.service
+After=edgellm-e08-daemon.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/edgellm-e08-console --project e08 --live \
+    --socket /run/edgellm/e08.sock \
+    --grammar /usr/share/edgellm/e08/grammar.gbnf \
+    --prompt /usr/share/edgellm/e08/prompt.txt \
+    --log /var/lib/edgellm/e08.csv
+StateDirectory=edgellm
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

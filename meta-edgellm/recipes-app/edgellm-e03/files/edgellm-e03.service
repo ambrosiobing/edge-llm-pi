@@ -1,0 +1,30 @@
+[Unit]
+Description=edge-llm-pi e03, the LED status explainer: three modules on BCM 17, 27, 22
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+
+[Service]
+Type=simple
+# The events are the replayed state stream (modelled, see the chapter); the LEDs are the
+# live part and are opened by --leds with the gpio spec /dev/gpiochip0:17,27,22, index
+# 0 green, 1 yellow, 2 red. --live gpio would make the line read-backs the event stream,
+# which is why the project carries its own option. No overlay: gpiochip0 exists at boot.
+# --interval 10 keeps each colour visible for ten seconds; the acceptance run drops it.
+ExecStart=/usr/bin/edgellm-e03 --project e03 \
+    --replay /usr/share/edgellm/e03/replay/state_200.csv \
+    --leds /dev/gpiochip0:17,27,22 \
+    --model /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --grammar /usr/share/edgellm/e03/grammar.gbnf \
+    --prompt /usr/share/edgellm/e03/prompt.txt \
+    --log /var/lib/edgellm/e03.csv \
+    --threads 4 --n-predict 64 --temperature 0.3 --interval 10 \
+    --state /run/edgellm/e03.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A model that dies is restarted; the log is flushed per row so nothing is lost, and
+# the lines are driven low on every exit so no LED stays lit between runs.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

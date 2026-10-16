@@ -1,0 +1,38 @@
+# projects/e15-esp32-sidecar/pyproject.toml: the e15 project, Python, on the shared
+# package common/python/edgellm. A PEP 508 dependency cannot name a relative path, so
+# the shared package is installed by its own command first and the project second:
+#
+#     python -m pip install -e common/python/edgellm
+#     python -m pip install -e projects/e15-esp32-sidecar
+#     python -m pytest projects/e15-esp32-sidecar
+#
+# tests/conftest.py puts the shared package on the path when it is not installed, so
+# CI's single "pip install -e <project>" followed by pytest passes either way. The
+# engine is the "engine" extra of the shared package; the PPK2 harness needs ppk2-api,
+# pinned in requirements.txt at the repository root, and nothing else here does.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgellm-e15"
+version = "0.1.0"
+description = "e15, the ESP32 sidecar with a bounded pattern proposal"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "pyserial==3.5",
+]
+
+[project.optional-dependencies]
+bench = ["ppk2-api==0.9.2", "llama-cpp-python==0.3.36"]
+test = ["pytest==9.1.1"]
+
+[project.scripts]
+edgellm-e15 = "edgellm_e15.main:main"
+
+[tool.setuptools]
+packages = ["edgellm_e15"]
+
+[tool.edgellm]
+shared = "../../common/python/edgellm"

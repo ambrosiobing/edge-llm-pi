@@ -1,0 +1,30 @@
+[Unit]
+Description=edge-llm-pi e16, the NB-IoT sleep interval from a measured current profile
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The port the AT bring-up of wiring.md uses, when the operator runs it by hand. The
+# loop below does not open it: the scenarios are replayed and the decision is offline.
+After=dev-ttyAMA0.device
+
+[Service]
+Type=simple
+# The scenario file holds one row per profile summary, battery target and granted PSM
+# window; the run ends by itself. --n-predict 64 and --temperature 0.3 are the sentence
+# settings. Note that edgellm.c builds ONE sampler chain for the whole answer, so a
+# temperature above zero samples the interval literal too, not only the sentence; the
+# grammar still admits nothing but the four literals, so a sampled answer is always one
+# of them, and the rule bounds it afterwards in any case. Corrected Wednesday 14 October
+# 2026: this comment previously claimed the enum stayed greedy, which the code does not do.
+ExecStart=/usr/bin/edgellm-e16 --project e16 \
+    --replay /usr/share/edgellm/e16/replay/profiles_100.csv \
+    --model /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --grammar /usr/share/edgellm/e16/grammar.gbnf \
+    --prompt /usr/share/edgellm/e16/prompt.txt \
+    --log /var/lib/edgellm/e16.csv \
+    --threads 4 --n-predict 64 --temperature 0.3 --state /run/edgellm/e16.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+SupplementaryGroups=dialout
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

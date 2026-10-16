@@ -1,0 +1,22 @@
+# e20_next.gbnf: the ranked next three measurements, as a JSON array of exactly three
+# objects in rank order. "project" is one of the twenty identifiers of the volume, in
+# the same order as the name table of the ranking rule in
+# projects/e20-scorecard/edgellm_e20/rank.py, so the log's rule column and its model
+# column are compared letter for letter. "reason" is 20 to 200 characters of letters,
+# digits, space, comma, full stop and round brackets: it can carry neither a quote nor
+# a brace nor a newline, so every object closes and the log's CSV quoting stays simple.
+# The array is fixed at three items because the rule returns three and the acceptance
+# test compares the first of each. The stub expands the first alternative on every path
+# and a character class to nothing, so in CI the answer is e01 three times with an
+# empty reason, which tests/oracle/e20.expected.csv expects on every row. ws admits
+# spaces and tabs only, never a newline, which is why 192 generated tokens are enough
+# for the longest answer this grammar allows.
+root    ::= "[" ws item ws "," ws item ws "," ws item ws "]"
+item    ::= "{" ws "\"project\"" ws ":" ws project ws "," ws "\"reason\"" ws ":" ws
+            reason ws "}"
+project ::= "\"e01\"" | "\"e02\"" | "\"e03\"" | "\"e04\"" | "\"e05\"" | "\"e06\"" |
+            "\"e07\"" | "\"e08\"" | "\"e09\"" | "\"e10\"" | "\"e11\"" | "\"e12\"" |
+            "\"e13\"" | "\"e14\"" | "\"e15\"" | "\"e16\"" | "\"e17\"" | "\"e18\"" |
+            "\"e19\"" | "\"e20\""
+reason  ::= "\"" [A-Za-z0-9 ,.()]{20,200} "\""
+ws      ::= [ \t]*

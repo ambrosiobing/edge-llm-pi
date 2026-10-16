@@ -1,0 +1,36 @@
+# edgellm-image for the Raspberry Pi 3 Model B Rev 1.2 (1 GB), the board that carries
+# the LEDs, the ADXL345 and the VL53L4CD (e03, e05, e06) or the 3.5 inch LCD (e09).
+# Machine raspberrypi3-64 through the bench's kas/bench-rpi3.yml.
+#
+#   cd ~/bench/edge-llm-pi        (skyhorizon, WSL)
+#   kas build meta-edgellm/kas/edgellm-pi3.yml
+header:
+  version: 14
+  includes:
+    - repo: bench
+      file: kas/bench-rpi3.yml
+
+repos:
+  edgellm:
+    layers:
+      meta-edgellm:
+
+  bench:
+    url: https://github.com/ambrosiobing/embedded-linux.git
+    branch: main
+    layers:
+      meta-bench:
+
+target: edgellm-image
+
+local_conf_header:
+  edgellm: |
+    EDGELLM_MODELS = "model-smollm2-360m"
+    EDGELLM_APPS = "edgellm-e02"
+    RM_WORK_EXCLUDE += "llama-cpp"
+
+    # The I2C projects on this board run the bus at 100 kHz (the measurement of
+    # Friday 9 October 2026, recorded in the bench's kas/bench-adxl345.yml); the
+    # project kas file that includes this one sets the overlay and baud rate line
+    # with :forcevariable, as that file explains.
+    ENABLE_I2C = "1"

@@ -1,0 +1,42 @@
+# projects/e11-nucleo-hub-narrator/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e11"
+title    = "Nucleo CDC sensor hub narrator"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 4 Model B, card eplepi; NUCLEO-H7A3ZI-Q with the X-NUCLEO-IKS5A1 over USB CDC"
+hat      = "none"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e11_impact.gbnf"
+prompt   = "projects/e11-nucleo-hub-narrator/prompt.txt"
+rule     = "projects/e11-nucleo-hub-narrator/src/rules_e11.c"
+binary   = "edgellm-e11"
+# The decoder dependency: tinycbor (MIT), through pkg-config (Debian trixie package
+# libtinycbor-dev, 0.6.1), or compiled from a source checkout at tag v0.6.1 named by
+# -DEDGELLM_E11_TINYCBOR_SRC=<path>; see CMakeLists.txt.
+depends  = "tinycbor"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON].
+command = "cmake --build build --target edgellm-e11 rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e11-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --replay projects/e11-nucleo-hub-narrator/replay/hub_60s.csv --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_replay.csv"
+stub   = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --replay projects/e11-nucleo-hub-narrator/replay/hub_60s.csv --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --n-predict 64 --log /tmp/e11_stub.csv --stub"
+# The frame layer owns the port; the by-id name is read from ls -l /dev/serial/by-id on the Pi.
+live   = "build/projects/e11-nucleo-hub-narrator/edgellm-e11 --project e11 --live cdc /dev/serial/by-id/usb-STMicroelectronics_STLINK-V3_<serial>-if02:921600 --grammar projects/e11-nucleo-hub-narrator/grammar.gbnf --prompt projects/e11-nucleo-hub-narrator/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --state /tmp/e11.state --log projects/e11-nucleo-hub-narrator/evidence/e11_run.csv"
+
+[oracle]
+expected = "tests/oracle/e11.expected.csv"
+compare  = "build/tests/oracle_check projects/e11-nucleo-hub-narrator/evidence/e11_replay.csv tests/oracle/e11.expected.csv"
+table    = "python tools/agreement.py projects/e11-nucleo-hub-narrator/evidence/e11_run.csv --md"
+
+[acceptance]
+# Three numbers from one live run: the agreement table over at least 100 hand impacts on
+# foam, the sequence gap count printed at exit (must be 0; a gap makes the exit status 3),
+# and the frame rate from the hub's timestamps printed beside it (104 Hz within 1 percent).
+events   = "100 hand impacts on foam, logged by the live run"
+gaps     = "exit status 0 and the line 'e11: N frames, 0 sequence gaps' on stderr"
+rate     = "the Hz figure on the same line, 103 to 105"

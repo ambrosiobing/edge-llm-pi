@@ -1,0 +1,12 @@
+# e03_colour.gbnf: the colour the rule lit, as the three literals of rules_e03.c letter
+# for letter, and one bounded reason. The reason is 10 to 120 characters from letters,
+# digits, space, comma and full stop, so it cannot carry a quote, a brace or a newline;
+# the object closes only after it. The stub expands the first alternative on every
+# path and a character class to nothing, so in CI the answer is
+# {"colour":"GREEN","reason":""}, which the oracle file expects on every row. The reason
+# is scored by projects/e03-led-explainer/tools/reason_check.py: it must name the field
+# the rule triggered on, level or slope. ws admits spaces and tabs, never a newline.
+root   ::= "{" ws "\"colour\"" ws ":" ws colour ws "," ws "\"reason\"" ws ":" ws reason ws "}"
+colour ::= "\"GREEN\"" | "\"YELLOW\"" | "\"RED\""
+reason ::= "\"" [a-zA-Z0-9 ,.]{10,120} "\""
+ws     ::= [ \t]*

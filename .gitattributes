@@ -1,0 +1,7 @@
+# LF everywhere, whatever the laptop: the sources are authored on Windows and built on
+# Linux, and a CRLF in a shell hook or a kas file is a failure that names nothing.
+* text=auto eol=lf
+*.sh text eol=lf
+.githooks/* text eol=lf
+*.gguf binary
+*.png binary

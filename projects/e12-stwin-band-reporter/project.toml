@@ -1,0 +1,32 @@
+# projects/e12-stwin-band-reporter/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e12"
+title    = "STWIN.box vibration band reporter"
+language = "C++"
+variant  = "A"
+board    = "Raspberry Pi 4 Model B, card eplepi, STWIN.box over USB-C, DSI 7 inch panel"
+hat      = "none"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf (qwen2.5-1.5b-instruct-q4_k_m.gguf if e01 reads 4 GB)"
+grammar  = "grammars/e12_band.gbnf"
+prompt   = "projects/e12-stwin-band-reporter/prompt.txt"
+rule     = "projects/e12-stwin-band-reporter/src/rules_e12.c"
+binary   = "edgellm-e12"
+fft      = "pocketfft, BSD 3-clause, third_party/pocketfft (cpp branch); radix-2 fallback in src/bands.cpp"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The bench
+# build adds -DEDGELLM_IO_SERIAL=ON for the CDC port.
+command = "cmake --build build --target edgellm-e12 e12_bands_test rules_test oracle_check"
+# The six rule cases, the synthetic tone test on the bands, and the oracle over the band replay.
+test    = "ctest --test-dir build -R 'rules_test|e12_bands_test|edgellm-e12-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e12-stwin-band-reporter/edgellm-e12 --project e12 --replay projects/e12-stwin-band-reporter/replay/band_windows.csv --grammar projects/e12-stwin-band-reporter/grammar.gbnf --prompt projects/e12-stwin-band-reporter/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e12.state --n-predict 96 --log projects/e12-stwin-band-reporter/evidence/e12_replay.csv"
+stub   = "build/projects/e12-stwin-band-reporter/edgellm-e12 --project e12 --replay projects/e12-stwin-band-reporter/replay/band_windows.csv --grammar projects/e12-stwin-band-reporter/grammar.gbnf --prompt projects/e12-stwin-band-reporter/prompt.txt --log /tmp/e12_stub.csv --stub"
+live   = "build/projects/e12-stwin-band-reporter/edgellm-e12 --project e12 --live serial /dev/ttyACM0:921600 --grammar projects/e12-stwin-band-reporter/grammar.gbnf --prompt projects/e12-stwin-band-reporter/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e12.state --n-predict 96 --baseline-windows 50 --max-events 100 --log projects/e12-stwin-band-reporter/evidence/e12_run.csv"
+frames = "build/projects/e12-stwin-band-reporter/edgellm-e12 --project e12 --frames projects/e12-stwin-band-reporter/evidence/capture.txt --grammar projects/e12-stwin-band-reporter/grammar.gbnf --prompt projects/e12-stwin-band-reporter/prompt.txt --log /tmp/e12_frames.csv --stub"
+
+[oracle]
+expected = "tests/oracle/e12.expected.csv"
+compare  = "build/tests/oracle_check /tmp/e12_stub.csv tests/oracle/e12.expected.csv"
+table    = "python tools/agreement.py projects/e12-stwin-band-reporter/evidence/e12_run.csv --md"

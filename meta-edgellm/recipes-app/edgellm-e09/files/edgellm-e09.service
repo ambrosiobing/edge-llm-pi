@@ -1,0 +1,33 @@
+[Unit]
+Description=edge-llm-pi e09, the LCD prompt and verdict display on the ADXL345
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The panel's card and the touch node come from the bench-lcd35a overlay and the sensor
+# from i2c-sensor,adxl345; udev has to have settled before the loop looks for them.
+After=systemd-udev-settle.service
+Wants=systemd-udev-settle.service
+
+[Service]
+Type=simple
+# The console is released from the panel first, or fbcon repaints over the frames
+# whenever the kernel prints; the vtcon number is the frame buffer console's and the
+# leading dash keeps a board without one from failing the unit.
+ExecStartPre=-/bin/sh -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
+ExecStart=/usr/bin/edgellm-e09 --project e09 \
+    --live iio /sys/bus/iio/devices/iio:device0:0.1 --g-per-unit 0.1019716 \
+    --leds /dev/gpiochip0:4,27,22 \
+    --model /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --grammar /usr/share/edgellm/e09/grammar.gbnf \
+    --prompt /usr/share/edgellm/e09/prompt.txt \
+    --log /var/lib/edgellm/e09.csv \
+    --panel-log /var/lib/edgellm/e09_panel.csv \
+    --threads 4 --n-predict 8 --state /run/edgellm/e09.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A loop that stops on a missing device or a dead model is restarted; the logs are
+# flushed per row so nothing is lost.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

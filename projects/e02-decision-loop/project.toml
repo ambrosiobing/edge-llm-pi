@@ -1,0 +1,36 @@
+# projects/e02-decision-loop/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e02"
+title    = "The decision loop: grammar, state reuse, control harness"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 4 Model B, card eplepi"
+hat      = "none"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e02_decision.gbnf"
+prompt   = "projects/e02-decision-loop/prompt.txt"
+rule     = "projects/e02-decision-loop/src/rules_e02.c"
+binary   = "edgellm-e02"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON].
+command = "cmake --build build --target edgellm-e02 rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e02-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e02-decision-loop/edgellm-e02 --project e02 --replay projects/e02-decision-loop/replay/synthetic_1000.csv --grammar projects/e02-decision-loop/grammar.gbnf --prompt projects/e02-decision-loop/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e02.state --log projects/e02-decision-loop/evidence/e02_run.csv"
+stub   = "build/projects/e02-decision-loop/edgellm-e02 --project e02 --replay projects/e02-decision-loop/replay/synthetic_1000.csv --grammar projects/e02-decision-loop/grammar.gbnf --prompt projects/e02-decision-loop/prompt.txt --log /tmp/e02_stub.csv --stub"
+live   = "not applicable: e02 has no live source; the same loop goes live from e03 on"
+
+[oracle]
+expected = "tests/oracle/e02.expected.csv"
+compare  = "build/tests/oracle_check projects/e02-decision-loop/evidence/e02_run.csv tests/oracle/e02.expected.csv"
+table    = "python tools/agreement.py projects/e02-decision-loop/evidence/e02_run.csv --md"
+
+[comparison]
+# The two alternative loops, priced beside the C baseline once; never in CI. Run from the
+# project folder so grammar.gbnf and prompt.txt resolve.
+variant_a      = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv"
+variant_a_cold = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv --cold"
+variant_b      = "../../build/projects/e02-decision-loop/e02_variant_b --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv"

@@ -1,0 +1,58 @@
+# The device service of project e18, the Rust half. The C half is configured on its
+# own from ../c; nothing in this manifest builds it, which is the point.
+#
+# ONE OPEN DEPENDENCY, stated plainly rather than worked around. The shared crate
+# common/rust/edgellm is the e05 author's and is not in the tree yet
+# (common/rust/README.md says so). This service needs four of its modules, io, rules,
+# elog and template, and NOT its engine module, because the engine of e18 lives in the
+# C daemon. The interface it expects from each of the four is written out at the top of
+# src/main.rs, so that the crate can be written against a stated contract rather than
+# guessed at. Until it exists, cargo cannot resolve this manifest and the chapter says
+# so in its pitfalls; registers.rs and rules.rs carry their own tests and depend on
+# nothing but the standard library.
+[package]
+name = "edgellm-e18"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+license = "MIT"
+description = "e18, a mini industrial serial logger: a Rust device service over a C ABI"
+repository = "https://github.com/ambrosiobing/edge-llm-pi"
+publish = false
+
+[[bin]]
+name = "edgellm-e18"
+path = "src/main.rs"
+
+[dependencies]
+# default-features = false so that the crate's engine module, which links
+# llama-cpp-2, is never compiled here: this project's engine is the C daemon, and
+# linking a second copy of the engine into the service would defeat the boundary the
+# chapter is about.
+edgellm = { path = "../../../common/rust/edgellm", default-features = false, features = [
+    "io",
+    "rules",
+    "elog",
+    "template",
+] }
+
+[features]
+# Off by default. The FFI backend links libedgellm_abi.so, which means the C half must
+# be built first and the linker must be given its path, neither of which CI has:
+#
+#     cmake -S ../c -B ../../../build-e18c -DEDGELLM_STUB_MODEL=ON
+#     cmake --build ../../../build-e18c
+#     RUSTFLAGS="-L ../../../build-e18c" cargo test --features ffi
+#
+# With the feature off the service still reaches the same four functions over the
+# daemon's Unix domain socket, and the Rust stub of src/abi.rs runs the whole loop
+# with no C at all, which is what the oracle test uses.
+default = []
+ffi = []
+
+[profile.release]
+# A logger that runs for weeks: the smaller binary and the aborting panic are both
+# easier to reason about in a unit than a backtrace nobody will read.
+opt-level = 2
+panic = "abort"
+strip = true

@@ -1,0 +1,23 @@
+| # | Project | Owns |
+|---|---|---|
+| 1 | [Bring-up and the honest tokens per second table](chapters/01-bring-up-and-the-honest-tokens-per-second.md) | the price list: tokens per second per board, model and thread count, with its instrument named |
+| 2 | [The decision loop: grammar, state reuse, control harness](chapters/02-the-decision-loop.md) | the reference loop every later chapter instances: one model, one grammar, one saved prompt state, one rule, one log |
+| 3 | [LED status explainer](chapters/03-led-status-explainer.md) | the first real output of the volume: a line lit by the rule, and the sentence the model writes about it |
+| 4 | [Pi thermal and throttle narrator](chapters/04-pi-thermal-and-throttle-narrator.md) | the HTTP integration: one engine process behind llama-server, one client process with the loop, and the price of the wire between them |
+| 5 | [ADXL345 event reporter](chapters/05-adxl345-event-reporter.md) | the first Rust project and the shared Rust crate: one executable with the engine inside, an IIO source, and the price of that binary beside e03's C one |
+| 6 | [VL53L4CD "too close" explainer](chapters/06-vl53l4cd-too-close-explainer.md) | the first video's subject: a two-line rule on a distance, a model that proposes the same enum and one sentence, and the table of where they differ |
+| 7 | [IKS4A1 climate and motion narrator](chapters/07-iks4a1-climate-and-motion-narrator.md) | a day of six sensors read through sysfs every minute, the pressure trend by rule, one three-sentence summary an hour by the model, and the count of numbers the model made up |
+| 8 | [Explorer700 console with a model](chapters/08-explorer700-console-with-a-model.md) | the two-process form: a console that owns the HAT and a daemon that owns the model, joined by a Unix domain socket, and the recovery time that join buys |
+| 9 | [LCD prompt and verdict display](chapters/09-lcd-prompt-and-verdict-display.md) | the on-camera instrument of the channel's first video: the prompt, the model's answer and the rule's verdict as three panes on the glass, with the frame time measured |
+| 10 | [MCC 118 voltage event labeller](chapters/10-mcc-118-voltage-event-labeller.md) | the only calibrated analog path in the volume: a 100 kS/s window labelled by a band and a slope test, and the same label proposed by the model |
+| 11 | [Nucleo CDC sensor hub narrator](chapters/11-nucleo-cdc-sensor-hub-narrator.md) | the frame boundary: a microcontroller's framed CBOR stream decoded on the Pi, a rule per frame, and the model's incident line when something hits |
+| 12 | [STWIN.box vibration band reporter](chapters/12-stwin-box-vibration-band-reporter.md) | the only 6 kHz vibration path on the bench, windowed and banded in C++, with a rule on one band's share and a model that writes the two-sentence report |
+| 13 | [CAN honesty agent](chapters/13-can-honesty-agent.md) | the volume's honesty rule as a measured quantity: per node, PRESENT, MODELLED or ABSENT, with the model's verdict beside the rule's |
+| 14 | [Joint monitor: CAN plus accelerometer](chapters/14-joint-monitor.md) | the price of a process boundary: the same service as \ref{sec:e13} with the model moved out of process, measured on the same bus |
+| 15 | [ESP32 sidecar with a bounded pattern proposal](chapters/15-esp32-sidecar-with-a-bounded-pattern-proposal.md) | the one project where the model's proposal is priced in measured milliamps, and the one loop written in Python that e20 reuses |
+| 16 | [NB-IoT sleep interval from measured microamps](chapters/16-nb-iot-sleep-interval-from-measured-microamps.md) | the energy decision taken offline on a logged current profile, and the correction that the instrument cannot meter a Raspberry Pi |
+| 17 | [Cellular status summariser](chapters/17-cellular-status-summariser.md) | the AT parser that survives unsolicited result codes, and the count of operator names the model invented |
+| 18 | [Mini industrial serial logger](chapters/18-mini-industrial-serial-logger.md) | the product shape: a Rust device service over a C ABI, where the ports and the log have one owner and the engine another |
+| 19 | [Event-driven cellular alert composer](chapters/19-event-driven-cellular-alert-composer.md) | the sharpest instance of the volume's
+safety rule: the model composes the message, the rule alone decides whether anything is sent |
+| 20 | [What should I measure next, and the scorecard](chapters/20-what-should-i-measure-next.md) | the twenty-row scorecard of the whole volume, the rule that says what to measure next, and the one chapter whose inference is not local |

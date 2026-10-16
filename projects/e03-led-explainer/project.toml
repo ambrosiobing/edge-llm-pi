@@ -1,0 +1,33 @@
+# projects/e03-led-explainer/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e03"
+title    = "LED status explainer"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 3 Model B Rev 1.2, card eplepi; NanoPi NEO Air variant"
+hat      = "none: three Joy-it LK-LED10 modules on BCM 17, 27, 22 (header pins 11, 13, 15)"
+model    = "SmolLM2-360M-Instruct-Q4_K_M.gguf; SmolLM2-135M-Instruct-Q4_K_M.gguf on the NanoPi"
+grammar  = "grammars/e03_colour.gbnf"
+prompt   = "projects/e03-led-explainer/prompt.txt"
+rule     = "projects/e03-led-explainer/src/rules_e03.c"
+binary   = "edgellm-e03"
+io       = "gpio"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The bench
+# build adds -DEDGELLM_IO_GPIO=ON (libgpiod-dev 2.2.1 on trixie) or --leds is refused.
+command = "cmake --build build --target edgellm-e03 rules_test oracle_check"
+# The eight rule cases run inside the shared harness; the oracle test exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e03-oracle' --output-on-failure"
+
+[run]
+# The events are always the replayed state stream (modelled); --leds names the real lines.
+replay = "build/projects/e03-led-explainer/edgellm-e03 --project e03 --replay projects/e03-led-explainer/replay/state_200.csv --grammar projects/e03-led-explainer/grammar.gbnf --prompt projects/e03-led-explainer/prompt.txt --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --n-predict 64 --temperature 0.3 --state /tmp/e03.state --log projects/e03-led-explainer/evidence/e03_run.csv"
+stub   = "build/projects/e03-led-explainer/edgellm-e03 --project e03 --replay projects/e03-led-explainer/replay/state_200.csv --grammar projects/e03-led-explainer/grammar.gbnf --prompt projects/e03-led-explainer/prompt.txt --n-predict 64 --temperature 0.3 --log /tmp/e03_stub.csv --stub"
+live   = "build/projects/e03-led-explainer/edgellm-e03 --project e03 --replay projects/e03-led-explainer/replay/state_200.csv --leds /dev/gpiochip0:17,27,22 --grammar projects/e03-led-explainer/grammar.gbnf --prompt projects/e03-led-explainer/prompt.txt --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --n-predict 64 --temperature 0.3 --threads 4 --state /tmp/e03.state --log projects/e03-led-explainer/evidence/e03_run.csv"
+nanopi = "the same command with --model ~/models/SmolLM2-135M-Instruct-Q4_K_M.gguf, --threads from e01's NanoPi row, and the three line offsets of the 24-pin header in place of 17,27,22 (to confirm on the silkscreen)"
+
+[oracle]
+expected = "tests/oracle/e03.expected.csv"
+compare  = "build/tests/oracle_check projects/e03-led-explainer/evidence/e03_run.csv tests/oracle/e03.expected.csv"
+table    = "python projects/e03-led-explainer/tools/reason_check.py projects/e03-led-explainer/evidence/e03_run.csv --md"

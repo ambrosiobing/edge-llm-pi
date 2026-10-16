@@ -1,0 +1,27 @@
+[Unit]
+Description=edge-llm-pi e17, the cellular status summariser over one day of samples
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+After=edgellm-e17-sampler.service
+
+[Service]
+# Oneshot, not simple: the loop reads a finished sample file and ends. A replay source
+# stops at end of file, so a file the sampler is still appending to is not a live source,
+# and the honest arrangement is the sampler first and this afterwards. Point --replay at
+# /usr/share/edgellm/e17/replay/day_1440.csv to run the modelled day instead, which is what
+# a first bring-up on the image should do before a SIM is trusted.
+Type=oneshot
+ExecStart=/usr/bin/edgellm-e17 --project e17 \
+    --replay /var/lib/edgellm/e17_day.csv \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e17/grammar.gbnf \
+    --prompt /usr/share/edgellm/e17/prompt.txt \
+    --log /var/lib/edgellm/e17.csv \
+    --threads 4 --n-predict 64 --temperature 0.3 \
+    --state /run/edgellm/e17.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+TimeoutStartSec=1800
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

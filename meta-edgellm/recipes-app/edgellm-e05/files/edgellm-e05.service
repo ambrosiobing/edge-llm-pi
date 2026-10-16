@@ -1,0 +1,31 @@
+[Unit]
+Description=edge-llm-pi e05, the ADXL345 event reporter over IIO
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The adxl345 driver binds from the overlay during boot; the attribute the loop reads is
+# the gate, because an IIO device has no systemd device unit of its own.
+After=sysinit.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sh -c 'test -r /sys/bus/iio/devices/iio:device0/in_accel_x_raw'
+# Live source, 50 samples per second; the model is asked only at the onset of a TAP, TILT
+# or FREEFALL decision, so the loop keeps up with the sampler between onsets.
+ExecStart=/usr/bin/edgellm-e05 --project e05 \
+    --live iio /sys/bus/iio/devices/iio:device0:0.02 \
+    --model /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --grammar /usr/share/edgellm/e05/grammar.gbnf \
+    --prompt /usr/share/edgellm/e05/prompt.txt \
+    --log /var/lib/edgellm/e05.csv \
+    --threads 4 --n-predict 64
+StateDirectory=edgellm
+# No root: the in_*_raw attributes are world readable, and the loop writes nothing under
+# /sys. A dynamic user owns the state directory and nothing else.
+DynamicUser=yes
+# A read error (an open contact) ends the run with exit 1; it is restarted, and the log is
+# flushed per row so nothing is lost.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

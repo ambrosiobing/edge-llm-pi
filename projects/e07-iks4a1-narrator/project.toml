@@ -1,0 +1,32 @@
+# projects/e07-iks4a1-narrator/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e07"
+title    = "IKS4A1 climate and motion narrator"
+language = "C++"
+variant  = "B"
+board    = "Raspberry Pi 3 Model B Plus, 1 GB, card eplepi"
+hat      = "none seated; X-NUCLEO-IKS4A1 on five flying leads to pins 1, 3, 5, 6 and 18"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e07_pressure.gbnf"
+prompt   = "projects/e07-iks4a1-narrator/prompt.txt"
+rule     = "projects/e07-iks4a1-narrator/src/rules_e07.c"
+binary   = "edgellm-e07"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The
+# bench build adds -DEDGELLM_IO_IIO=ON so --live iio is accepted.
+command = "cmake --build build --target edgellm-e07 rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e07-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e07-iks4a1-narrator/edgellm-e07 --project e07 --replay projects/e07-iks4a1-narrator/replay/synthetic_day.csv --grammar projects/e07-iks4a1-narrator/grammar.gbnf --prompt projects/e07-iks4a1-narrator/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e07.state --log projects/e07-iks4a1-narrator/evidence/e07_replay.csv"
+stub   = "build/projects/e07-iks4a1-narrator/edgellm-e07 --project e07 --replay projects/e07-iks4a1-narrator/replay/synthetic_day.csv --grammar projects/e07-iks4a1-narrator/grammar.gbnf --prompt projects/e07-iks4a1-narrator/prompt.txt --log /tmp/e07_stub.csv --stub"
+live   = "build/projects/e07-iks4a1-narrator/edgellm-e07 --project e07 --live iio /sys/bus/iio/devices --interval 60 --every 60 --max-events 1440 --grammar projects/e07-iks4a1-narrator/grammar.gbnf --prompt projects/e07-iks4a1-narrator/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e07.state --log projects/e07-iks4a1-narrator/evidence/e07_day.csv"
+
+[oracle]
+expected = "tests/oracle/e07.expected.csv"
+compare  = "build/tests/oracle_check /tmp/e07_stub.csv tests/oracle/e07.expected.csv"
+# The decision key of this project is "trend", not the house "decision", so the
+# project's own tool prints the agreement table beside the hallucinated-number count.
+table    = "python projects/e07-iks4a1-narrator/tools/hallucination_check.py projects/e07-iks4a1-narrator/evidence/e07_day.csv --md"

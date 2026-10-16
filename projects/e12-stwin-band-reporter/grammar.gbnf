@@ -1,0 +1,13 @@
+# e12_band.gbnf: the two literals of rules_e12.c, letter for letter, in the house shape
+# plus one more key: a report of exactly two sentences. The decision comes first so the
+# agreement tool's "decision" key is where it is in every other grammar; the report is
+# bounded by the sentence rule, which must open with a capital, run 8 to 100 characters
+# of plain text and end with a full stop, so the end-of-generation token is reachable only
+# after two full stops. ws admits spaces and tabs only, never a newline. The stub in CI
+# expands the first alternative of every rule: {"decision":"BASELINE","report":". ."},
+# which tests/oracle/e12.expected.csv carries in its model column.
+root ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"report\"" ws ":" ws report ws "}"
+decision ::= "\"BASELINE\"" | "\"BAND_SHIFT\""
+report ::= "\"" sentence " " sentence "\""
+sentence ::= [A-Z] [a-z0-9 ,.%-]{8,100} "."
+ws ::= [ \t]*

@@ -1,0 +1,48 @@
+# edgellm-image for the Raspberry Pi 4 Model B, on top of the bench's own board file.
+#
+#   cd ~/bench/edge-llm-pi        (skyhorizon, WSL)
+#   kas build meta-edgellm/kas/edgellm-pi4.yml
+#
+# The bench's kas/bench-rpi4.yml (embedded-linux-bench) carries the machine, poky at
+# scarthgap, meta-openembedded, meta-raspberrypi and the local.conf policy (systemd,
+# the two consoles, the radio licence flag, DL_DIR and SSTATE_DIR outside the tree).
+# It is included from the bench repository rather than copied, so the two layers
+# cannot drift apart on the release or the machine. kas resolves an include from
+# another repository through the repo key, so the bench repository is declared here
+# with its url; the bench file's own url-less "bench" entry merges with this one.
+#
+# The bench file's RPI_EXTRA_CONFIG names the 7 inch DSI panel overlay. A project
+# that needs its own config.txt lines (I2C baud rate, an overlay) adds a kas file that
+# includes this one and sets RPI_EXTRA_CONFIG:forcevariable, for the reason the bench's
+# kas/bench-adxl345.yml records: kas writes local_conf_header sections in name order
+# and a plain assignment in a section sorting before "bench" is overwritten.
+header:
+  version: 14
+  includes:
+    - repo: bench
+      file: kas/bench-rpi4.yml
+
+repos:
+  # This repository. No url: the one containing this file.
+  edgellm:
+    layers:
+      meta-edgellm:
+
+  bench:
+    url: https://github.com/ambrosiobing/embedded-linux.git
+    branch: main
+    layers:
+      meta-bench:
+
+target: edgellm-image
+
+local_conf_header:
+  edgellm: |
+    # Which models and projects the image carries; see recipes-images/edgellm-image.bb.
+    EDGELLM_MODELS = "model-smollm2-360m model-qwen2.5-0.5b"
+    EDGELLM_APPS = "edgellm-e02"
+
+    # llama-cpp's work directory stays after the build so that the configured
+    # CMake cache (GGML_NATIVE, the ARM arch) can be read back when a number
+    # looks wrong; the kernel is kept for the same reason by the bench file.
+    RM_WORK_EXCLUDE += "llama-cpp"

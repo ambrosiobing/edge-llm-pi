@@ -1,0 +1,40 @@
+# projects/e04-thermal-narrator/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e04"
+title    = "Pi thermal and throttle narrator"
+language = "C"
+variant  = "D"
+board    = "Raspberry Pi 4 Model B, card eplepi"
+hat      = "none"
+model    = "SmolLM2-360M-Instruct-Q4_K_M.gguf, served by llama-server on 127.0.0.1:8080"
+grammar  = "grammars/e04_thermal.gbnf"
+prompt   = "projects/e04-thermal-narrator/prompt.txt"
+rule     = "projects/e04-thermal-narrator/src/rules_e04.c"
+binary   = "edgellm-e04"
+engine   = "llama-server from the llama-cpp recipe (or ~/llama.cpp/build/bin on Raspberry Pi OS), tag v0.6.0"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. libcurl
+# (libcurl4-openssl-dev) must be installed; the client never links the engine.
+command = "cmake --build build --target edgellm-e04 rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test runs the client against
+# tools/mock_server.py on an ephemeral port and exists in every build with a Python interpreter.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e04-oracle' --output-on-failure"
+
+[run]
+server = "~/llama.cpp/build/bin/llama-server -m ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --host 127.0.0.1 --port 8080 -c 512 -t 4"
+replay = "build/projects/e04-thermal-narrator/edgellm-e04 --project e04 --replay projects/e04-thermal-narrator/replay/benchmark_180.csv --grammar projects/e04-thermal-narrator/grammar.gbnf --prompt projects/e04-thermal-narrator/prompt.txt --server http://127.0.0.1:8080 --log projects/e04-thermal-narrator/evidence/e04_replay.csv --rtt projects/e04-thermal-narrator/evidence/e04_replay_rtt.csv"
+mock   = "python projects/e04-thermal-narrator/tools/mock_server.py --run -- build/projects/e04-thermal-narrator/edgellm-e04 --project e04 --replay projects/e04-thermal-narrator/replay/benchmark_180.csv --grammar projects/e04-thermal-narrator/grammar.gbnf --prompt projects/e04-thermal-narrator/prompt.txt --server http://127.0.0.1:{PORT} --log /tmp/e04_mock.csv"
+live   = "build/projects/e04-thermal-narrator/edgellm-e04 --project e04 --live sysfs /sys/class/thermal/thermal_zone0/temp:60 --grammar projects/e04-thermal-narrator/grammar.gbnf --prompt projects/e04-thermal-narrator/prompt.txt --server http://127.0.0.1:8080 --log projects/e04-thermal-narrator/evidence/e04_live.csv --rtt projects/e04-thermal-narrator/evidence/e04_live_rtt.csv"
+idle   = "build/projects/e04-thermal-narrator/edgellm-e04 --project e04 --live sysfs /sys/class/thermal/thermal_zone0/temp:60 --grammar projects/e04-thermal-narrator/grammar.gbnf --prompt projects/e04-thermal-narrator/prompt.txt --rule-only --log projects/e04-thermal-narrator/evidence/e04_idle.csv"
+
+[oracle]
+expected = "tests/oracle/e04.expected.csv"
+compare  = "build/tests/oracle_check projects/e04-thermal-narrator/evidence/e04_replay.csv tests/oracle/e04.expected.csv"
+table    = "python tools/agreement.py projects/e04-thermal-narrator/evidence/e04_live.csv --md"
+
+[units]
+# Two units, installed by meta-edgellm/recipes-app/edgellm-e04; on Raspberry Pi OS copy both
+# into /etc/systemd/system and edit the paths. The client unit Requires= and After= the server.
+server = "projects/e04-thermal-narrator/files/edgellm-llama-server.service"
+client = "projects/e04-thermal-narrator/files/edgellm-e04.service"

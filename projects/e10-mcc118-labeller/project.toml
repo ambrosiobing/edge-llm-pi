@@ -1,0 +1,37 @@
+# projects/e10-mcc118-labeller/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e10"
+title    = "MCC 118 voltage event labeller"
+language = "C"
+variant  = "C"
+board    = "Raspberry Pi 4 Model B, card A (eplepi)"
+hat      = "MCC 118 DAQ HAT on SPI0 CE0; NUCLEO-H7A3ZI-Q DAC on PA4 as the stimulus on CH0"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e10_shape.gbnf"
+prompt   = "projects/e10-mcc118-labeller/prompt.txt"
+rule     = "projects/e10-mcc118-labeller/src/rules_e10.c"
+binary   = "edgellm-e10"
+# The live source is project-local (src/io_mcc118.c over libdaqhats, MIT) because io.h has
+# no hook for a backend outside common/c/src; main() forks it and feeds the shared loop
+# through a pipe in the replay CSV shape. Compiled in only with -DEDGELLM_DAQHATS=ON.
+live_option = "EDGELLM_DAQHATS"
+
+[build]
+# From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The host
+# and CI build carries no HAT library; the bench build adds -DEDGELLM_DAQHATS=ON.
+command = "cmake --build build --target edgellm-e10 rules_test oracle_check"
+# The six rule cases run inside the shared harness; the oracle test exists in a stub build.
+test    = "ctest --test-dir build -R 'rules_test|edgellm-e10-oracle' --output-on-failure"
+
+[run]
+replay = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --replay projects/e10-mcc118-labeller/replay/stimuli_300.csv --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e10.state --log projects/e10-mcc118-labeller/evidence/e10_replay.csv"
+stub   = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --replay projects/e10-mcc118-labeller/replay/stimuli_300.csv --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --log /tmp/e10_stub.csv --stub"
+live   = "build/projects/e10-mcc118-labeller/edgellm-e10 --project e10 --live mcc118 0:0:2 --grammar projects/e10-mcc118-labeller/grammar.gbnf --prompt projects/e10-mcc118-labeller/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e10.state --log projects/e10-mcc118-labeller/evidence/e10_live_step_2.000V.csv"
+
+[oracle]
+expected = "tests/oracle/e10.expected.csv"
+compare  = "build/tests/oracle_check /tmp/e10_stub.csv tests/oracle/e10.expected.csv"
+table    = "python tools/agreement.py projects/e10-mcc118-labeller/evidence/e10_live_step_2.000V.csv --md"
+# The second acceptance number: the median measured step amplitude of the STEP rows
+# against the amplitude commanded at the DAC, within 2 percent.
+amplitude = "python projects/e10-mcc118-labeller/tools/make_replay.py --check projects/e10-mcc118-labeller/evidence/e10_live_step_2.000V.csv 2.000"

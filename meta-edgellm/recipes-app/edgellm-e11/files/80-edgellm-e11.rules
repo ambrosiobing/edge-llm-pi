@@ -1,0 +1,6 @@
+# The sensor hub's ST-LINK V3 virtual COM port (project e11). A stable name, a systemd
+# device unit the service binds to, and no ModemManager probe. The product id is the one
+# project 12 read with lsusb for the ST-LINK V3 with its VCP; confirm it on the first plug
+# with: lsusb | grep -i st-link
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374e", \
+    SYMLINK+="edgellm-hub", TAG+="systemd", ENV{ID_MM_DEVICE_IGNORE}="1"

@@ -1,0 +1,40 @@
+[Unit]
+Description=edge-llm-pi e18 device service, the Rust half that owns the ports and the log
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# Wants= rather than Requires=: the device service is the one that must keep running.
+# It polls the register block, applies the rule and writes the log and the RS232 line
+# whether or not the engine is there; a decision it cannot get is a row with the rule
+# column filled and the model column empty, which the agreement table counts as such.
+# After= orders the start so that the first frame usually has an engine to ask.
+Wants=edgellm-e18-daemon.service
+After=edgellm-e18-daemon.service
+# The two RS485 channels come from the sc16is752 overlay and the RS232 channel from the
+# Pi's own UART. A device that is not there yet is not a reason to start and fail.
+After=dev-ttySC0.device dev-ttySC1.device dev-ttyAMA0.device
+BindsTo=dev-ttySC0.device
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/edgellm-e18 --live \
+    --rs485-a /dev/ttySC0 \
+    --rs485-b /dev/ttySC1 \
+    --rs232 /dev/ttyAMA0 \
+    --baud 115200 --addr 17 --period 2 \
+    --engine socket --socket /run/edgellm/e18-daemon.sock \
+    --grammar /usr/share/edgellm/e18/grammar.gbnf \
+    --prompt /usr/share/edgellm/e18/prompt.txt \
+    --log /var/lib/edgellm/e18.csv
+StateDirectory=edgellm
+# dialout for the three serial devices, edgellm for the daemon's socket. No root: the
+# service opens character devices and one socket and nothing else.
+User=edgellm
+Group=edgellm
+SupplementaryGroups=dialout
+Restart=always
+RestartSec=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

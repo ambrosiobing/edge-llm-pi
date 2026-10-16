@@ -1,0 +1,12 @@
+# e05_event.gbnf: the four literals of projects/e05-adxl345-events/src/rules.rs, letter for
+# letter and in the same order, plus one sentence, in the house shape: one JSON object with
+# a "decision" key and a "why" key. The quiet state NONE is first, so the CI stub answers
+# NONE. The sentence is bounded to 120 characters of plain text and must end with a full
+# stop before the closing quote, so the end-of-generation token is reachable only after a
+# finished sentence; n_predict is 64 in the project, enough for the enum and the sentence.
+# ws admits spaces and tabs only, never a newline.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws why ws "}"
+why      ::= "\"why\"" ws ":" ws sentence
+decision ::= "\"NONE\"" | "\"TAP\"" | "\"TILT\"" | "\"FREEFALL\""
+sentence ::= "\"" [A-Za-z0-9 ,%-]{8,120} "." "\""
+ws       ::= [ \t]*

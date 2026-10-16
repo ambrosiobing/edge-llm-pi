@@ -1,0 +1,35 @@
+[Unit]
+Description=edgellm e14 joint monitor, one CAN bus and one accelerometer
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# Wants, never Requires and never BindsTo: the rule is what decides, so the monitor must
+# keep deciding and keep logging when the engine is not there. The engine daemon is
+# ordered before it so that the first minute of a boot usually has an answer, and the
+# client reconnects by itself when it does not.
+Wants=edgellm-e14-daemon.service
+After=edgellm-e14-daemon.service
+# The interface names of the WS-28164's two controllers swap between boots, so this
+# device unit and EDGELLM_E14_CAN below must both name the interface that
+# dmesg | grep mcp25 reported on this boot. Reading that line is step one of every
+# sitting, and a unit that names the wrong one waits for a device that never appears.
+After=sys-subsystem-net-devices-can0.device
+
+[Service]
+Type=simple
+Environment=EDGELLM_E14_CAN=can0
+Environment=EDGELLM_E14_IIO=/sys/bus/iio/devices/iio:device0
+EnvironmentFile=-/etc/default/edgellm-e14
+ExecStart=/usr/bin/edgellm-e14 --project e14 \
+    --live ${EDGELLM_E14_CAN} \
+    --iio ${EDGELLM_E14_IIO} \
+    --socket /run/edgellm/e14-engine.sock \
+    --minute-s 60 --sample-hz 50 --timeout-ms 2000 --peak-g 2.0 \
+    --log /var/lib/edgellm/e14.csv
+Restart=on-failure
+RestartSec=5
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+RuntimeDirectoryPreserve=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

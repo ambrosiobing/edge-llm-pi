@@ -1,0 +1,26 @@
+# projects/e01-bringup/project.toml: the manifest CI and tools/bench_runner.py read.
+[project]
+id       = "e01"
+title    = "Bring-up and the honest tokens per second table"
+language = "C++"
+variant  = "A"
+board    = "Raspberry Pi 4 Model B, Raspberry Pi 3 Model B Plus, Raspberry Pi 3 Model B Rev 1.2, NanoPi NEO Air"
+hat      = "none"
+model    = "the whole ladder, see cmake/llama_tag.cmake and models/MODELS.md"
+grammar  = "none: this project decides nothing, it is the instrument"
+prompt   = "projects/e01-bringup/prompt.txt"
+rule     = "none: the upstream llama-bench is the reference instrument"
+engine_tag = "v0.6.0"
+
+[build]
+# From the repository root, on the board itself, after cmake -S . -B build -DGGML_NATIVE=ON.
+command = "cmake --build build --target e01_bench_harness llama-bench"
+
+[run]
+replay    = "not applicable: there is no event stream to replay, see README-notes.md"
+reference = "python tools/bench_runner.py --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --board pi4b-eplepi --evidence projects/e01-bringup/evidence --llama-bench build/llama.cpp/bin/llama-bench"
+harness   = "build/projects/e01-bringup/e01_bench_harness --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --prompt projects/e01-bringup/prompt.txt -p 64 -n 32 -t 4 -r 5"
+
+[oracle]
+expected = "none: the acceptance is numeric, the harness tg within 10 percent of the llama-bench tg per board"
+compare  = "by hand, in the evidence file: abs(harness - reference) / reference at or below 0.10"

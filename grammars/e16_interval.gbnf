@@ -1,0 +1,15 @@
+# e16_interval.gbnf: the four sleep intervals of rules_e16.c, letter for letter, and
+# one bounded sentence of reason. The literals are I60, I300, I900 and I3600, for 60,
+# 300, 900 and 3600 seconds, in the order of the rule's name table, so I60 comes first
+# and is what the stub answers in CI. The "decision" key keeps the house name so that
+# tools/agreement.py reads it unchanged. The reason is 10 to 160 characters of letters,
+# digits, space, comma, full stop and percent, ending in a full stop, so the
+# end-of-generation token is reachable only after a complete sentence; the class admits
+# no quote, no brace and no newline, so the object always closes and the log's CSV
+# quoting stays simple. The stub expands every character class to nothing, so in CI the
+# answer is {"decision":"I60","reason":"."}, which the oracle file expects on every row.
+# ws admits spaces and tabs only, never a newline.
+root ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"reason\"" ws ":" ws reason ws "}"
+decision ::= "\"I60\"" | "\"I300\"" | "\"I900\"" | "\"I3600\""
+reason ::= "\"" [A-Za-z0-9 ,.%]{9,159} "." "\""
+ws ::= [ \t]*

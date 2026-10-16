@@ -1,0 +1,71 @@
+# projects/e18-industrial-logger/project.toml: the manifest CI and the tools read.
+# Two halves, two languages, two build systems, one grammar and one oracle file.
+[project]
+id       = "e18"
+title    = "Mini industrial serial logger"
+language = "Rust and C"
+variant  = "R3 and R5"
+board    = "Raspberry Pi 4 Model B, card B, the spare Verbatim 32 GB"
+hat      = "Waveshare WS-28164 isolated RS232, RS485, CAN, CAN FD"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e18_drift.gbnf"
+prompt   = "projects/e18-industrial-logger/prompt.txt"
+rule     = "projects/e18-industrial-logger/rust/src/rules.rs"
+binary   = "edgellm-e18"
+daemon   = "edgellm-e18-daemon"
+library  = "libedgellm_abi.so, soname libedgellm_abi.so.1, abi version 1000"
+abi      = "projects/e18-industrial-logger/c/abi.h"
+
+# The one dependency that is not in the tree yet: the shared Rust crate is the e05
+# author's (common/rust/README.md). The four modules e18 reuses and the interface it
+# expects from each are written out at the top of rust/src/main.rs. Until the crate
+# exists, cargo cannot resolve rust/Cargo.toml; the C half and the generator do not
+# depend on it and build and run as they are.
+blocked_on = "common/rust/edgellm, the shared crate, modules io, rules, elog, template"
+
+[build]
+# The C half is its own CMake project on purpose: the daemon is installed, versioned
+# and upgraded without the service being rebuilt, which is the chapter's argument.
+# It is NOT picked up by the repository's top level CMakeLists.txt, which globs one
+# level deep.
+c_configure = "cmake -S projects/e18-industrial-logger/c -B build-e18c -DEDGELLM_STUB_MODEL=ON"
+c_command   = "cmake --build build-e18c"
+c_test      = "ctest --test-dir build-e18c --output-on-failure"
+rust_command = "cargo build --manifest-path projects/e18-industrial-logger/rust/Cargo.toml"
+rust_test    = "cargo test --manifest-path projects/e18-industrial-logger/rust/Cargo.toml"
+# The FFI backend needs the C library built and a link path; the socket backend and the
+# Rust stub need neither, which is why the default feature set is empty.
+rust_ffi = "RUSTFLAGS='-L build-e18c' cargo test --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi"
+
+[run]
+# The oracle run: the Rust stub, no C, no model, no board. This is what CI does.
+stub = "cargo run --manifest-path projects/e18-industrial-logger/rust/Cargo.toml -- --replay projects/e18-industrial-logger/replay/registers_600.csv --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine stub --log /tmp/e18_stub.csv"
+# The daemon, then the service over its socket, with the real engine on the board.
+daemon = "build-e18c/edgellm-e18-daemon --socket /run/edgellm/e18-daemon.sock --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 64"
+replay = "target/release/edgellm-e18 --replay projects/e18-industrial-logger/replay/registers_600.csv --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine socket --socket /run/edgellm/e18-daemon.sock --rs232 /dev/ttyAMA0 --log projects/e18-industrial-logger/evidence/e18_replay.csv"
+live   = "target/release/edgellm-e18 --live --rs485-a /dev/ttySC0 --rs232 /dev/ttyAMA0 --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine socket --socket /run/edgellm/e18-daemon.sock --log projects/e18-industrial-logger/evidence/e18_live.csv"
+
+[acceptance]
+# One: the echo between the two RS485 channels, the one real electrical test here.
+echo = "target/release/edgellm-e18 --echo 1000 --rs485-a /dev/ttySC0 --rs485-b /dev/ttySC1 --baud 115200 --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+# Two: the agreement table over the replayed register stream.
+table = "python tools/agreement.py projects/e18-industrial-logger/evidence/e18_replay.csv --md"
+
+[measure]
+# Three: what the boundary costs per call. Three figures on one prompt, one board, one
+# model: in process with no boundary, through the C ABI in process, and through the
+# daemon's socket. The first two come from the C test, the third from the service.
+in_process_and_abi = "build-e18c/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200"
+ffi = "RUSTFLAGS='-L build-e18c' cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+socket = "target/release/edgellm-e18 --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+
+[oracle]
+expected = "tests/oracle/e18.expected.csv"
+compare  = "cargo test --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --test oracle"
+generate = "python projects/e18-industrial-logger/tools/make_replay.py"
+
+[units]
+# Two units: the daemon first, the service ordered after it. On Raspberry Pi OS copy
+# both into /etc/systemd/system and edit the paths.
+daemon  = "projects/e18-industrial-logger/files/edgellm-e18-daemon.service"
+service = "projects/e18-industrial-logger/files/edgellm-e18.service"

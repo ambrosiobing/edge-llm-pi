@@ -1,0 +1,47 @@
+# projects/e13-can-honesty/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e13"
+title    = "CAN honesty agent"
+language = "Rust"
+variant  = "R1"
+board    = "Raspberry Pi 4 Model B, card B (the spare Verbatim 32 GB)"
+hat      = "Waveshare WS-28164 isolated RS232, RS485, CAN, CAN FD; two jumper wires"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e13_presence.gbnf"
+prompt   = "projects/e13-can-honesty/prompt.txt"
+rule     = "projects/e13-can-honesty/src/rules.rs"
+binary   = "edgellm-e13"
+
+[build]
+# Host build and test, which is what CI's manifests job runs: the stub feature, no engine
+# crate and no SocketCAN. The first build of any kind is Joseph's in skyhorizon's WSL;
+# nothing compiles on the authoring laptop by rule.
+command = "cargo build --manifest-path projects/e13-can-honesty/Cargo.toml"
+test    = "cargo test --manifest-path projects/e13-can-honesty/Cargo.toml"
+# Bench build, with the shared crate's engine and the SocketCAN backend.
+bench   = "cargo build --release --manifest-path projects/e13-can-honesty/Cargo.toml --no-default-features --features engine,live"
+
+[run]
+replay = "cargo run --manifest-path projects/e13-can-honesty/Cargo.toml --no-default-features --features engine -- --replay projects/e13-can-honesty/replay/heartbeats_1000.csv --grammar projects/e13-can-honesty/grammar.gbnf --prompt projects/e13-can-honesty/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --state /tmp/e13.state --periods 1000 --log projects/e13-can-honesty/evidence/e13_run.csv"
+stub   = "cargo run --manifest-path projects/e13-can-honesty/Cargo.toml -- --replay projects/e13-can-honesty/replay/heartbeats_1000.csv --grammar projects/e13-can-honesty/grammar.gbnf --prompt projects/e13-can-honesty/prompt.txt --periods 1000 --stub --log /tmp/e13_stub.csv"
+live   = "edgellm-e13 --live --periods 1000 --grammar /usr/share/edgellm/e13/grammar.gbnf --prompt /usr/share/edgellm/e13/prompt.txt --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log /var/lib/edgellm/e13.csv"
+
+[oracle]
+expected = "tests/oracle/e13.expected.csv"
+compare  = "cargo test --manifest-path projects/e13-can-honesty/Cargo.toml --test oracle"
+table    = "python tools/agreement.py projects/e13-can-honesty/evidence/e13_run.csv --md"
+
+[generator]
+# Writes replay/heartbeats_1000.csv and tests/oracle/e13.expected.csv together; they are
+# one pair and are never regenerated apart.
+replay = "python projects/e13-can-honesty/tools/make_replay.py"
+
+[notes]
+# The shared Rust crate common/rust/edgellm is the e05 author's; this project takes its
+# engine, log writer, chat template, Rule trait and replay reader unchanged and forwards
+# its two features. The loop and the SocketCAN source are this project's own, with the
+# reason stated at the head of src/main.rs. Everything the chapter publishes (the rule,
+# the replay run, the oracle, the agreement number) runs with the default `stub` feature
+# and needs no SocketCAN.
+shared_crate = "common/rust/edgellm, by path; features stub and engine forwarded"
+socketcan = "4.0.0, MIT, optional, feature live; four API names to verify at the first build"

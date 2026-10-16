@@ -1,0 +1,17 @@
+# e14_inspect.gbnf: the two literals of projects/e14-joint-monitor/src/rules.rs, letter
+# for letter, and one bounded sentence, in the house shape extended by one key. The
+# "decision" key keeps the house name so that tools/agreement.py reads it unchanged, and
+# the "summary" key holds one sentence of 10 to 160 characters ending in a full stop, so
+# the end-of-generation token is reachable only after a complete sentence. The class
+# admits no quote, no brace and no newline, so the object always closes and the log's CSV
+# quoting stays simple. OK is first because the stub answers the first alternative of
+# every rule and a character class to nothing, so in CI the answer is
+# {"decision":"OK","summary":"."} on every row and the oracle file expects exactly that.
+# INSPECT is a recommendation to a person and the sentence says what to look at; nothing
+# in project e14 is actuated. ws admits spaces and tabs only, never a newline.
+root     ::= "{" ws key_d ws ":" ws decision ws "," ws key_s ws ":" ws summary ws "}"
+key_d    ::= "\"decision\""
+key_s    ::= "\"summary\""
+decision ::= "\"OK\"" | "\"INSPECT\""
+summary  ::= "\"" [A-Za-z0-9 ,.]{9,159} "." "\""
+ws       ::= [ \t]*

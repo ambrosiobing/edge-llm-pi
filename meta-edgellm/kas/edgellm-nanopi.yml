@@ -1,0 +1,56 @@
+# edgellm-image for the NanoPi NEO Air (Allwinner H3, 512 MB, armv7), the e01
+# benchmark floor and the e03 variant. The bench repository has no NanoPi kas file to
+# include (checked Wednesday 14 October 2026), so this one stands alone: poky at
+# scarthgap with meta-sunxi for the machine.
+#
+# TO VERIFY before the first build: that meta-sunxi carries a scarthgap branch and
+# that its machine name for this board is nanopi-neo-air. Both are read from the
+# layer index, not assumed; if either differs, this file changes and nothing else.
+#
+#   cd ~/bench/edge-llm-pi        (skyhorizon, WSL)
+#   kas build meta-edgellm/kas/edgellm-nanopi.yml
+header:
+  version: 14
+
+machine: nanopi-neo-air
+distro: poky
+target: edgellm-image
+
+repos:
+  edgellm:
+    layers:
+      meta-edgellm:
+
+  poky:
+    url: https://git.yoctoproject.org/poky
+    branch: scarthgap
+    layers:
+      meta:
+      meta-poky:
+
+  meta-openembedded:
+    url: https://git.openembedded.org/meta-openembedded
+    branch: scarthgap
+    layers:
+      meta-oe:
+      meta-python:
+
+  meta-sunxi:
+    url: https://github.com/linux-sunxi/meta-sunxi
+    branch: scarthgap
+
+local_conf_header:
+  edgellm: |
+    INIT_MANAGER = "systemd"
+    IMAGE_FSTYPES = "wic.bz2 wic.bmap"
+    INHERIT += "rm_work"
+    RM_WORK_EXCLUDE += "llama-cpp"
+
+    # 512 MB: only the 135M model fits the 60 percent rule, and e01 measures
+    # 1 to 4 threads on this board rather than assuming 4.
+    EDGELLM_MODELS = "model-smollm2-135m"
+    EDGELLM_APPS = "edgellm-e02"
+
+  cache: |
+    DL_DIR ?= "${TOPDIR}/../downloads"
+    SSTATE_DIR ?= "${TOPDIR}/../sstate-cache"

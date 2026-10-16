@@ -1,0 +1,136 @@
+# CI for edge-llm-pi. Four jobs:
+#   host        the C core, every C and C++ project and the tests with the stub engine
+#               and every I/O backend compiled in; then the two repository scans
+#   engine      the real engine from the submodule at the pinned tag, compile only,
+#               so a header change upstream is seen here and not on the bench
+#   manifests   cargo test in every projects/*/ with a Cargo.toml, pytest in every
+#               projects/*/ with a pyproject.toml
+#   yocto       the layer parsed by bitbake-layers and bitbake -p in a poky container;
+#               allowed to fail, see the comment on the job
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libgpiod-dev libcurl4-openssl-dev
+      - name: submodule sits at the pinned tag
+        run: |
+          tag=$(sed -n 's/^set(LLAMA_CPP_TAG "\(.*\)")$/\1/p' cmake/llama_tag.cmake)
+          got=$(git -C third_party/llama.cpp describe --tags --exact-match 2>/dev/null \
+                || echo none)
+          echo "pinned $tag, checked out $got"
+          test "$got" = "$tag"
+      - name: configure with the stub and every backend
+        run: |
+          cmake -S . -B build -G Ninja -DEDGELLM_STUB_MODEL=ON \
+            -DEDGELLM_IO_GPIO=ON -DEDGELLM_IO_I2C=ON -DEDGELLM_IO_IIO=ON \
+            -DEDGELLM_IO_SERIAL=ON -DEDGELLM_IO_CAN=ON
+      - name: build
+        run: cmake --build build
+      - name: ctest
+        run: ctest --test-dir build --output-on-failure
+      - name: attribution scan over the tree and the history
+        run: python3 tools/no_trace_scan.py
+      - name: no authoring files
+        run: python3 tools/no_authoring_files.py
+      - name: ASCII and 99 columns
+        run: python3 tools/line_check.py
+      - name: python tools compile
+        run: python3 -m py_compile tools/*.py
+
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libgpiod-dev
+      - name: configure against the submodule
+        run: |
+          cmake -S . -B build-engine -G Ninja -DEDGELLM_BUILD_LLAMA_TOOLS=OFF \
+            -DEDGELLM_BUILD_TESTS=ON -DEDGELLM_IO_GPIO=ON -DEDGELLM_IO_I2C=ON \
+            -DEDGELLM_IO_IIO=ON -DEDGELLM_IO_SERIAL=ON -DEDGELLM_IO_CAN=ON
+      - name: build the core and the smoke project
+        run: cmake --build build-engine --target edgellm_core edgellm-smoke cpp_wrapper_test
+
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libgpiod-dev libclang-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo test in every Rust project
+        run: |
+          set -e
+          for m in projects/*/Cargo.toml; do
+            [ -f "$m" ] || continue
+            echo "== $m"
+            cargo test --manifest-path "$m"
+          done
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: pytest in every Python project
+        run: |
+          set -e
+          python -m pip install -r requirements.txt
+          for m in projects/*/pyproject.toml; do
+            [ -f "$m" ] || continue
+            d=$(dirname "$m")
+            echo "== $d"
+            python -m pip install -e "$d"
+            python -m pytest "$d"
+          done
+
+  yocto:
+    runs-on: ubuntu-latest
+    # Allowed to fail: the poky container and the three layer clones take minutes and
+    # depend on hosts this repository does not control, and a parse error here says
+    # nothing a bench build would not say sooner. The job exists so that a broken
+    # recipe is seen on the push that broke it; the image build is skyhorizon's job.
+    continue-on-error: true
+    container:
+      image: crops/poky:ubuntu-22.04
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+      - name: layers at the bench release
+        run: |
+          git clone --depth 1 -b scarthgap https://git.yoctoproject.org/poky /tmp/poky
+          git clone --depth 1 -b scarthgap https://git.openembedded.org/meta-openembedded \
+            /tmp/meta-openembedded
+          git clone --depth 1 -b scarthgap https://git.yoctoproject.org/meta-raspberrypi \
+            /tmp/meta-raspberrypi
+      - name: parse
+        shell: bash
+        run: |
+          cd /tmp/poky
+          source oe-init-build-env /tmp/build
+          bitbake-layers add-layer /tmp/meta-openembedded/meta-oe
+          bitbake-layers add-layer /tmp/meta-raspberrypi
+          bitbake-layers add-layer "$GITHUB_WORKSPACE/meta-edgellm"
+          echo 'MACHINE = "raspberrypi4-64"' >> conf/local.conf
+          echo 'LICENSE_FLAGS_ACCEPTED = "synaptics-killswitch"' >> conf/local.conf
+          bitbake-layers show-layers
+          bitbake -p
+          bitbake-layers show-recipes "llama-cpp" "edgellm-*" "model-*"

@@ -1,0 +1,39 @@
+# Model weights never enter the repository; models/MODELS.md says where they come from.
+*.gguf
+*.state
+
+# Build trees of every language.
+build/
+target/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+# The authoring half of the volume stays in the catalogue. CI refuses these too
+# (tools/no_authoring_files.py), so an ignore rule here is the first fence, not the
+# only one.
+*.pdf
+*.html
+*.tex
+*.aux
+*.log
+*.toc
+sections/
+figures/*.tex
+build.py
+mdbuild.py
+lint.py
+palette.tex
+
+# Nothing personal.
+private_journal/
+
+# Editor and OS noise.
+*~
+*.swp
+.DS_Store
+
+# the message handed to git commit -F; the commit carries it, the tree does not
+commit-message.txt

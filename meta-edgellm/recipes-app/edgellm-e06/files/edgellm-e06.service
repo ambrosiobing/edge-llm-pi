@@ -1,0 +1,27 @@
+[Unit]
+Description=edge-llm-pi e06, the VL53L4CD too close explainer on /dev/i2c-1
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+After=dev-i2c\x2d1.device
+Requires=dev-i2c\x2d1.device
+
+[Service]
+Type=simple
+# The live backend: the ST ULD over i2c-dev at 0x29, ten samples per second with a
+# 50 ms timing budget, on the bus the ADXL345 of e05 shares at 100 kHz. The rule's
+# verdict per sample goes to the journal; the model's answer only to the log.
+ExecStart=/usr/bin/edgellm-e06 --project e06 \
+    --live vl53l4cd /dev/i2c-1:0x29:interval=0.1:budget=50 \
+    --model /usr/share/edgellm/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+    --grammar /usr/share/edgellm/e06/grammar.gbnf \
+    --prompt /usr/share/edgellm/e06/prompt.txt \
+    --log /var/lib/edgellm/e06.csv \
+    --threads 4 --n-predict 40 --state /run/edgellm/e06.state
+StateDirectory=edgellm
+RuntimeDirectory=edgellm
+# A model that dies is restarted; the log is flushed per row so nothing is lost.
+Restart=on-failure
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

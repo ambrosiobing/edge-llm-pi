@@ -1,0 +1,35 @@
+# projects/e15-esp32-sidecar/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e15"
+title    = "ESP32 sidecar with a bounded pattern proposal"
+language = "Python"
+variant  = "R8-shaped in Python: llama-cpp-python in process, ppk2-api, pyserial"
+board    = "Raspberry Pi 4 Model B or Pi 3 Model B, card eplepi; SBC-NodeMCU-ESP32 sidecar"
+hat      = "none; the ESP32 over the Renkforce USB/TTL cable, the PPK2 over USB"
+model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+grammar  = "grammars/e15_pattern.gbnf"
+prompt   = "projects/e15-esp32-sidecar/prompt.txt"
+rule     = "projects/e15-esp32-sidecar/edgellm_e15/rules.py"
+binary   = "edgellm-e15"
+firmware = "projects/e15-esp32-sidecar/firmware"
+
+[build]
+# From the repository root. The shared package first, by path; then the project.
+command = "python -m pip install -e common/python/edgellm; python -m pip install -e projects/e15-esp32-sidecar"
+# The shared package's cases and the project's eight rule cases plus the oracle test.
+test    = "python -m pytest common/python/edgellm projects/e15-esp32-sidecar"
+
+[run]
+replay = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv"
+stub   = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --log /tmp/e15_stub.csv --stub"
+# The bench run: the same replay, plus the serial link to the ESP32 (the by-id path is read on the Pi).
+live   = "edgellm-e15 --project e15 --replay projects/e15-esp32-sidecar/replay/budgets_200.csv --grammar projects/e15-esp32-sidecar/grammar.gbnf --prompt projects/e15-esp32-sidecar/prompt.txt --model models/qwen2.5-0.5b-instruct-q4_k_m.gguf --log projects/e15-esp32-sidecar/evidence/e15_run.csv --serial /dev/serial/by-id/<the Renkforce cable>"
+
+[oracle]
+expected = "tests/oracle/e15.expected.csv"
+compare  = "python -m pytest projects/e15-esp32-sidecar/tests/test_oracle.py"
+table    = "python tools/agreement.py projects/e15-esp32-sidecar/evidence/e15_run.csv --md"
+
+[measure]
+# The PPK2 harness: each pattern commanded over the serial link, 20 s of current, three runs.
+patterns = "python projects/e15-esp32-sidecar/tools/measure_patterns.py --serial /dev/serial/by-id/<the Renkforce cable> --out projects/e15-esp32-sidecar/evidence"

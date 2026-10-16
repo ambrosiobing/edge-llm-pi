@@ -1,0 +1,5 @@
+# Smoke grammar in the house shape (grammars/README.md): a JSON object with one
+# "decision" key whose value is one of the rule's literals, in the rule's name order.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
+decision ::= "\"COOL\"" | "\"WARM\"" | "\"HOT\""
+ws       ::= [ \t]*

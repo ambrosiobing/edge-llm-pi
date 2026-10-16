@@ -1,0 +1,12 @@
+# e07_pressure.gbnf: the three trend literals of rules_e07.c, letter for letter, plus a
+# summary of three sentences, both keys in one JSON object so the log holds one cell.
+# STABLE is the first literal because it is the quiet state and what the stub answers
+# in CI. A sentence is a capital, 12 to 130 characters from a class that holds no quote
+# and no backslash, and a full stop, so the object stays valid JSON whatever the model
+# writes; three of them with two spaces are 44 to 398 characters, inside the 40 to 400
+# the chapter promises. ws admits spaces and tabs only, never a newline.
+root      ::= "{" ws "\"trend\"" ws ":" ws trend ws "," ws "\"summary\"" ws ":" ws text ws "}"
+trend     ::= "\"STABLE\"" | "\"RISING\"" | "\"FALLING\""
+text      ::= "\"" sentence " " sentence " " sentence "\""
+sentence  ::= [A-Z] [A-Za-z0-9 ,.%:()]{12,130} "."
+ws        ::= [ \t]*

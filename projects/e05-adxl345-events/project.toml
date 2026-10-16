@@ -1,0 +1,43 @@
+# projects/e05-adxl345-events/project.toml: the manifest CI and the tools read.
+[project]
+id       = "e05"
+title    = "ADXL345 event reporter"
+language = "Rust"
+variant  = "R7"
+board    = "Raspberry Pi 3 Model B Rev 1.2, card eplepi"
+hat      = "none: the DFRobot SEN0032 ADXL345 on header pins 1, 3, 5, 6, 9, 16, 17"
+model    = "SmolLM2-360M-Instruct-Q4_K_M.gguf"
+grammar  = "grammars/e05_event.gbnf"
+prompt   = "projects/e05-adxl345-events/prompt.txt"
+rule     = "projects/e05-adxl345-events/src/rules.rs"
+binary   = "edgellm-e05"
+crate    = "common/rust/edgellm"
+binding  = "llama-cpp-2 =0.1.159, pinned Wednesday 14 October 2026; bundles its own llama.cpp, not the v0.6.0 tag of the C projects"
+
+[build]
+# From the repository root. The default feature is the stub; CI builds and tests this.
+command = "cargo build --manifest-path projects/e05-adxl345-events/Cargo.toml"
+test    = "cargo test --manifest-path projects/e05-adxl345-events/Cargo.toml"
+# The bench binary, with the engine compiled into it. Cross build from skyhorizon's WSL for
+# aarch64-unknown-linux-gnu, or build on the Pi 3 itself with -j1 and patience.
+engine  = "cargo build --release --manifest-path projects/e05-adxl345-events/Cargo.toml --no-default-features --features engine"
+
+[run]
+stub   = "projects/e05-adxl345-events/target/debug/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --log /tmp/e05_stub.csv --stub"
+replay = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_replay.csv"
+live   = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --live iio /sys/bus/iio/devices/iio:device0:0.02 --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_run.csv"
+
+[oracle]
+expected = "tests/oracle/e05.expected.csv"
+# The in-process check is tests/oracle.rs, run by `cargo test`; the C checker reads the same
+# two files when the C tree is built beside it.
+compare  = "build/tests/oracle_check /tmp/e05_stub.csv tests/oracle/e05.expected.csv"
+table    = "python tools/agreement.py projects/e05-adxl345-events/evidence/e05_run.csv --md"
+
+[comparison]
+# The three figures the chapter reports beside e03's C binary on the same Pi 3: the size of
+# the deployable, the resident set after the first decision, and the tokens per second from
+# the log's timing columns. Both binaries carry an engine; they are different builds of it.
+size   = "ls -l projects/e05-adxl345-events/target/release/edgellm-e05 build/projects/e03-led-explainer/edgellm-e03"
+rss    = "grep VmRSS /proc/$(pgrep -f edgellm-e05)/status"
+linked = "ldd projects/e05-adxl345-events/target/release/edgellm-e05"

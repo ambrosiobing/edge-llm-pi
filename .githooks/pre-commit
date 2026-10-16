@@ -1,0 +1,25 @@
+#!/bin/sh
+# Refuses a commit that would add an authoring file (.tex, .pdf, .html, .aux, .log,
+# .toc or anything under build/). The volume's sources and its built editions stay in
+# the catalogue; this repository carries the Markdown edition and the code.
+#
+# Pure shell on purpose, and it must stay that way. This hook runs through git's own
+# bash on the authoring laptop, where "command -v python3" finds
+# AppData/Local/Microsoft/WindowsApps/python3, the Windows Store alias stub, and not an
+# interpreter: the stub prints an advertisement and exits non-zero. An earlier version
+# of this hook preferred python3 over python and so picked the stub every time, which
+# aborted the first commit with a message about the Microsoft Store and nothing about
+# this repository. A hook that cannot run is a hook that gets switched off, so this one
+# depends on nothing but git and grep. Corrected Friday 16 October 2026.
+#
+# tools/no_authoring_files.py runs the same check in CI, where python3 is real, and
+# reports more detail. The two are deliberately redundant.
+bad=$(git diff --cached --name-only --diff-filter=AM |
+      grep -E '\.(tex|pdf|html|aux|log|toc)$|(^|/)build/')
+if [ -n "$bad" ]; then
+    echo "pre-commit: these are authoring files and never go in this repository:" >&2
+    echo "$bad" | sed 's/^/  /' >&2
+    echo "pre-commit: unstage each with  git restore --staged <path>" >&2
+    exit 1
+fi
+exit 0

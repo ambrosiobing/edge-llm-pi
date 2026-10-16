@@ -1,0 +1,32 @@
+[Unit]
+Description=edge-llm-pi e18 inference daemon, the C half behind the C ABI
+Documentation=https://github.com/ambrosiobing/edge-llm-pi
+# The daemon depends on nothing but the model file. It knows nothing about serial
+# ports, which is the point: it can be stopped, upgraded and started again while the
+# device service keeps polling and logging the rule's verdict alone.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/edgellm-e18-daemon \
+    --socket /run/edgellm/e18-daemon.sock \
+    --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+    --grammar /usr/share/edgellm/e18/grammar.gbnf \
+    --prompt /usr/share/edgellm/e18/prompt.txt \
+    --state /run/edgellm/e18.state \
+    --n-ctx 512 --threads 4 --n-predict 64 --temperature 0
+RuntimeDirectory=edgellm
+RuntimeDirectoryMode=0750
+# The socket is group readable and the service joins that group, so the two processes
+# meet on one group and neither needs root. The daemon touches no device at all.
+User=edgellm
+Group=edgellm
+Restart=on-failure
+RestartSec=5
+Nice=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+
+[Install]
+WantedBy=multi-user.target

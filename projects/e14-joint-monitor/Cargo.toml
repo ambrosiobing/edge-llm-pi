@@ -1,0 +1,63 @@
+# projects/e14-joint-monitor/Cargo.toml: the Rust service and its engine daemon, the two
+# processes that make project e14 project e13 with the model moved out of process.
+#
+# Four builds, and the chapter names each one:
+#
+#   cargo test                          the host and CI build: no socketcan, no
+#                                       llama.cpp, the stub answers from the grammar and
+#                                       the oracle test runs the whole boundary
+#   cargo build --features live         the bench build without a model file
+#   cargo build --features live,engine   the bench build, llama.cpp in the daemon
+#   cargo build --features engine        the daemon alone, on a host with no CAN
+#
+# Why both heavy dependencies are optional: CI compiles this project on every push and
+# has neither a CAN interface nor a reason to build llama.cpp, and a project whose test
+# suite takes minutes is a project whose test suite is skipped. The process boundary is
+# what the oracle test exercises, and it needs neither crate.
+#
+# The shared crate common/rust/edgellm is not a dependency because it is not in the tree
+# on Wednesday 14 October 2026: common/rust/README.md assigns it to the author of
+# project e05 and common/ is not this project's to write. src/main.rs reads the ADXL345
+# through its own iio module, in the shape that crate's IIO source will expose.
+
+[package]
+name = "edgellm-e14"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+license = "MIT"
+description = "Joint monitor: one CAN bus, one ADXL345, a rule, a model in another process"
+publish = false
+autobins = false
+
+[[bin]]
+name = "edgellm-e14"
+path = "src/main.rs"
+
+[[bin]]
+name = "edgellm-e14-engine-daemon"
+path = "src/bin/engine_daemon.rs"
+
+[features]
+default = []
+# The bench reader: SocketCAN frames and error frames from the WS-28164's MCP2515.
+live = ["socketcan"]
+# The daemon's engine: llama.cpp through the Rust binding, in the second process only.
+engine = ["llama-cpp-2"]
+
+[dependencies]
+# socketcan 4.0.0, MIT, read from crates.io on Wednesday 14 October 2026; it is Linux
+# only, which is why it is behind a feature and not a plain dependency.
+socketcan = { version = "4.0.0", optional = true }
+# llama-cpp-2 0.1.159, MIT or Apache-2.0, read from crates.io on Wednesday 14 October
+# 2026. It bundles its own llama.cpp commit, which is not the tag cmake/llama_tag.cmake
+# pins for the C projects; models/MODELS.md records both and the chapter says so.
+llama-cpp-2 = { version = "0.1.159", optional = true }
+
+[profile.release]
+# A long running service on a Pi 4: optimise, keep one codegen unit so the service's
+# own code is as small as the chapter's resident memory figure assumes, and abort on a
+# panic so that a monitor never half runs.
+opt-level = 2
+codegen-units = 1
+panic = "abort"

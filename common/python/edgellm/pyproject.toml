@@ -1,0 +1,30 @@
+# common/python/edgellm/pyproject.toml: the shared Python package of the volume, the
+# Python mirror of common/c (edgellm.h, io.h, rules.h, elog.h and edgellm_main.c). The
+# two Python projects, e15 and e20, depend on it by path:
+#
+#     python -m pip install -e common/python/edgellm
+#
+# llama-cpp-python is an extra, not a hard dependency: the stub engine, the replay
+# source, the rules, the logger and the loop import without it, which is how the oracle
+# tests run on a host with no engine. The pins match requirements.txt at the repository
+# root (read from PyPI on Wednesday 14 October 2026).
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgellm"
+version = "0.1.0"
+description = "The shared decision loop over llama-cpp-python: engine, replay, rules, log"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "pyserial==3.5",
+]
+
+[project.optional-dependencies]
+engine = ["llama-cpp-python==0.3.36"]
+test = ["pytest==9.1.1"]
+
+[tool.setuptools]
+packages = ["edgellm"]

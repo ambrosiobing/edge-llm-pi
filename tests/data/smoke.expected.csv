@@ -1,0 +1,10 @@
+t_s,tag,rule,model
+0.000000,thermal_zone0/temp,COOL,"{""decision"":""COOL""}"
+10.000000,thermal_zone0/temp,COOL,"{""decision"":""COOL""}"
+20.000000,thermal_zone0/temp,WARM,"{""decision"":""COOL""}"
+30.000000,thermal_zone0/temp,WARM,"{""decision"":""COOL""}"
+40.000000,thermal_zone0/temp,WARM,"{""decision"":""COOL""}"
+50.000000,thermal_zone0/temp,HOT,"{""decision"":""COOL""}"
+60.000000,thermal_zone0/temp,HOT,"{""decision"":""COOL""}"
+70.000000,thermal_zone0/temp,WARM,"{""decision"":""COOL""}"
+80.000000,thermal_zone0/temp,COOL,"{""decision"":""COOL""}"

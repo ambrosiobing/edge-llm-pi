@@ -1,0 +1,12 @@
+# e11_impact.gbnf: the three literals of rules_e11.c, letter for letter, plus one line,
+# in the house shape extended by a second key: one JSON object with a "decision" key and
+# a "line" key. The line is bounded to 8 to 120 characters of letters, digits, spaces and
+# commas and ends with a literal full stop, so the end of generation is reachable only
+# after a complete sentence and the longest answer stays inside an n_predict of 64. ws
+# admits spaces and tabs only, never a newline. The stub expands the first alternative of
+# every rule and the character class to nothing, so it answers
+# {"decision":"QUIET","line":"."}; the oracle file carries exactly that.
+root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "," ws "\"line\"" ws ":" ws line ws "}"
+decision ::= "\"QUIET\"" | "\"LOW_G_EVENT\"" | "\"HIGH_G_EVENT\""
+line     ::= "\"" [A-Za-z0-9 ,]{8,120} "." "\""
+ws       ::= [ \t]*

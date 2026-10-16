@@ -1,0 +1,15 @@
+# e13_presence.gbnf: the three literals of projects/e13-can-honesty/src/rules.rs, letter
+# for letter and in the same order, plus the node the verdict is about and one bounded
+# sentence. The house shape with two keys added: "decision" is the key tools/agreement.py
+# reads, "node" says which node was judged, and "why" is the one sentence the chapter asks
+# for. Nothing else can be sampled, so a verdict is never free text and a sentence can
+# never run past 96 characters. The quiet state PRESENT is first, so the stub answers it.
+# ws admits spaces and tabs only, never a newline. The hyphen sits last in the "why" class
+# so that it is a literal hyphen and not a range: the sentence has to be able to write a
+# node name.
+root     ::= "{" ws "\"node\"" ws ":" ws node ws "," ws "\"decision\"" ws ":" ws
+             decision ws "," ws "\"why\"" ws ":" ws why ws "}"
+node     ::= "\"joint-a\"" | "\"joint-b\"" | "\"joint-c\"" | "\"joint-d\""
+decision ::= "\"PRESENT\"" | "\"MODELLED\"" | "\"ABSENT\""
+why      ::= "\"" [A-Za-z0-9 ,.()-]{8,96} "\""
+ws       ::= [ \t]*
