@@ -64,8 +64,14 @@ prints the verdict. `--hat` is not decoration: `wiring.md` asks for a bare heade
 explicit note, and on the first run nobody wrote it down, so the runner now asks at the only
 moment anyone is looking at the board.
 
-`python3`, not `python`: Debian trixie does not guarantee the unsuffixed name, and the
-Raspberry Pi OS image this bench runs carries the interpreter only as `/usr/bin/python3`.
+`python3`, not `python`, and the reason is not the one first written here. Bare `python`
+**does** work on this card: `python-is-python3` 3.13.3-1 is installed and symlinks it, checked
+on Friday 16 October 2026. The original command's `python` would have run. `python3` stays
+because it is the spelling that cannot be wrong anywhere, while `python` depends on a package
+that a Lite image or another card need not carry, and the other three boards in the table have
+not been checked. The thirty or so bare `python` commands in the other projects' wiring files
+are therefore left alone: they work on this card, they are unverified on the rest, and
+rewriting eighteen files on a guess is worse than knowing which guess you are making.
 The llama-cpp tools land in `build/bin/`, because llama.cpp's own CMakeLists sets
 `CMAKE_RUNTIME_OUTPUT_DIRECTORY` to `${CMAKE_BINARY_DIR}/bin` and `CMAKE_BINARY_DIR` is the
 top-level build directory even when llama.cpp is added as a subdirectory. The path
