@@ -199,6 +199,8 @@ cd ~; vcgencmd get_throttled; vcgencmd measure_temp
 
 **Step 3.** Build the engine at the pinned tag on the Pi 4B, natively, with the CPU flags of the board it runs on. The same three commands run on the Pi 3B+ and the Pi 3B with `-j2` in place of `-j4`, because a 1 GB board swaps at four parallel compiles of this tree.
 
+**There is a second reason to drop the job count, and it is about the supply rather than the memory.** On this bench the `-j4` build took the Pi 4B down: the board simply vanished, forty-odd minutes in, leaving no entry in any log because that installation keeps no persistent journal. Later the same evening the throttle register recorded an under-voltage event under sustained four-core load on a bare header with nothing attached. A Raspberry Pi 4 on four cores wants 5.1 V at 3 A over USB-C, and a supply that is merely close behaves exactly like this: steady at idle, sagging under a long compile, and occasionally dropping the board outright. **The symptom is an absence rather than an error**, so it is easy to read as a hung build, which is what happened here. Where the supply is not known to be good, build with `-j3`: it costs a few minutes and removes a failure that leaves nothing behind to diagnose. A benchmark can be protected by a settling pause between stages, as the pitfall below describes; a compile has no such pause to give it.
+
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
 cd ~; git clone --branch v0.6.0 --depth 1 https://github.com/ggml-org/llama.cpp.git
