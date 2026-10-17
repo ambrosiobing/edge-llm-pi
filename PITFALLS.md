@@ -4,7 +4,7 @@ Generated from the Pitfalls section of each project, so it is an index and
 never a second copy: the sentence that explains a pitfall stays in the project
 that owns it. Alphabetical, because by project is what the chapters already give.
 
-**162 pitfalls across 20 projects.**
+**163 pitfalls across 20 projects.**
 
 | Pitfall | Project |
 |---|---|
@@ -26,6 +26,7 @@ that owns it. Alphabetical, because by project is what the chapters already give
 | A 10 microsecond sampler cannot see a nanosecond pulse | [Project 10](chapters/10-mcc-118-voltage-event-labeller.md) |
 | A 50 Hz poll can miss a tap | [Project 5](chapters/05-adxl345-event-reporter.md) |
 | A baseline taken on another mounting, or under a hand | [Project 12](chapters/12-stwin-box-vibration-band-reporter.md) |
+| A board that browns out under sustained load still prints a number | [Project 1](chapters/01-bring-up-and-the-honest-tokens-per-second.md) |
 | A C ABI that changes without its version being bumped | [Project 18](chapters/18-mini-industrial-serial-logger.md) |
 | A CAN error frame may not carry the counters | [Project 14](chapters/14-joint-monitor.md) |
 | A capture taken without a SIM measures an attach that never completes | [Project 16](chapters/16-nb-iot-sleep-interval-from-measured-microamps.md) |
