@@ -197,6 +197,74 @@ def gate(reference, harness, gate_threads, band, ran=True):
                     % ("PASS" if ok else "FAIL", gate_threads, delta, band))
 
 
+def evidence_text(head, readings, reference_table, harness_runs, table,
+                  stopped_at, verdict):
+    """Return the whole evidence file as one string.
+
+    Pure: no clock, no filesystem, no argparse. It was inline in main() with twenty locals
+    around it until Saturday 17 October 2026, which is why the one case it most needed to
+    handle went wrong unnoticed: the verdict sentence sat inside the "if table" block, so a
+    run refused at the reference stage wrote the banner, the register table and no statement
+    of what the register said or why it stopped, because there is no division to print when
+    the harness never ran. The fix was to move one line; the reason it survived long enough
+    to need fixing is that nothing could reach this code without a board, a model file and an
+    hour. Now a test can.
+
+    head carries the nine fixed values of the header: board, started (a datetime), model,
+    kernel, command, hat, settle, band, gate_threads. readings is a list of
+    (moment, reading, temperature). harness_runs is a list of (command, text) and is empty
+    when the run stopped before the harness. table is a list of
+    (threads, test, reference, harness, percent) and is empty for the same reason.
+    stopped_at is None on a clean run and names the stage otherwise.
+    """
+    out = []
+    w = out.append
+    w("# llama-bench on %s, %s\n\n" % (head["board"],
+                                        head["started"].strftime("%A %d %B %Y, %H:%M")))
+    w("- model: %s\n" % head["model"])
+    w("- kernel: %s\n" % head["kernel"])
+    w("- command: %s\n" % head["command"])
+    w("- header: %s\n" % head["hat"])
+    w("- settling pause between stages: %d s\n" % head["settle"])
+    w("- instrument: upstream llama-bench; the volume's harness is priced "
+      "against this table and published only within %.1f percent of it\n\n" % head["band"])
+    if stopped_at is not None:
+        w("**REFUSED at %s.** See the verdict below. The figures in this file "
+          "are kept so the failure can be read; none of them is publishable.\n\n"
+          % stopped_at)
+    w("## The register, read at every stage\n\n")
+    w("| moment | vcgencmd get_throttled | in words | temperature |\n")
+    w("|---|---|---|---|\n")
+    for moment, reading, temp in readings:
+        w("| %s | %s | %s | %s |\n" % (moment, reading, decode(reading), temp))
+    w("\nRead between stages and not only at the ends, because a run refused at "
+      "the end says the rail sagged without saying when.\n\n")
+    w(reference_table)
+    if not reference_table.endswith("\n"):
+        w("\n")
+    for hcmd, text in harness_runs:
+        w("\n## The harness, same board, same sitting, same model file\n\n")
+        w("    %s\n\n" % " ".join(hcmd))
+        w(text)
+        if not text.endswith("\n"):
+            w("\n")
+    if table:
+        w("\n## The division\n\n")
+        w("| threads | quantity | reference | harness | harness minus reference |\n")
+        w("|---|---|---|---|---|\n")
+        for threads, test, ref, har, pct in table:
+            label = "pp 64" if test == "pp64" else "tg 32"
+            w("| %d | %s | %.2f | %.2f | %+.2f percent |\n"
+              % (threads, label, ref, har, pct))
+        w("\nThe gate is the tg 32 comparison at %d threads. Other thread counts "
+          "are measured and reported here and do not decide, because a band is "
+          "only meaningful around a figure that repeats.\n" % head["gate_threads"])
+    # The verdict goes out whatever happened, and outside the block above. See the docstring:
+    # this one line is the whole of the defect that prompted the extraction.
+    w("\n**Verdict: %s.**\n" % verdict)
+    return "".join(out)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", required=True, help="GGUF file")
@@ -287,55 +355,20 @@ def main():
     name = "%s_llama-bench_%s_%s.md" % (started.strftime("%Y-%m-%d_%H%M"), args.board, stem)
     path = os.path.join(args.evidence, name)
     uname = platform.uname()
+    head = {
+        "board": args.board,
+        "started": started,
+        "model": os.path.basename(args.model),
+        "kernel": "%s %s %s" % (uname.system, uname.release, uname.machine),
+        "command": " ".join(cmd),
+        "hat": args.hat,
+        "settle": args.settle,
+        "band": args.band,
+        "gate_threads": args.gate_threads,
+    }
     with open(path, "w", encoding="ascii", errors="replace", newline="\n") as fh:
-        fh.write("# llama-bench on %s, %s\n\n" % (args.board,
-                                                  started.strftime("%A %d %B %Y, %H:%M")))
-        fh.write("- model: %s\n" % os.path.basename(args.model))
-        fh.write("- kernel: %s %s %s\n" % (uname.system, uname.release, uname.machine))
-        fh.write("- command: %s\n" % " ".join(cmd))
-        fh.write("- header: %s\n" % args.hat)
-        fh.write("- settling pause between stages: %d s\n" % args.settle)
-        fh.write("- instrument: upstream llama-bench; the volume's harness is priced "
-                 "against this table and published only within %.1f percent of it\n\n"
-                 % args.band)
-        if stopped_at is not None:
-            fh.write("**REFUSED at %s.** See the verdict below. The figures in this file "
-                     "are kept so the failure can be read; none of them is publishable.\n\n"
-                     % stopped_at)
-        fh.write("## The register, read at every stage\n\n")
-        fh.write("| moment | vcgencmd get_throttled | in words | temperature |\n")
-        fh.write("|---|---|---|---|\n")
-        for moment, reading, temp in readings:
-            fh.write("| %s | %s | %s | %s |\n" % (moment, reading, decode(reading), temp))
-        fh.write("\nRead between stages and not only at the ends, because a run refused at "
-                 "the end says the rail sagged without saying when.\n\n")
-        fh.write(reference_table)
-        if not reference_table.endswith("\n"):
-            fh.write("\n")
-        for hcmd, text in harness_runs:
-            fh.write("\n## The harness, same board, same sitting, same model file\n\n")
-            fh.write("    %s\n\n" % " ".join(hcmd))
-            fh.write(text)
-            if not text.endswith("\n"):
-                fh.write("\n")
-        if table:
-            fh.write("\n## The division\n\n")
-            fh.write("| threads | quantity | reference | harness | harness minus reference |\n")
-            fh.write("|---|---|---|---|---|\n")
-            for threads, test, ref, har, pct in table:
-                label = "pp 64" if test == "pp64" else "tg 32"
-                fh.write("| %d | %s | %.2f | %.2f | %+.2f percent |\n"
-                         % (threads, label, ref, har, pct))
-            fh.write("\nThe gate is the tg 32 comparison at %d threads. Other thread counts "
-                     "are measured and reported here and do not decide, because a band is "
-                     "only meaningful around a figure that repeats.\n" % args.gate_threads)
-        # The verdict is written whatever happened, and outside the block above. It used to
-        # sit inside it, so a run refused at the reference stage produced a file with the
-        # banner at the top, the reference table, and no statement of what the register said
-        # or why the run stopped: there is no division to print when the harness never ran,
-        # and the verdict went with it. That is the first failure the write-even-when-refused
-        # behaviour was added for. Found reviewing this file the morning it was written.
-        fh.write("\n**Verdict: %s.**\n" % verdict)
+        fh.write(evidence_text(head, readings, reference_table, harness_runs, table,
+                               stopped_at, verdict))
 
     print(reference_table)
     for _, text in harness_runs:

@@ -10,6 +10,7 @@ Why they exist at all: the runner now decides pass or fail, and a measuring tool
 decides anything has to be measured itself. Nothing here needs a Raspberry Pi, a model
 file or a compiler.
 """
+import datetime
 import os
 import sys
 
@@ -143,3 +144,97 @@ def test_decode_passes_through_what_it_cannot_read():
     """A host without vcgencmd records "not checked", and that must survive unchanged."""
     assert bench_runner.decode("not checked") == "not checked"
     assert bench_runner.decode("throttled=0xzz") == "throttled=0xzz"
+
+
+# The evidence file itself. These are the first tests to reach the writing path: it was
+# inline in main() with twenty locals around it until Saturday 17 October 2026, which is
+# exactly why its worst case went wrong unseen. The run that found the defect needed a
+# board, a model file and an hour; these need none of the three.
+
+HEAD = {
+    "board": "pi4b-eplepi",
+    "started": datetime.datetime(2026, 10, 17, 0, 10),
+    "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "kernel": "Linux 6.12.0-rpi aarch64",
+    "command": "build/bin/llama-bench -m model.gguf -p 64 -n 32 -t 1,2,3,4 -r 5 -o md",
+    "hat": "bare, nothing seated",
+    "settle": 60,
+    "band": 10.0,
+    "gate_threads": 3,
+}
+
+
+def test_a_run_refused_at_the_reference_stage_still_states_the_register_and_the_reason():
+    """The defect this extraction exists for.
+
+    The verdict sentence used to sit inside the "if table" block. There is no division to
+    print when the harness never ran, so a refusal at the very first stage wrote the banner,
+    the register table, and nothing at all about what the register said or why the run
+    stopped. That is the one case the write-even-when-refused behaviour had been added for,
+    and the one case it did not cover.
+    """
+    verdict = ("REFUSED at the reference stage: the register read throttled=0x50000 "
+               "(under-voltage has occurred, throttling has occurred). The stages after it "
+               "were not run.")
+    text = bench_runner.evidence_text(
+        HEAD,
+        [("before any load", "throttled=0x0", "45.2'C"),
+         ("after the reference", "throttled=0x50000", "72.0'C")],
+        REFERENCE,
+        [],          # the harness never ran
+        [],          # so there is nothing to divide
+        "the reference stage",
+        verdict,
+    )
+    assert "**Verdict: %s.**" % verdict in text
+    assert "throttled=0x50000" in text
+    assert "under-voltage has occurred, throttling has occurred" in text
+    assert "**REFUSED at the reference stage.**" in text
+    assert "## The division" not in text
+
+
+def test_the_verdict_is_the_last_thing_in_the_file_on_a_refusal():
+    """A reader who opens a refused file must not have to hunt for the reason."""
+    text = bench_runner.evidence_text(
+        HEAD, [("before any load", "throttled=0x50000", "45.2'C")],
+        REFERENCE, [], [], "the reference stage", "REFUSED at the reference stage: reasons",
+    )
+    assert text.rstrip().endswith("**Verdict: REFUSED at the reference stage: reasons.**")
+
+
+def test_a_clean_run_writes_the_division_and_no_refusal_banner():
+    text = bench_runner.evidence_text(
+        HEAD, [("before any load", "throttled=0x0", "45.2'C")],
+        REFERENCE, [(["harness", "--threads", "3"], HARNESS)],
+        [(3, "tg32", 9.47, 9.26, -2.22)], None, "PASS",
+    )
+    assert "## The division" in text
+    assert "| 3 | tg 32 | 9.47 | 9.26 | -2.22 percent |" in text
+    assert "REFUSED" not in text
+    assert text.rstrip().endswith("**Verdict: PASS.**")
+
+
+def test_every_register_reading_is_decoded_into_words_beside_it():
+    """The hex is the record; the words are what makes the record readable a month later."""
+    text = bench_runner.evidence_text(
+        HEAD,
+        [("before any load", "throttled=0x0", "45.2'C"),
+         ("after the reference", "throttled=0x80000", "79.1'C"),
+         ("after the harness", "not checked", "not checked")],
+        REFERENCE, [], [], None, "PASS",
+    )
+    assert "| before any load | throttled=0x0 | clean | 45.2'C |" in text
+    assert "soft temperature limit has occurred" in text
+    assert "| after the harness | not checked | not checked | not checked |" in text
+
+
+def test_the_header_records_the_conditions_a_figure_cannot_be_read_without():
+    """Board, header state and settling pause are conditions of the measurement, not trivia."""
+    text = bench_runner.evidence_text(
+        HEAD, [("before any load", "throttled=0x0", "45.2'C")],
+        REFERENCE, [], [], None, "PASS",
+    )
+    assert "# llama-bench on pi4b-eplepi, Saturday 17 October 2026, 00:10" in text
+    assert "- header: bare, nothing seated" in text
+    assert "- settling pause between stages: 60 s" in text
+    assert "within 10.0 percent of it" in text
