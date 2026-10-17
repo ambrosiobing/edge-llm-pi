@@ -32,6 +32,23 @@ mean across five repeats, so a band of 10 percent drawn around it is crossed or 
 by chance; at three threads both instruments repeat to a hundredth of a token per second.
 A gate is only as good as the stability of the number it is drawn around. Other thread
 counts are measured and reported, and do not decide.
+
+**--settle defaults to 60 seconds between stages, and that is a measured default.** On
+Saturday 17 October 2026 this runner was refused three times on the bench Pi 4B with
+`throttled=0x50000`, under-voltage and throttling flagged since boot, while the same three
+stages run by hand with pauses between them passed. The HAT, the peripherals and the peak
+thread count were each eliminated: bare header with nothing on USB still refused, and one-
+and four-thread bursts from a fresh boot left the register clean. What differed was whether
+the load was continuous. The hand runs peaked at 72.0 C and then fell to 71.5 and 68.1
+between stages; back to back the board kept climbing into the band below the 80 C soft limit
+where the draw is greatest and nothing yet tells the processor to stop. Pass --settle 0 to
+reproduce the old behaviour, which is also how to test whether the pause is what helps.
+
+**The register is read at every stage and the evidence file is written even when the run is
+refused.** Both followed from the same night. Reading it only at the ends says the rail
+sagged without saying when, and raising on a bad reading threw away eight minutes of
+measurement that would have shown how far off it had gone. A refused run now stops at the
+stage that dirtied the register, writes what it had, and says so at the top of the file.
 """
 import argparse
 import datetime
@@ -39,22 +56,58 @@ import os
 import platform
 import subprocess
 import sys
+import time
 
 TESTS = ("pp64", "tg32")
 
 
+CLEAN = "throttled=0x0"
+
+
 def throttled(check):
+    """The register, reported and not judged.
+
+    It used to raise on anything but a clean reading, which meant a run refused at the end
+    threw away the table it had just spent eight minutes measuring. A refused run is still a
+    measurement of something, and on Saturday 17 October 2026 three of them in a row told us
+    only that the rail had sagged at some unknown point. Reading and deciding are now
+    separate, so the decision can be recorded next to the figures it rejected.
+    """
     if not check:
         return "not checked"
     try:
-        out = subprocess.run(["vcgencmd", "get_throttled"], capture_output=True, text=True,
-                             check=True).stdout.strip()
+        return subprocess.run(["vcgencmd", "get_throttled"], capture_output=True, text=True,
+                              check=True).stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         raise SystemExit("bench_runner: vcgencmd get_throttled failed; use "
                          "--no-throttle-check on a host that is not a Raspberry Pi")
-    if out != "throttled=0x0":
-        raise SystemExit("bench_runner: refused, %s (must be throttled=0x0)" % out)
-    return out
+
+
+def temperature():
+    """Best effort. A host without vcgencmd still runs; it just records less."""
+    try:
+        return subprocess.run(["vcgencmd", "measure_temp"], capture_output=True, text=True,
+                              check=True).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return "not read"
+
+
+def decode(reading):
+    """The sticky bits in words, because 0x50000 tells a reader nothing on its own."""
+    if not reading.startswith("throttled=0x"):
+        return reading
+    try:
+        bits = int(reading.split("0x", 1)[1], 16)
+    except ValueError:
+        return reading
+    if bits == 0:
+        return "clean"
+    names = [(0, "under-voltage now"), (1, "arm frequency capped now"),
+             (2, "throttled now"), (3, "soft temperature limit now"),
+             (16, "under-voltage has occurred"), (17, "arm frequency capping has occurred"),
+             (18, "throttling has occurred"), (19, "soft temperature limit has occurred")]
+    set_bits = [text for bit, text in names if bits & (1 << bit)]
+    return ", ".join(set_bits) if set_bits else "unknown bits"
 
 
 def run_tool(label, cmd):
@@ -161,6 +214,8 @@ def main():
                         help="the thread count whose tg comparison decides pass or fail")
     parser.add_argument("--band", type=float, default=10.0,
                         help="percent the harness may differ from the reference")
+    parser.add_argument("--settle", type=int, default=60,
+                        help="seconds of idle between stages; 0 runs them back to back")
     parser.add_argument("--hat", default="not recorded",
                         help="what was seated on the header, e.g. 'bare header, no HAT'")
     args = parser.parse_args()
@@ -170,18 +225,44 @@ def main():
 
     check = not args.no_throttle_check
     before = throttled(check)
+    if check and before != CLEAN:
+        raise SystemExit("bench_runner: refused before any load, %s (%s). The sticky bits "
+                         "only clear at boot, so reboot and read it again before running."
+                         % (before, decode(before)))
     started = datetime.datetime.now()
+    readings = [("before any load", before, temperature())]
+    stopped_at = None
+
     cmd = [args.llama_bench, "-m", args.model, "-p", "64", "-n", "32", "-t", args.threads,
            "-r", str(args.repeat), "-o", "md"]
     reference_table = run_tool("llama-bench", cmd)
+    after = throttled(check)
+    readings.append(("after the reference", after, temperature()))
+    if check and after != CLEAN:
+        stopped_at = "the reference"
 
+    # The register is read between stages, not only at the end, because three refusals in
+    # one night said the rail had sagged without saying when. And the stages are separated
+    # by --settle seconds, because the one difference between the runs that passed and the
+    # runs that were refused on this bench was whether the load was continuous: the same
+    # three stages run by hand with pauses peaked at 72.0 C and then fell to 71.5 and 68.1,
+    # while back to back they kept climbing into the band below the soft limit where the
+    # draw is greatest and nothing yet tells the processor to stop. Saturday 17 October 2026.
     harness_runs = []
-    if args.harness:
+    if args.harness and stopped_at is None:
         for t in [x.strip() for x in args.harness_threads.split(",") if x.strip()]:
+            if args.settle > 0:
+                time.sleep(args.settle)
+                readings.append(("after settling %d s" % args.settle, throttled(check),
+                                 temperature()))
             hcmd = [args.harness, "--model", args.model, "--prompt", args.prompt,
                     "-p", "64", "-n", "32", "-t", t, "-r", str(args.repeat)]
             harness_runs.append((hcmd, run_tool("the harness", hcmd)))
-    after = throttled(check)
+            after = throttled(check)
+            readings.append(("after the harness at %s threads" % t, after, temperature()))
+            if check and after != CLEAN:
+                stopped_at = "the harness at %s threads" % t
+                break
 
     reference = parse_rows(reference_table)
     harness = {}
@@ -191,6 +272,15 @@ def main():
 
     failed, verdict = gate(reference, harness, args.gate_threads, args.band,
                            ran=bool(args.harness))
+    if stopped_at is not None:
+        # The register beats the gate. Figures measured on a rail that sagged are not
+        # publishable however well they agree with each other, and the run stops at the
+        # stage that dirtied it rather than carrying on to collect more of them.
+        failed = True
+        verdict = ("REFUSED at %s: the register read %s (%s). The stages after it were not "
+                   "run. Everything above was measured before the register went dirty and "
+                   "is kept so the failure can be read, not so it can be quoted."
+                   % (stopped_at, readings[-1][1], decode(readings[-1][1])))
 
     os.makedirs(args.evidence, exist_ok=True)
     stem = os.path.splitext(os.path.basename(args.model))[0]
@@ -204,11 +294,21 @@ def main():
         fh.write("- kernel: %s %s %s\n" % (uname.system, uname.release, uname.machine))
         fh.write("- command: %s\n" % " ".join(cmd))
         fh.write("- header: %s\n" % args.hat)
-        fh.write("- throttled before: %s\n" % before)
-        fh.write("- throttled after: %s\n" % after)
+        fh.write("- settling pause between stages: %d s\n" % args.settle)
         fh.write("- instrument: upstream llama-bench; the volume's harness is priced "
                  "against this table and published only within %.1f percent of it\n\n"
                  % args.band)
+        if stopped_at is not None:
+            fh.write("**REFUSED at %s.** See the verdict below. The figures in this file "
+                     "are kept so the failure can be read; none of them is publishable.\n\n"
+                     % stopped_at)
+        fh.write("## The register, read at every stage\n\n")
+        fh.write("| moment | vcgencmd get_throttled | in words | temperature |\n")
+        fh.write("|---|---|---|---|\n")
+        for moment, reading, temp in readings:
+            fh.write("| %s | %s | %s | %s |\n" % (moment, reading, decode(reading), temp))
+        fh.write("\nRead between stages and not only at the ends, because a run refused at "
+                 "the end says the rail sagged without saying when.\n\n")
         fh.write(reference_table)
         if not reference_table.endswith("\n"):
             fh.write("\n")

@@ -116,3 +116,30 @@ def test_the_band_is_the_band(band, expected_fail):
     harness = bench_runner.parse_rows(HARNESS)
     failed, _ = bench_runner.gate(reference, harness, 3, band)
     assert failed is expected_fail
+
+
+def test_decode_reads_the_value_this_bench_actually_produced():
+    """0x50000 is what the Pi 4B reported three times on Saturday 17 October 2026."""
+    words = bench_runner.decode("throttled=0x50000")
+    assert words == "under-voltage has occurred, throttling has occurred"
+
+
+def test_decode_calls_a_clean_register_clean():
+    assert bench_runner.decode("throttled=0x0") == "clean"
+
+
+def test_decode_separates_now_from_has_occurred():
+    """The low bits mean it is happening; the high bits mean it happened since boot."""
+    assert bench_runner.decode("throttled=0x1") == "under-voltage now"
+    assert bench_runner.decode("throttled=0x10000") == "under-voltage has occurred"
+
+
+def test_decode_names_the_soft_temperature_limit_separately():
+    """Bit 19 was never set in the refusals, which is how we knew it was not heat."""
+    assert bench_runner.decode("throttled=0x80000") == "soft temperature limit has occurred"
+
+
+def test_decode_passes_through_what_it_cannot_read():
+    """A host without vcgencmd records "not checked", and that must survive unchanged."""
+    assert bench_runner.decode("not checked") == "not checked"
+    assert bench_runner.decode("throttled=0xzz") == "throttled=0xzz"

@@ -57,10 +57,29 @@ On the NanoPi there is no `vcgencmd`; read `/sys/class/thermal/thermal_zone0/tem
       --prompt projects/e01-bringup/prompt.txt \
       --hat "bare header, no HAT"
 
-One command, and it exits non-zero if the run does not pass. It reads the throttle register,
-runs the reference at 1, 2, 3 and 4 threads, runs the harness at 3 and 4, reads the register
-again, writes the dated evidence file with both tables and the division between them, and
-prints the verdict. `--hat` is not decoration: `wiring.md` asks for a bare header or an
+One command, and it exits non-zero if the run does not pass. It reads the throttle register
+and the temperature at every stage, runs the reference at 1, 2, 3 and 4 threads, waits
+`--settle` seconds, runs the harness at 3 and 4 threads with the same pause between them,
+writes the dated evidence file with both tables, the register readings, the division and the
+verdict.
+
+**The settling pause defaults to 60 seconds and the default is measured, not cautious.** On
+Saturday 17 October 2026 this runner was refused three times on this board with
+`throttled=0x50000`, under-voltage and throttling flagged since boot, while the same three
+stages run by hand with pauses between them passed and produced the second day's figures. The
+HAT, the peripherals and the peak thread count were each eliminated by test. What differed
+was whether the load was continuous: the hand runs peaked at 72.0 C and then fell to 71.5 and
+68.1 between stages, where back to back the board kept climbing into the band under the 80 C
+soft limit, with the draw at its greatest and nothing yet telling the processor to stop. Pass
+`--settle 0` to run them back to back, which is how to test whether the pause is what helps.
+
+**A refused run still writes its evidence file.** It stops at the stage that dirtied the
+register rather than collecting more unusable figures, marks the file REFUSED at the top, and
+keeps what it had so the failure can be read. Nothing in such a file is publishable. The
+register is read between stages and not only at the ends, because a refusal at the end says
+the rail sagged without saying when, which cost an entire night to work out by hand.
+
+`--hat` is not decoration: `wiring.md` asks for a bare header or an
 explicit note, and on the first run nobody wrote it down, so the runner now asks at the only
 moment anyone is looking at the board.
 
