@@ -58,6 +58,32 @@ zero. The second acceptance number is the ratio of the `--cold` mean `prompt_ms`
 state-restore mean `prompt_ms` from `e02_variant_a` on the same board and thread count,
 which must be at least 2.0; throttle bits `0x0` before and after both.
 
+**The second number needs a binary the project's build command does not make.**
+`project.toml`'s `[build] command` builds `edgellm-e02`, `rules_test` and `oracle_check`,
+which is what the host and CI need, and the two comparison loops are deliberately left out
+of the stub build because they require the real engine. On the board, build them too before
+running the acceptance, or the ratio has nothing to measure:
+
+    cd ~/edge-llm-pi
+    cmake --build build --target e02_variant_a e02_variant_b -j3
+
+    cd ~/edge-llm-pi/projects/e02-decision-loop
+    ../../build/projects/e02-decision-loop/e02_variant_a \
+      --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+      --replay replay/synthetic_1000.csv
+    ../../build/projects/e02-decision-loop/e02_variant_a \
+      --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+      --replay replay/synthetic_1000.csv --cold
+
+Run from the project folder, because those two resolve `grammar.gbnf` and `prompt.txt`
+relative to it. `-j3` rather than `-j4` on the bench Pi 4B: that board has twice gone
+under-voltage on sustained four-core load, and a compile has no settling pause to protect it,
+which is written up in `projects/e01-bringup/wiring.md` and in chapter one's pitfalls.
+
+This gap was found by reading e02 ahead of its sitting rather than during one, on Saturday
+17 October 2026, which is the cheaper of the two places to find it. The build command is
+unchanged: it is right for CI, and the bench needs one line more.
+
 ## config.txt
 
 No overlay and no line is added for e02.
