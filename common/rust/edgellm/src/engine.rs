@@ -6,8 +6,6 @@
 //! common/c/src/edgellm.c: restore the system prompt, reset the sampler, decode the user
 //! text, sample under the grammar until n_predict or an end-of-generation token.
 
-use crate::{err, Decider, Decision, Error};
-
 /// The first expansion of a grammar, the stub's whole answer. Starting at the rule named
 /// `root`, the FIRST alternative is walked left to right: a quoted literal appends its text
 /// (escapes \" \\ \n \t \r \xHH resolved), a reference to another rule expands that rule's
@@ -410,6 +408,12 @@ pub mod llama {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // Decider, for s.decide() below. It sat at the top of this file until Saturday
+    // 17 October 2026, unused in every build except this one: both feature modules
+    // import what they need for themselves, and running this crate's tests for the
+    // first time that evening printed the difference, all four names unused in the
+    // library build and only the other three unused in the test build.
+    use crate::Decider;
 
     const HOUSE: &str = "# the house shape\n\
 root     ::= \"{\" ws \"\\\"decision\\\"\" ws \":\" ws decision ws \"}\"\n\
