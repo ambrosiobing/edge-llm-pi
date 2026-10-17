@@ -4,6 +4,8 @@
     python tools/cargo_all.py            run them all
     python tools/cargo_all.py --list     print what would run, and run nothing
 
+Every Cargo.toml under projects/ and under common/rust/, which is every one in the tree.
+
 Why this is a script and not four lines in the workflow. Until Saturday 17 October 2026 the
 workflow globbed `projects/*/Cargo.toml`, which is one level deep, and e18 keeps its halves
 in `rust/` and `c/`. So nothing ever compiled e18, and because nothing compiled it, its
@@ -36,15 +38,28 @@ KNOWN = {
 }
 
 
+# Where Rust lives in this tree. common/rust is here because nothing ran the shared crate's
+# own tests until Saturday 17 October 2026: the workflow named no path under common/, and
+# this script's first version walked projects/ only. Four projects depend on that crate and
+# roughly eighty of its test functions had never been run by any job, which is the same gap
+# as the one-level glob, one directory over.
+WALK = ("projects", "common/rust")
+
+
 def manifests():
     found = []
-    for p in sorted((ROOT / "projects").rglob("Cargo.toml")):
-        rel = p.relative_to(ROOT).as_posix()
-        if "/target/" in "/" + rel:
+    for top in WALK:
+        base = ROOT / top
+        if not base.is_dir():
+            print("cargo_all: %s is not a directory, which cannot be right" % top)
             continue
-        if len(rel.split("/")) > 4:
-            continue
-        found.append(rel)
+        for p in sorted(base.rglob("Cargo.toml")):
+            rel = p.relative_to(ROOT).as_posix()
+            if "/target/" in "/" + rel:
+                continue
+            if len(rel.split("/")) > 4:
+                continue
+            found.append(rel)
     return found
 
 
