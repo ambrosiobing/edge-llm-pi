@@ -51,9 +51,23 @@ reference and this table needs the other build's numbers beside it.
 ## The board
 
 Raspberry Pi 4 Model B Rev 1.4, card `eplepi`, user `bing`, Raspberry Pi OS Debian 13 trixie.
-MemTotal 8,007,396 kB, MemAvailable 7,789,840 kB after boot, four cores. 34.5 C before the
-run and 46.7 C after, `throttled=0x0` at both readings and again after the harness runs.
-`pgrep` confirmed no compiler was running during the measurement.
+MemTotal 8,007,396 kB, MemAvailable 7,789,840 kB after boot, four cores. `throttled=0x0`
+before and after the run, and again after the harness runs. `pgrep` confirmed no compiler
+was running during the measurement.
+
+**Temperature, corrected on Saturday 17 October 2026.** This file first read "34.5 C before
+the run and 46.7 C after". The 34.5 C was the day's first pre-flight at about 17:45, on a
+board that had been sitting unpowered, and it was quoted here as though it described this
+run's thermal state. It did not. The board read 45.7 C at 18:53, and the only temperature
+actually recorded around this run is the 46.7 C taken after the harness stages. **The
+starting temperature of this run was not measured and is not known**, beyond being
+somewhere in the mid forties.
+
+The figures are unaffected and the throttle readings stand. The attribution was wrong, and
+quoting a number from the wrong record is the mistake this volume spends whole chapters
+warning about. It came to light while testing whether a cooler start explained a later
+refusal; the answer was that the run which passed and the runs which failed began at much
+the same temperature, so the hypothesis died and took this error with it.
 
 The engine is llama.cpp at tag v0.6.0, commit `d81235049384534c167caea52b85a694f6103d14`,
 built on this board. Every ARM feature probe failed at configure time and ggml settled on
