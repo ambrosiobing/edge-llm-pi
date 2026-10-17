@@ -166,8 +166,26 @@ On the board, with the real engine, `libllama` must already be built or installe
     cmake -S projects/e18-industrial-logger/c -B build-e18c \
       -DEDGELLM_LLAMA_INCLUDE_DIR=$HOME/llama.cpp/include \
       -DEDGELLM_LLAMA_LIBRARY=$HOME/llama.cpp/build/bin/libllama.so
-    cmake --build build-e18c -j4
+    cmake --build build-e18c -j3
     cargo build --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml
+
+`$HOME/llama.cpp` is the clone project e01 makes at the pinned tag; building `llama-bench`
+there leaves `libllama.so` in its `build/bin/`, which is what these two options point at.
+**It does not exist on this bench yet**, because e01's run of Friday 16 October 2026 used the
+repository's submodule build for its reference rather than the standalone clone its own steps
+prescribe; that is recorded as a deviation in `projects/e01-bringup/evidence`. Either create
+the clone as e01 step 3 says, or point these two options at
+`$HOME/edge-llm-pi/third_party/llama.cpp/include` and `$HOME/edge-llm-pi/build/bin/libllama.so`,
+which carry the same tag. The decision belongs with e01's and not with this chapter, since it
+is the same question: whether the engine on a board is upstream's build or this repository's.
+
+`-j3` rather than `-j4` on the bench Pi 4B, for the reason in
+`projects/e01-bringup/wiring.md`: that board has gone under-voltage under sustained four-core
+load and once vanished mid-compile without an entry in any log.
+
+The include and library options exist so they can point anywhere, and the Yocto build leaves
+them unset so `find_library` picks up the one the `llama-cpp` recipe installs. Nothing in the
+C code changes between the three.
 
 ## The acceptance runs
 
