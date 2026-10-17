@@ -249,6 +249,16 @@ int main(int argc, char **argv)
             if (std::strcmp(model, "none") == 0) ++n_free;
             log << ev.t_s << ',' << ev.tag << ',' << rule_e02.names[idx] << ',' << model << ','
                 << (t1 - t0) << ',' << (t2 - t1) << '\n';
+            // Flushed per row, as common/c/src/elog.c does. Without this the whole file sits
+            // in the stream buffer until the process exits, and on Saturday 17 October 2026
+            // the Raspberry Pi 4 Model B with the card eplepi restarted about three minutes
+            // into the seven-minute --cold pass: the log was zero bytes and every computed
+            // row was lost, where a per-row flush would have left the mean recoverable from
+            // the rows that did finish. That board has restarted unexplained four times, so
+            // a run of minutes must assume it may not reach its own last line. The flush is
+            // outside both timed regions, after t2, so it perturbs neither prompt_ms nor
+            // generate_ms.
+            log.flush();
             sum_p += t1 - t0;
             sum_g += t2 - t1;
             ++n_rows;
