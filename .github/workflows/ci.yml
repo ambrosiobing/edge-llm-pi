@@ -135,16 +135,12 @@ jobs:
           sudo apt-get install -y cmake ninja-build libgpiod-dev libclang-dev
       - uses: dtolnay/rust-toolchain@stable
       - name: cargo test in every Rust project
-        run: |
-          set -e
-          # find, not a one-level glob: e18's manifest is at rust/Cargo.toml and was
-          # reached by no job, which is why its dependency on the shared crate could
-          # name four features that crate does not declare and no run ever said so.
-          for m in $(find projects -maxdepth 3 -name Cargo.toml -not -path '*/target/*' | sort); do
-            [ -f "$m" ] || continue
-            echo "== $m"
-            cargo test --manifest-path "$m"
-          done
+        # tools/cargo_all.py walks the tree instead of globbing one level deep, which is how
+        # e18 was reached for the first time on Saturday 17 October 2026, and it names the
+        # one manifest that does not compile rather than hiding it or failing every push
+        # over it. A named failure that starts passing fails the script, so the list cannot
+        # quietly become a set of excuses. The reason for each entry is in the script.
+        run: python3 tools/cargo_all.py
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

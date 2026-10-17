@@ -29,7 +29,42 @@ abi      = "projects/e18-industrial-logger/c/abi.h"
 # loop globbed projects/*/Cargo.toml while this project's is at rust/Cargo.toml. The
 # workflow's loop is widened in the same change; the C half is still configured by hand
 # with c_configure below, which is deliberate, and the chapter says why.
-blocked_on = "nothing; see the note above, and build both halves with the four keys below"
+# AND THEN cargo COMPILED IT, for the first time, in skyhorizon's WSL the same evening.
+# The line below said "nothing" for about an hour, which was wrong: resolving the manifest
+# only got as far as the compiler. The Rust half has never compiled, and it fails on eight
+# errors in two kinds. What it expects of the shared crate is written at the top of
+# rust/src/main.rs, and the crate was written to a different interface:
+#
+#   e18 expects                                   common/rust/edgellm has
+#   io::replay::Replay::open                      io::Replay::open, no replay module
+#   elog::Log::create(path, engine)               elog::Elog::open(path, engine_version)
+#   elog::Answer{text,prompt_ms,                  Decision, in lib.rs, with those four
+#       generate_ms,n_generated}                      fields and two more
+#   template::chatml_system / chatml_user         template::wrap_system(Template::ChatMl, s)
+#                                                     and wrap_user, same shape
+#   io::serial::Port::open / set_rs485 /          NOTHING. open_live knows "iio" only.
+#       write_all / read_exact_timeout
+#   rules::RuleCtx::new(n)                        RuleCtx::new(), history fixed at
+#                                                     RULE_HISTORY = 16
+#
+# The first four are renames with identical semantics and are not the reason this is still
+# open. The last two are, and neither is a repair:
+#
+# ONE, there is no serial port in the Rust crate. Four methods, termios, half duplex for
+# RS485, and a timed read. This project is the only Rust one that needs serial, so where it
+# lives is a decision: common/rust/edgellm/src/io.rs as e18's own header assumes, or inside
+# this project. Either way it is new code and it needs a dependency this project does not
+# have yet, libc for hand-rolled termios or a serial crate with its licence recorded.
+#
+# TWO, rules.rs here sets WINDOW = 30 and the crate keeps 16. Dropping the argument the
+# compiler objects to would halve this rule's window in silence, and the unit test that
+# asserts over WINDOW values would then exercise a history the loop cannot produce. So the
+# window is a convention question across both languages, because rules.h fixes
+# RULE_HISTORY at 16 in C as well: either the context carries its capacity, or this rule is
+# re-specified to 16, or this project keeps its own history and does not use RuleCtx.
+#
+# The C half is unaffected and green: it configures, builds and passes its ctest.
+blocked_on = "the Rust half: no serial port in the shared crate, and WINDOW 30 against RULE_HISTORY 16"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned
