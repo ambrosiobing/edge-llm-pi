@@ -32,7 +32,10 @@ static void tag_from_path(const char *path, char *tag, size_t len)
             p--;
         start = p;
     }
-    snprintf(tag, len, "%s", start);
+    /* Deliberate truncation: tag is a short label for the log's source column and start
+     * is the last two components of a sysfs path, which can be long. The precision writes
+     * the same bytes snprintf would have truncated to, and tells gcc so. */
+    snprintf(tag, len, "%.*s", (int)(len - 1), start);
 }
 
 static int sysfs_next(io_source *s, io_event *ev)

@@ -129,7 +129,11 @@ static const char *wrap_user(const char *user, char *buf, size_t len)
     }
     if (strlen(head) + strlen(user) + strlen(tail) + 1 > len)
         return NULL;
-    sprintf(buf, "%s%s%s", head, user, tail);
+    /* The line above has already proved the three parts fit, so this writes exactly what
+     * sprintf would have. It is snprintf because len is a parameter: gcc cannot see the
+     * guard through it and warned -Wformat-overflow on every build of every C project
+     * here, and a build that prints warnings teaches a reader to skip them. */
+    snprintf(buf, len, "%s%s%s", head, user, tail);
     return buf;
 }
 
