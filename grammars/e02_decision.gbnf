@@ -1,7 +1,20 @@
 # e02_decision.gbnf: the three literals of rules_e02.c, letter for letter, in the house
 # shape: one JSON object with one "decision" key. Nothing else can be sampled, so a
-# decision is never free text. ws admits spaces and tabs only, never a newline, so the
-# longest answer stays inside the n_predict of 8 tokens on every tokenizer in the ladder.
+# decision is never free text. ws admits spaces and tabs only, never a newline.
+#
+# This file used to claim that the longest answer therefore stayed inside the n_predict of
+# 8 tokens on every tokenizer in the ladder. Measured on the Raspberry Pi 4 Model B with
+# the card eplepi on Saturday 17 October 2026, that is false for Qwen2.5. Its tokenizer
+# splits ALERT into two pieces where NORMAL is one, so the ALERT path needs nine tokens and
+# at eight it loses its closing brace: a thousand rows read { "decision": "ALERT" with no
+# "}", legal prefixes of this grammar that never reach its accept state. NORMAL completed
+# in exactly eight. The claim was never checked against a single tokenizer before it was
+# written down, and "every tokenizer in the ladder" was the part that made it sound checked.
+#
+# The remedy belongs to whoever runs the loop, not to this file: pass --n-predict 12, which
+# was shown to produce complete objects on the same board the same day. Whether the C core's
+# default of 8 should change for all twenty projects is a separate decision, because it
+# would move every figure already measured at 8.
 root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
 decision ::= "\"NORMAL\"" | "\"WATCH\"" | "\"ALERT\""
 ws       ::= [ \t]*

@@ -138,8 +138,19 @@ public:
         char piece[64];
         llama_sampler_reset(sampler_);
         for (int i = 0; i < n_predict; ++i) {
+            // No llama_sampler_accept here. llama_sampler_sample accepts the token it
+            // returns, so a second accept advances the grammar twice: the first legal
+            // piece is consumed, then offered to a grammar that has already moved past
+            // it, no viable stack remains, and llama.cpp throws "Unexpected empty
+            // grammar stack after accepting piece". That is exactly what this binary
+            // did on its first decision on the Raspberry Pi 4 Model B with the card
+            // eplepi on Saturday 17 October 2026, aborting before one row was logged,
+            // in both the restore and the --cold pass. common/c/src/edgellm.c carries
+            // the warning in its header comment and does not make the call; this file
+            // was written separately and did. Nothing caught it because project.toml's
+            // build command leaves e02_variant_a and e02_variant_b out, so neither
+            // binary had ever been built or run by CI, the host or the board.
             llama_token tok = llama_sampler_sample(sampler_, ctx_, -1);
-            llama_sampler_accept(sampler_, tok);
             if (llama_vocab_is_eog(vocab_, tok)) break;
             int n = llama_token_to_piece(vocab_, tok, piece, sizeof piece, 0, true);
             if (n > 0) out.append(piece, (size_t)n);

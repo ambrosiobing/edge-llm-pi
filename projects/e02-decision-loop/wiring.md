@@ -68,21 +68,80 @@ running the acceptance, or the ratio has nothing to measure:
     cmake --build build --target e02_variant_a e02_variant_b -j3
 
     cd ~/edge-llm-pi/projects/e02-decision-loop
+    head -n 101 replay/synthetic_1000.csv > /tmp/e02_first_100.csv
     ../../build/projects/e02-decision-loop/e02_variant_a \
       --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
-      --replay replay/synthetic_1000.csv
+      --replay /tmp/e02_first_100.csv --threads 2 \
+      --state /tmp/e02_a.state --log evidence/e02_variant_a_restore.csv
     ../../build/projects/e02-decision-loop/e02_variant_a \
       --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
-      --replay replay/synthetic_1000.csv --cold
+      --replay /tmp/e02_first_100.csv --threads 2 --cold \
+      --log evidence/e02_variant_a_cold.csv
 
 Run from the project folder, because those two resolve `grammar.gbnf` and `prompt.txt`
-relative to it. `-j3` rather than `-j4` on the bench Pi 4B: that board has twice gone
-under-voltage on sustained four-core load, and a compile has no settling pause to protect it,
-which is written up in `projects/e01-bringup/wiring.md` and in chapter one's pitfalls.
+relative to it. Three things in those two lines were missing when the sheet was
+first written, and each was found by running it on Saturday 17 October 2026 rather than by
+reading it.
 
-This gap was found by reading e02 ahead of its sitting rather than during one, on Saturday
-17 October 2026, which is the cheaper of the two places to find it. The build command is
-unchanged: it is right for CI, and the bench needs one line more.
+**`--threads` must be passed, because the default is not the figure.** `e02_variant_a`
+defaults to four threads. The acceptance above asks for the ratio on the same board and
+thread count as the 1000-decision run, and that run was made at two threads, so a bare
+command would divide a four-thread mean by a four-thread mean and report a ratio belonging
+to no run in the evidence. Worse, two full passes at four threads is the continuous
+four-core load that took this board down three times; this binary has no settling pause and
+cannot be given one, because a gap between decisions is part of what it measures.
+
+**Each pass needs its own `--log`,** or the second overwrites the first: both default to
+`e02_a.csv` in the working directory. The means are printed on exit either way, but a figure
+whose rows cannot be read again afterwards is not evidence, and the two files are also what
+a later sitting would need to see whether the saving is uniform across rows or concentrated
+in the first few.
+
+**A hundred rows is the measurement, not a thousand.** The ratio is a per-decision prompt
+cost, and its mean is stable long before row one hundred; two thousand-row passes is about
+two and a half hours of unbroken load for the same number. The truncated file goes in `/tmp`
+rather than `replay/`, so no second replay file enters the repository for a figure that does
+not need one.
+
+**The comparison binary aborted on its first decision, and had never been run before.**
+`e02_variant_a` called `llama_sampler_accept` on the token `llama_sampler_sample` had just
+returned. Sample already accepts, so the grammar advanced twice: the first legal piece was
+consumed, then offered to a grammar that had moved past it, no viable stack remained, and
+llama.cpp threw `Unexpected empty grammar stack after accepting piece: {" (4913)`. Both the
+restore pass and the `--cold` pass died there, before one row was logged, so neither the
+ratio nor the restore-versus-cold control could be measured at all.
+
+`common/c/src/edgellm.c` carries the warning in its own header comment, that calling accept
+a second time would advance the grammar twice, and does not make the call. That is why the
+1000-decision run through the C core completed and this binary could not do one row. The
+reason nobody noticed is structural and is the same gap as the missing build target above:
+`project.toml`'s build command leaves `e02_variant_a` and `e02_variant_b` out, so until
+Saturday 17 October 2026 neither binary had ever been built or run by CI, by the host, or on
+a board. The chapter asked for one of its two acceptance numbers from code that had never
+executed. The fix is one deleted line, and the comment above it now names the measurement.
+
+Still unfixed and deliberately left: `generate()` decodes the sampled token on the final
+iteration too, where the C core guards that with `i + 1 < n_predict`. It is a wasted decode
+per decision, it inflates `generate_ms`, and it falls equally on both passes, so it does not
+touch the ratio the acceptance asks for. Changing it would change a figure, so it waits for
+a sitting where the before and after can both be measured.
+
+`-j3` rather than `-j4` throughout, on this board: it has gone under-voltage on sustained
+four-core load three times now, on three different workloads. A `-j4` compile on Friday
+16 October 2026 took the board down with no log; the back-to-back benchmark stages of
+Saturday 17 October 2026 raised bits 16 and 18 of `get_throttled` three times running; and
+the first attempt at this chapter's own 1000-decision run, at four threads, ended at row 880
+when the board rebooted, which was read off `uptime` rather than off any error. That is why
+the run above is specified at two threads and the comparison loops are given `--threads 2`
+to match. A settling pause protects a staged benchmark and protects neither a compile nor a
+decision loop, so on this supply the only control left is the thread count, and it is
+recorded as a condition of every figure e02 produces.
+
+The missing build target was found by reading e02 ahead of its sitting rather than during
+one, on Saturday 17 October 2026, which is the cheaper of the two places to find it. The
+three defects in the comparison commands were found the expensive way, during the sitting.
+The build command itself is unchanged: it is right for CI, and the bench needs one line
+more.
 
 ## config.txt
 
