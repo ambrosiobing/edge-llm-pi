@@ -72,6 +72,31 @@ Proved by changing only that number, same board, same day:
 
 **100 answers, 0 model errors.** Complete objects on every row of a hundred, not a sample.
 
+### Every automated counter in the project read zero on this log
+
+Material to the verdict above, and found the same day: **no check in this repository could
+fail clause one.** Three counters exist and all three reported zero on the log where 949 rows
+of 1000 held an object that never closed.
+
+| counter | what it actually counts | on this log |
+|---|---|---|
+| `agreement.py`, "empty model column" | only an empty string; a truncated answer is a non-empty string and was scored as though it were a decision | 0 |
+| the shared main loop, "model errors" | only `edgellm_decide()` returning non-zero, which is an engine failure | 0 |
+| `e02_variant_a`, "rows without a literal" | a substring search, which finds ALERT inside the truncated form | 0 |
+
+The chapter's acceptance step reads "the count of rows without a literal must be zero" and
+names `agreement.py` as the thing that measures it. By that wording and that tool, **clause
+one passed.** What caught the failure was a person reading `{ "decision": "ALERT"` as a column
+header in the confusion table, which is not a check.
+
+`agreement.py` now counts rows whose model column is not one of the decisions the rule
+itself emitted in the log, prints them, and exits non-zero when there are any. It
+discriminates the two cases that matter: a model answering NORMAL where the rule said WATCH
+is the disagreement the agreement table exists to measure and is not a failure, while an
+answer that is not a decision at all is. Both directions are tested. The same tool scores
+sixteen of the twenty projects, so the clause was unenforceable in all of them, and the
+wording in those chapters and manifests is a separate question from the tool.
+
 ### Defect two, the model itself, not cured by anything here
 
     python tools/agreement.py .../e02_npredict12.csv
