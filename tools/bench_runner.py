@@ -326,10 +326,16 @@ def main():
                 label = "pp 64" if test == "pp64" else "tg 32"
                 fh.write("| %d | %s | %.2f | %.2f | %+.2f percent |\n"
                          % (threads, label, ref, har, pct))
-            fh.write("\n**Verdict: %s.**\n\n" % verdict)
-            fh.write("The gate is the tg 32 comparison at %d threads. Other thread counts "
+            fh.write("\nThe gate is the tg 32 comparison at %d threads. Other thread counts "
                      "are measured and reported here and do not decide, because a band is "
                      "only meaningful around a figure that repeats.\n" % args.gate_threads)
+        # The verdict is written whatever happened, and outside the block above. It used to
+        # sit inside it, so a run refused at the reference stage produced a file with the
+        # banner at the top, the reference table, and no statement of what the register said
+        # or why the run stopped: there is no division to print when the harness never ran,
+        # and the verdict went with it. That is the first failure the write-even-when-refused
+        # behaviour was added for. Found reviewing this file the morning it was written.
+        fh.write("\n**Verdict: %s.**\n" % verdict)
 
     print(reference_table)
     for _, text in harness_runs:
