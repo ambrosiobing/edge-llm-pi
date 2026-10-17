@@ -88,8 +88,8 @@ defaults to four threads. The acceptance above asks for the ratio on the same bo
 thread count as the 1000-decision run, and that run was made at two threads, so a bare
 command would divide a four-thread mean by a four-thread mean and report a ratio belonging
 to no run in the evidence. Worse, two full passes at four threads is the continuous
-four-core load that took this board down three times; this binary has no settling pause and
-cannot be given one, because a gap between decisions is part of what it measures.
+four-core load that took this board down three times. Two threads is not a safe operating
+point either: see the correction at the end of this section.
 
 **Each pass needs its own `--log`,** or the second overwrites the first: both default to
 `e02_a.csv` in the working directory. The means are printed on exit either way, but a figure
@@ -126,16 +126,47 @@ per decision, it inflates `generate_ms`, and it falls equally on both passes, so
 touch the ratio the acceptance asks for. Changing it would change a figure, so it waits for
 a sitting where the before and after can both be measured.
 
-`-j3` rather than `-j4` throughout, on this board: it has gone under-voltage on sustained
-four-core load three times now, on three different workloads. A `-j4` compile on Friday
-16 October 2026 took the board down with no log; the back-to-back benchmark stages of
-Saturday 17 October 2026 raised bits 16 and 18 of `get_throttled` three times running; and
-the first attempt at this chapter's own 1000-decision run, at four threads, ended at row 880
-when the board rebooted, which was read off `uptime` rather than off any error. That is why
-the run above is specified at two threads and the comparison loops are given `--threads 2`
-to match. A settling pause protects a staged benchmark and protects neither a compile nor a
-decision loop, so on this supply the only control left is the thread count, and it is
-recorded as a condition of every figure e02 produces.
+## The supply, and a claim withdrawn the same day it was written
+
+Four unexplained failures on this board, all under continuous load, all on Saturday
+17 October 2026 except the first:
+
+| # | Workload | Threads | How it was detected |
+|---|---|---|---|
+| 1 | `cmake --build -j4` on Friday 16 October 2026 | 4 | board vanished, no log at all |
+| 2 | back-to-back benchmark stages, three refusals | 1 to 4 | `get_throttled` read `0x50000` before any reboot |
+| 3 | this chapter's 1000-decision run, first attempt | 4 | `uptime` had reset; the log stopped at row 880 |
+| 4 | this chapter's `e02_variant_a --cold` pass | **2** | `uptime` read 3 min where it had read 1:40 |
+
+Event 4 happened at about 14:23, roughly three minutes into a run of about seven, with the
+board otherwise idle. It left nothing behind: the binary buffers its log, so the file was
+zero bytes, and `get_throttled` cannot be read after the fact because the sticky bits clear
+at boot. Only the reset `uptime` recorded it.
+
+**The claim written here earlier the same day, that on this supply the thread count is the
+one control left, is withdrawn.** Two threads completed a thousand decisions that morning in
+about seventy-five minutes, then failed three minutes into a seven-minute run that afternoon.
+A setting that survives the longer load and fails the shorter one is not controlling
+anything; it was a count of two successes read as a mechanism, which is the same error as
+taking a tally for a reason. No thread count has been shown safe on this board, and the
+chapter must not print one as though it had.
+
+What does survive the four events: every one was continuous load, and the only measure that
+has ever been shown to work is the settling pause between stages of e01's benchmark, proved
+by one changed variable on a command that had been refused three times. A pause cannot be
+given to a compile or to a decision loop, because for the loop the gap between decisions is
+part of what is being measured.
+
+`-j3` rather than `-j4` stays, not because three is safe but because it is less load than
+four on a supply that is failing, and the same for `--threads 2`.
+
+**This now blocks e02.** The second acceptance number is the ratio of two means that have to
+be measured under the same conditions on the same board. The restore half is in hand at
+1320.6 ms over a hundred rows. The cold half has been attempted once and lost to event 4.
+Until the supply is identified and replaced, every attempt at it is a run that may or may not
+survive long enough to print a figure, and a figure obtained from a board that fails
+unpredictably under the exact load being measured is not evidence of anything. A Raspberry Pi
+4 on four cores wants 5.1 V at 3 A over USB-C; this one has never been identified.
 
 The missing build target was found by reading e02 ahead of its sitting rather than during
 one, on Saturday 17 October 2026, which is the cheaper of the two places to find it. The
