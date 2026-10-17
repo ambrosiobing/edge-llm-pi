@@ -4,7 +4,7 @@ Generated from the Pitfalls section of each project, so it is an index and
 never a second copy: the sentence that explains a pitfall stays in the project
 that owns it. Alphabetical, because by project is what the chapters already give.
 
-**163 pitfalls across 20 projects.**
+**168 pitfalls across 20 projects.**
 
 | Pitfall | Project |
 |---|---|
@@ -26,11 +26,14 @@ that owns it. Alphabetical, because by project is what the chapters already give
 | A 10 microsecond sampler cannot see a nanosecond pulse | [Project 10](chapters/10-mcc-118-voltage-event-labeller.md) |
 | A 50 Hz poll can miss a tap | [Project 5](chapters/05-adxl345-event-reporter.md) |
 | A baseline taken on another mounting, or under a hand | [Project 12](chapters/12-stwin-box-vibration-band-reporter.md) |
+| A binary the manifest does not build | [Project 2](chapters/02-the-decision-loop.md) |
 | A board that browns out under sustained load still prints a number | [Project 1](chapters/01-bring-up-and-the-honest-tokens-per-second.md) |
+| A buffered log and a board that restarts | [Project 2](chapters/02-the-decision-loop.md) |
 | A C ABI that changes without its version being bumped | [Project 18](chapters/18-mini-industrial-serial-logger.md) |
 | A CAN error frame may not carry the counters | [Project 14](chapters/14-joint-monitor.md) |
 | A capture taken without a SIM measures an attach that never completes | [Project 16](chapters/16-nb-iot-sleep-interval-from-measured-microamps.md) |
 | A character outside the SMS set changes the arithmetic, not the message | [Project 19](chapters/19-event-driven-cellular-alert-composer.md) |
+| A counter that reads zero because it counts the wrong noun | [Project 2](chapters/02-the-decision-loop.md) |
 | A frame form that was not verified | [Project 12](chapters/12-stwin-box-vibration-band-reporter.md) |
 | A generated table that quietly loses a project | [Project 20](chapters/20-what-should-i-measure-next.md) |
 | A line held by another consumer | [Project 3](chapters/03-led-status-explainer.md) |
@@ -38,10 +41,12 @@ that owns it. Alphabetical, because by project is what the chapters already give
 | A literal that spends the token budget | [Project 15](chapters/15-esp32-sidecar-with-a-bounded-pattern-proposal.md) |
 | A live log whose summary says replay | [Project 6](chapters/06-vl53l4cd-too-close-explainer.md) |
 | A modelled node that replays a hardware node's identifier | [Project 13](chapters/13-can-honesty-agent.md) |
+| A pitfall is not a check | [Project 2](chapters/02-the-decision-loop.md) |
 | A polled sensor misses most taps | [Project 9](chapters/09-lcd-prompt-and-verdict-display.md) |
 | A reason that names both fields | [Project 3](chapters/03-led-status-explainer.md) |
 | A rule file put into a static library | [Project 2](chapters/02-the-decision-loop.md) |
 | A rule file that includes a header of its own project | [Project 19](chapters/19-event-driven-cellular-alert-composer.md) |
+| A sampler accepted twice | [Project 2](chapters/02-the-decision-loop.md) |
 | A seated panel leaves no pin reachable | [Project 9](chapters/09-lcd-prompt-and-verdict-display.md) |
 | A serial read that returns what has arrived rather than a frame | [Project 18](chapters/18-mini-industrial-serial-logger.md) |
 | A server restart loses nothing | [Project 4](chapters/04-pi-thermal-and-throttle-narrator.md) |
