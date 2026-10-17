@@ -12,6 +12,15 @@ Type=simple
 # whenever the kernel prints; the vtcon number is the frame buffer console's and the
 # leading dash keeps a board without one from failing the unit.
 ExecStartPre=-/bin/sh -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
+# The budget is 16 and not the core's default of 8. On Saturday 17 October 2026 e02's
+# thousand-decision run on a Raspberry Pi 4 Model B wrote 949 objects that never closed,
+# because the Qwen2.5 tokenizer needs nine tokens for its ALERT path where NORMAL takes
+# eight. Nothing here has been counted against a tokenizer either, so this budget is set
+# generously rather than tightly: the loop breaks at the end-of-generation token, and this
+# grammar's root ends at the closing brace with nothing optional after it, so an unused
+# budget token costs nothing while a budget one token short costs the whole row.
+# e09 is the one at most risk: its model is SmolLM2-360M, a tokenizer this volume has
+# never counted, and FREEFALL is two characters longer than the ALERT that failed.
 ExecStart=/usr/bin/edgellm-e09 --project e09 \
     --live iio /sys/bus/iio/devices/iio:device0:0.1 --g-per-unit 0.1019716 \
     --leds /dev/gpiochip0:4,27,22 \
@@ -20,7 +29,7 @@ ExecStart=/usr/bin/edgellm-e09 --project e09 \
     --prompt /usr/share/edgellm/e09/prompt.txt \
     --log /var/lib/edgellm/e09.csv \
     --panel-log /var/lib/edgellm/e09_panel.csv \
-    --threads 4 --n-predict 8 --state /run/edgellm/e09.state
+    --threads 4 --n-predict 16 --state /run/edgellm/e09.state
 StateDirectory=edgellm
 RuntimeDirectory=edgellm
 # A loop that stops on a missing device or a dead model is restarted; the logs are

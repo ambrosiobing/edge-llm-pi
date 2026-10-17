@@ -9,13 +9,22 @@ After=dev-serial-by\x2did-<the-Renkforce-cable>.device
 Type=simple
 # The replay run ends by itself. --stub is dropped once python3-llama-cpp-python is in
 # the image (see the recipe); with --stub the log's engine column reads stub.
+# The budget is 16 and not the core's default of 8. On Saturday 17 October 2026 e02's
+# thousand-decision run on a Raspberry Pi 4 Model B wrote 949 objects that never closed,
+# because the Qwen2.5 tokenizer needs nine tokens for its ALERT path where NORMAL takes
+# eight. Nothing here has been counted against a tokenizer either, so this budget is set
+# generously rather than tightly: the loop breaks at the end-of-generation token, and this
+# grammar's root ends at the closing brace with nothing optional after it, so an unused
+# budget token costs nothing while a budget one token short costs the whole row.
+# e15's chapter named this failure in its own pitfalls list, PATTERN_D is the longest
+# answer, and named the remedy, --n-predict 10, and then shipped 8 anyway.
 ExecStart=/usr/bin/edgellm-e15 --project e15 \
     --replay /usr/share/edgellm/e15/replay/budgets_200.csv \
     --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
     --grammar /usr/share/edgellm/e15/grammar.gbnf \
     --prompt /usr/share/edgellm/e15/prompt.txt \
     --log /var/lib/edgellm/e15.csv \
-    --threads 4 --n-predict 8 \
+    --threads 4 --n-predict 16 \
     --serial /dev/serial/by-id/<the-Renkforce-cable>
 StateDirectory=edgellm
 Restart=on-failure

@@ -16,12 +16,20 @@ daemon   = "edgellm-e18-daemon"
 library  = "libedgellm_abi.so, soname libedgellm_abi.so.1, abi version 1000"
 abi      = "projects/e18-industrial-logger/c/abi.h"
 
-# The one dependency that is not in the tree yet: the shared Rust crate is the e05
-# author's (common/rust/README.md). The four modules e18 reuses and the interface it
-# expects from each are written out at the top of rust/src/main.rs. Until the crate
-# exists, cargo cannot resolve rust/Cargo.toml; the C half and the generator do not
-# depend on it and build and run as they are.
-blocked_on = "common/rust/edgellm, the shared crate, modules io, rules, elog, template"
+# This read "blocked on the shared Rust crate, which is not in the tree yet" until
+# Saturday 17 October 2026. The crate is in the tree, at common/rust/edgellm, with the
+# four modules this project reuses: io, rules, elog and template. What actually stopped
+# cargo was this project naming those four modules as cargo features, which the crate
+# does not declare, so the manifest was refused before anything compiled. That is fixed
+# in rust/Cargo.toml.
+#
+# What is still true is narrower and worth stating: no job in this repository builds
+# either half of e18. The top level CMakeLists.txt globs projects/*/CMakeLists.txt one
+# level deep and this project's C half is at c/CMakeLists.txt, and the workflow's Rust
+# loop globbed projects/*/Cargo.toml while this project's is at rust/Cargo.toml. The
+# workflow's loop is widened in the same change; the C half is still configured by hand
+# with c_configure below, which is deliberate, and the chapter says why.
+blocked_on = "nothing; see the note above, and build both halves with the four keys below"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned

@@ -83,6 +83,23 @@ static char *read_text(const char *path)
     return text;
 }
 
+/* A substring search for the literal passes on an object the generation budget cut before
+ * its closing brace: { "decision": "NOMINAL holds NOMINAL. e02 lost 949 rows of 1000 to
+ * exactly that on Saturday 17 October 2026, and all three counters in the repository
+ * reported zero on the log. So require the quoted literal and the brace this grammar's root
+ * accepts at, which is also what tools/agreement.py now does. */
+static int one_complete_decision(const char *s)
+{
+    size_t n;
+
+    if (strstr(s, "\"NOMINAL\"") == NULL && strstr(s, "\"DRIFT\"") == NULL)
+        return 0;
+    n = strlen(s);
+    while (n > 0 && (s[n - 1] == ' ' || s[n - 1] == '\t' || s[n - 1] == '\n'))
+        n--;
+    return n > 0 && s[n - 1] == '}';
+}
+
 int main(int argc, char **argv)
 {
     const char *grammar = NULL, *prompt_path = NULL, *model = NULL;
@@ -142,8 +159,8 @@ int main(int argc, char **argv)
     if (rc <= 0) {
         printf("FAIL the first decision returned %d\n", rc);
         failures++;
-    } else if (strstr(out, "NOMINAL") == NULL && strstr(out, "DRIFT") == NULL) {
-        printf("FAIL the answer holds neither literal: %s\n", out);
+    } else if (!one_complete_decision(out)) {
+        printf("FAIL the answer is not one complete decision: %s\n", out);
         failures++;
     } else {
         printf("ok one decision, %d bytes: %s\n", rc, out);

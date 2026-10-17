@@ -38,7 +38,7 @@ that owns it. Alphabetical, because by project is what the chapters already give
 | A generated table that quietly loses a project | [Project 20](chapters/20-what-should-i-measure-next.md) |
 | A line held by another consumer | [Project 3](chapters/03-led-status-explainer.md) |
 | A literal that differs by one letter | [Project 2](chapters/02-the-decision-loop.md) |
-| A literal that spends the token budget | [Project 15](chapters/15-esp32-sidecar-with-a-bounded-pattern-proposal.md) |
+| A literal that spends the token budget, and a pitfall that is not a gate | [Project 15](chapters/15-esp32-sidecar-with-a-bounded-pattern-proposal.md) |
 | A live log whose summary says replay | [Project 6](chapters/06-vl53l4cd-too-close-explainer.md) |
 | A modelled node that replays a hardware node's identifier | [Project 13](chapters/13-can-honesty-agent.md) |
 | A pitfall is not a check | [Project 2](chapters/02-the-decision-loop.md) |

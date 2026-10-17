@@ -111,8 +111,17 @@ jobs:
           cmake -S . -B build-engine -G Ninja -DEDGELLM_BUILD_LLAMA_TOOLS=OFF \
             -DEDGELLM_BUILD_TESTS=ON -DEDGELLM_IO_GPIO=ON -DEDGELLM_IO_I2C=ON \
             -DEDGELLM_IO_IIO=ON -DEDGELLM_IO_SERIAL=ON -DEDGELLM_IO_CAN=ON
-      - name: build the core and the smoke project
-        run: cmake --build build-engine --target edgellm_core edgellm-smoke cpp_wrapper_test
+      - name: build the core, the smoke project and every real-engine-only target
+        # e01_bench_harness, e02_variant_a and e02_variant_b sit behind
+        # if(NOT EDGELLM_STUB_MODEL), so the stub job cannot define them and this is the
+        # only job that can. Until Saturday 17 October 2026 it named three targets and
+        # none of those three, so e02's comparison binaries had never been compiled by
+        # any machine and e01's harness, which produced two published rows, had been
+        # compiled only by hand on a board. A target no job names is not covered by a
+        # green run.
+        run: |
+          cmake --build build-engine --target edgellm_core edgellm-smoke cpp_wrapper_test \
+            e01_bench_harness e02_variant_a e02_variant_b
 
   manifests:
     runs-on: ubuntu-latest
@@ -128,7 +137,10 @@ jobs:
       - name: cargo test in every Rust project
         run: |
           set -e
-          for m in projects/*/Cargo.toml; do
+          # find, not a one-level glob: e18's manifest is at rust/Cargo.toml and was
+          # reached by no job, which is why its dependency on the shared crate could
+          # name four features that crate does not declare and no run ever said so.
+          for m in $(find projects -maxdepth 3 -name Cargo.toml -not -path '*/target/*' | sort); do
             [ -f "$m" ] || continue
             echo "== $m"
             cargo test --manifest-path "$m"

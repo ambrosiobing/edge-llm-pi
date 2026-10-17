@@ -1,8 +1,16 @@
 # e10_shape.gbnf: the three literals of rules_e10.c, letter for letter and in the same
 # order, in the house shape: one JSON object with one "decision" key. The quiet label
 # NOISE comes first, so the CI stub answers {"decision":"NOISE"} on every window. ws
-# admits spaces and tabs only, never a newline, so the longest answer stays inside the
-# n_predict of 8 tokens on every tokenizer in the ladder.
+# admits spaces and tabs only, never a newline.
+#
+# This file used to add that the longest answer therefore stayed inside the n_predict of 8
+# tokens on every tokenizer in the ladder. That sentence is withdrawn here for the same
+# reason it was withdrawn from e02_decision.gbnf on Saturday 17 October 2026: it had never
+# been counted against one tokenizer, and e02's identical sentence was false for Qwen2.5,
+# whose ALERT path needs nine tokens. NOISE, RAMP and STEP are all shorter than ALERT, so
+# eight may well be enough here, and that is a guess rather than a measurement. The budget
+# the unit ships is 16, because the loop breaks at the end-of-generation token and this
+# root ends at the closing brace, so an unused budget token costs nothing.
 root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
 decision ::= "\"NOISE\"" | "\"RAMP\"" | "\"STEP\""
 ws       ::= [ \t]*

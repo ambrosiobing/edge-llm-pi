@@ -51,8 +51,16 @@ Qwen2.5-0.5B-Instruct at Q4\_K\_M, the file `qwen2.5-0.5b-instruct-q4_k_m.gguf`,
 # e10_shape.gbnf: the three literals of rules_e10.c, letter for letter and in the same
 # order, in the house shape: one JSON object with one "decision" key. The quiet label
 # NOISE comes first, so the CI stub answers {"decision":"NOISE"} on every window. ws
-# admits spaces and tabs only, never a newline, so the longest answer stays inside the
-# n_predict of 8 tokens on every tokenizer in the ladder.
+# admits spaces and tabs only, never a newline.
+#
+# This file used to add that the longest answer therefore stayed inside the n_predict of 8
+# tokens on every tokenizer in the ladder. That sentence is withdrawn here for the same
+# reason it was withdrawn from e02_decision.gbnf on Saturday 17 October 2026: it had never
+# been counted against one tokenizer, and e02's identical sentence was false for Qwen2.5,
+# whose ALERT path needs nine tokens. NOISE, RAMP and STEP are all shorter than ALERT, so
+# eight may well be enough here, and that is a guess rather than a measurement. The budget
+# the unit ships is 16, because the loop breaks at the end-of-generation token and this
+# root ends at the closing brace, so an unused budget token costs nothing.
 root     ::= "{" ws "\"decision\"" ws ":" ws decision ws "}"
 decision ::= "\"NOISE\"" | "\"RAMP\"" | "\"STEP\""
 ws       ::= [ \t]*
@@ -144,7 +152,7 @@ The pins the HAT uses are the kit labs’ P05 record of this HAT; which rail it 
 
 ![Figure 10.3. One window as a sequence diagram with seven actors: the Nucleo DAC in the firmware colour, the MCC 118 in the hardware colour, the iomcc118.c child process, then the loop, the rule, the engine and the log, all solid.](../figures/e10_seq.svg)
 
-*Figure 10.3. One window as a sequence diagram with seven actors: the Nucleo DAC in the firmware colour, the MCC 118 in the hardware colour, the io\_mcc118.c child process, then the loop, the rule, the engine and the log, all solid. Solid arrows carry a 2.000 V step from the DAC to CH0, 200 samples on the board's pacer from the HAT to the child, one pipe line with the time, the three summaries and the thirteen points from the child to the loop, and the event from the loop to the rule; a dashed reply brings the index 0, 1 or 2 back. Over a blue activation bar on the engine, two solid arrows from the loop carry llama\_state\_load\_file and then the window text with llama\_decode, with a note that at most 8 tokens are sampled greedily and every one is checked against root. A dashed reply returns the JSON label STEP, and the last solid arrow writes the row, tag mcc118:ch0, rule STEP, model STEP and the two times, into the log. A note says that the rule's index is what the agreement counts against, that the model's answer went only to the log, and that the child's next window is already in the pipe while the engine samples, so the HAT never waits for the model.*
+*Figure 10.3. One window as a sequence diagram with seven actors: the Nucleo DAC in the firmware colour, the MCC 118 in the hardware colour, the io\_mcc118.c child process, then the loop, the rule, the engine and the log, all solid. Solid arrows carry a 2.000 V step from the DAC to CH0, 200 samples on the board's pacer from the HAT to the child, one pipe line with the time, the three summaries and the thirteen points from the child to the loop, and the event from the loop to the rule; a dashed reply brings the index 0, 1 or 2 back. Over a blue activation bar on the engine, two solid arrows from the loop carry llama\_state\_load\_file and then the window text with llama\_decode, with a note that at most 16 tokens are sampled greedily and every one is checked against root. A dashed reply returns the JSON label STEP, and the last solid arrow writes the row, tag mcc118:ch0, rule STEP, model STEP and the two times, into the log. A note says that the rule's index is what the agreement counts against, that the model's answer went only to the log, and that the child's next window is already in the pipe while the engine samples, so the HAT never waits for the model.*
 
 ## States and data
 
@@ -204,13 +212,18 @@ sequenceDiagram
     L->>R: event
     R-->>L: index 0, 1 or 2 (this is what acts)
     L->>E: llama_state_load_file, then the window text
-    E-->>L: one of three literals, at most 8 tokens
+    E-->>L: one of three literals, at most 16 tokens
     L->>G: row: rule, model, prompt_ms, generate_ms
 ```
 
 ## Latency design
 
 The system prompt is 71 words, under 120 tokens on the Qwen tokenizer, decoded once at start and restored per window from the state file; the user text is about seventy tokens, the price of showing the model the shape and not only the summaries. `n_ctx` 512, `n_predict` 8, greedy under the grammar, 4 threads on the Pi 4B. The interval is set by the HAT and not by the loop: one window every 2 ms, which no model on the ladder can keep up with, and the chapter does not pretend otherwise. The child keeps scanning while the engine samples, the library buffers one second of samples and the pipe holds the lines not yet read, so the loop labels every window in order with a growing delay; a capture is sized by `--max-events` so that the buffer never overruns, which the child checks on every read. With [Project 1](01-bring-up-and-the-honest-tokens-per-second.md)'s table the admissible capture length becomes a number; until then a capture is 3000 windows, six seconds, which the stimulus sequence of fifty events fits inside. A deployment that must keep up would label one window in ten and say so; that is a future exercise, not a default.
+
+> [!NOTE]
+> **The generation budget here is 16 and was 8 until Saturday 17 October 2026.** It was raised without being measured on this project, which is the honest description of it. On that day e02, on a Raspberry Pi 4 Model B, lost 949 rows of 1000 to a budget of 8: the Qwen2.5 tokenizer needs nine tokens for the ALERT path where NORMAL needs eight, and every short row was a legal prefix of its grammar that stopped before the closing brace, so no grammar error was raised anywhere and no counter in the repository moved. The sentence claiming that eight sufficed on every tokenizer of the ladder had never been checked against one tokenizer, and it is withdrawn wherever it appeared.
+>
+> The budget is now set generously rather than at a measured minimum because an unused token is free. The loop stops at the end-of-generation token, and this grammar's root ends at the closing brace with nothing optional after it, so once the object closes that token is the only legal continuation: a budget of 16 and a budget of 8 produce the same bytes and the same timings for every answer that fits in eight. A budget one token short, by contrast, costs the whole row and says nothing while doing it. What is still unmeasured is the token count of this project's own longest literal on this project's own tokenizer, and [Project 2](02-the-decision-loop.md)'s pitfall on exactly that is the one to read before trusting any figure here.
 
 ## Steps
 
@@ -306,13 +319,20 @@ The application recipe `meta-edgellm/recipes-app/edgellm-e10/edgellm-e10_0.1.bb`
 Type=simple
 # Live: the project's main forks the libdaqhats capture and feeds the shared loop
 # through a pipe; --live mcc118 <address>:<channel>:<window_ms>. The run ends on stop.
+# The budget is 16 and not the core's default of 8. On Saturday 17 October 2026 e02's
+# thousand-decision run on a Raspberry Pi 4 Model B wrote 949 objects that never closed,
+# because the Qwen2.5 tokenizer needs nine tokens for its ALERT path where NORMAL takes
+# eight. Nothing here has been counted against a tokenizer either, so this budget is set
+# generously rather than tightly: the loop breaks at the end-of-generation token, and this
+# grammar's root ends at the closing brace with nothing optional after it, so an unused
+# budget token costs nothing while a budget one token short costs the whole row.
 ExecStart=/usr/bin/edgellm-e10 --project e10 \
     --live mcc118 0:0:2 \
     --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
     --grammar /usr/share/edgellm/e10/grammar.gbnf \
     --prompt /usr/share/edgellm/e10/prompt.txt \
     --log /var/lib/edgellm/e10.csv \
-    --threads 4 --n-predict 8 --state /run/edgellm/e10.state
+    --threads 4 --n-predict 16 --state /run/edgellm/e10.state
 StateDirectory=edgellm
 RuntimeDirectory=edgellm
 ```

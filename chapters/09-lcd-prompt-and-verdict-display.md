@@ -151,7 +151,7 @@ Two arrows carry the chapter. The dashed red one is the volume's safety rule: th
 
 ![Figure 9.3. One event whose verdict changed, as a sequence diagram with six solid actors: the ADXL345 through the IIO backend, the loop, the rule, the panel, the engine and the log.](../figures/e09_seq.svg)
 
-*Figure 9.3. One event whose verdict changed, as a sequence diagram with six solid actors: the ADXL345 through the IIO backend, the loop, the rule, the panel, the engine and the log. A solid arrow carries io\_next with x, y and z in g to the loop and the event on to the rule; a dashed reply brings index 2, TILT, back, with a note that io\_actuate lights the yellow LED from that index. A solid arrow to the panel carries the three panes, prompt, thinking and TILT, with the first flip, and a dashed reply brings the flip event. Over a blue activation bar on the engine, a solid arrow carries the restored state and the sixteen numbers of the user text; a note says at most 8 tokens, greedy, under the grammar, seconds on the Pi 3; a dashed reply returns the JSON decision TILT and marks t0 at its return. A second solid arrow to the panel carries the model pane and the flip, and its dashed reply brings the flip event at t1. The last solid arrow writes the row, rule TILT, model TILT, prompt ms and generate ms, into the log. Two notes: t1 minus t0 is the frame figure of the acceptance test, and a touch pressed while the engine was busy is read at the next pass; and when the verdict equals the previous one the engine is not asked and the row carries the rule alone. In CI the replayed CSV stands in for the first actor.*
+*Figure 9.3. One event whose verdict changed, as a sequence diagram with six solid actors: the ADXL345 through the IIO backend, the loop, the rule, the panel, the engine and the log. A solid arrow carries io\_next with x, y and z in g to the loop and the event on to the rule; a dashed reply brings index 2, TILT, back, with a note that io\_actuate lights the yellow LED from that index. A solid arrow to the panel carries the three panes, prompt, thinking and TILT, with the first flip, and a dashed reply brings the flip event. Over a blue activation bar on the engine, a solid arrow carries the restored state and the sixteen numbers of the user text; a note says at most 16 tokens, greedy, under the grammar, seconds on the Pi 3; a dashed reply returns the JSON decision TILT and marks t0 at its return. A second solid arrow to the panel carries the model pane and the flip, and its dashed reply brings the flip event at t1. The last solid arrow writes the row, rule TILT, model TILT, prompt ms and generate ms, into the log. Two notes: t1 minus t0 is the frame figure of the acceptance test, and a touch pressed while the engine was busy is read at the next pass; and when the verdict equals the previous one the engine is not asked and the row carries the rule alone. In CI the replayed CSV stands in for the first actor.*
 
 ## States and data
 
@@ -172,7 +172,7 @@ Two records. The per-event log, `projects/e09-lcd-verdict-display/evidence/e09_r
   (CI: replay/adxl345_200.csv)      |   +--> io_actuate led:0..2 (gpio) <- the rule only
   prompt.txt --decode once--------> |   v  verdict != previous?  no: log the rule alone
   grammars/e09_event.gbnf --------> |   |  yes: panes[prompt, "thinking", verdict] -> flip
-                                    |   |       state restored, 16 numbers, <= 8 tokens
+                                    |   |       state restored, 16 numbers, <= 16 tokens
                                     |   |       {"decision": "TILT"} .......... t0
                                     |   |       panes[prompt, answer, verdict] -> flip
                                     |   v       flip event ...................... t1
@@ -196,7 +196,7 @@ sequenceDiagram
     C-->>L: index 0 to 3 (this is what acts; LEDs)
     L->>P: prompt, thinking, verdict; flip
     L->>E: state restored, 16 numbers (on a change)
-    E-->>L: one of four literals, at most 8 tokens; t0
+    E-->>L: one of four literals, at most 16 tokens; t0
     L->>P: answer pane; flip, event at t1
     L->>G: row: rule, model, ms; panel: t1 - t0
 ```
@@ -204,6 +204,11 @@ sequenceDiagram
 ## Latency design
 
 The system prompt is 72 words, counted with the engine's tokenizer in step 7 against the volume's 120-token ceiling; it is decoded once at start, its state written with `llama_state_save_file` and read back before every decision, so each asked event pays for its own fifty to seventy tokens of user text and nothing else. `n_ctx` 512, `n_predict` 8, greedy under the grammar, 4 threads on the Pi 3B. The sampling interval is 0.1 s, set in the IIO backend's spec, and the model is asked only on a verdict change, so the loop's steady state is a 10 Hz read and a rule call; an event costs two frames and one decision. The decision time on the Pi 3 is one prompt decode of fifty to seventy tokens plus up to eight single-token decodes at [Project 1](01-bring-up-and-the-honest-tokens-per-second.md)'s rate for this board, which is seconds, and the chapter does not hide them: the first frame shows the rule's verdict while the engine works, the second shows the answer, and the camera sees the gap. The frame budget has its own arithmetic: a 480 by 320 RGB565 frame is 2.46 Mbit, which takes 77 ms on the wire at 32 MHz and 154 ms at the 16 MHz the jumper route allows, so the 200 ms acceptance leaves 46 ms for composing, copying and the driver on jumpers and 123 ms on a seated panel; if the bench figure lands over 200 ms on jumpers, the first fix is damage clips, which send only the changed rectangle, not a faster clock the wires cannot carry.
+
+> [!NOTE]
+> **The generation budget here is 16 and was 8 until Saturday 17 October 2026.** It was raised without being measured on this project, which is the honest description of it. On that day e02, on a Raspberry Pi 4 Model B, lost 949 rows of 1000 to a budget of 8: the Qwen2.5 tokenizer needs nine tokens for the ALERT path where NORMAL needs eight, and every short row was a legal prefix of its grammar that stopped before the closing brace, so no grammar error was raised anywhere and no counter in the repository moved. The sentence claiming that eight sufficed on every tokenizer of the ladder had never been checked against one tokenizer, and it is withdrawn wherever it appeared.
+>
+> The budget is now set generously rather than at a measured minimum because an unused token is free. The loop stops at the end-of-generation token, and this grammar's root ends at the closing brace with nothing optional after it, so once the object closes that token is the only legal continuation: a budget of 16 and a budget of 8 produce the same bytes and the same timings for every answer that fits in eight. A budget one token short, by contrast, costs the whole row and says nothing while doing it. What is still unmeasured is the token count of this project's own longest literal on this project's own tokenizer, and [Project 2](02-the-decision-loop.md)'s pitfall on exactly that is the one to read before trusting any figure here.
 
 ## Steps
 
@@ -352,6 +357,15 @@ The application recipe `meta-edgellm/recipes-app/edgellm-e09/edgellm-e09_0.1.bb`
 
 ```text
 ExecStartPre=-/bin/sh -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
+# The budget is 16 and not the core's default of 8. On Saturday 17 October 2026 e02's
+# thousand-decision run on a Raspberry Pi 4 Model B wrote 949 objects that never closed,
+# because the Qwen2.5 tokenizer needs nine tokens for its ALERT path where NORMAL takes
+# eight. Nothing here has been counted against a tokenizer either, so this budget is set
+# generously rather than tightly: the loop breaks at the end-of-generation token, and this
+# grammar's root ends at the closing brace with nothing optional after it, so an unused
+# budget token costs nothing while a budget one token short costs the whole row.
+# e09 is the one at most risk: its model is SmolLM2-360M, a tokenizer this volume has
+# never counted, and FREEFALL is two characters longer than the ALERT that failed.
 ExecStart=/usr/bin/edgellm-e09 --project e09 \
     --live iio /sys/bus/iio/devices/iio:device0:0.1 --g-per-unit 0.1019716 \
     --leds /dev/gpiochip0:4,27,22 \
@@ -360,7 +374,7 @@ ExecStart=/usr/bin/edgellm-e09 --project e09 \
     --prompt /usr/share/edgellm/e09/prompt.txt \
     --log /var/lib/edgellm/e09.csv \
     --panel-log /var/lib/edgellm/e09_panel.csv \
-    --threads 4 --n-predict 8 --state /run/edgellm/e09.state
+    --threads 4 --n-predict 16 --state /run/edgellm/e09.state
 ```
 
 The layer parse is the check that runs on skyhorizon before anything is wired; the image build is a separate later sitting of hours:

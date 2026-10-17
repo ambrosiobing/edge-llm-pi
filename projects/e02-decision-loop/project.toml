@@ -14,7 +14,13 @@ binary   = "edgellm-e02"
 
 [build]
 # From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON].
+# e02_variant_a and e02_variant_b are guarded by if(NOT EDGELLM_STUB_MODEL) in this
+# project's CMakeLists.txt, so a stub configure does not define them at all and this
+# command only reaches them in a real-engine build. They were left out of it until
+# Saturday 17 October 2026, which is how a chapter came to ask for an acceptance
+# number from a binary that had never been compiled anywhere.
 command = "cmake --build build --target edgellm-e02 rules_test oracle_check"
+command_engine = "cmake --build build --target edgellm-e02 e02_variant_a e02_variant_b"
 # The six rule cases run inside the shared harness; the oracle test exists in a stub build.
 test    = "ctest --test-dir build -R 'rules_test|edgellm-e02-oracle' --output-on-failure"
 
@@ -31,6 +37,12 @@ table    = "python tools/agreement.py projects/e02-decision-loop/evidence/e02_ru
 [comparison]
 # The two alternative loops, priced beside the C baseline once; never in CI. Run from the
 # project folder so grammar.gbnf and prompt.txt resolve.
-variant_a      = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv"
-variant_a_cold = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv --cold"
-variant_b      = "../../build/projects/e02-decision-loop/e02_variant_b --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay replay/synthetic_1000.csv"
+# A hundred rows of the head of the replay, not a thousand: every row of this
+# measurement costs about the same, and at a thousand rows each pass runs over forty
+# minutes on a board that has restarted under shorter loads. Two threads is the condition
+# every figure of Saturday 17 October 2026 was taken under. The two passes share the state
+# file and the two cores, so they must not overlap.
+head_100       = "head -n 101 projects/e02-decision-loop/replay/synthetic_1000.csv > /tmp/e02_first_100.csv"
+variant_a      = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay /tmp/e02_first_100.csv --threads 2 --state /tmp/e02_a.state --log evidence/e02_variant_a_restore.csv"
+variant_a_cold = "../../build/projects/e02-decision-loop/e02_variant_a --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay /tmp/e02_first_100.csv --threads 2 --cold --state /tmp/e02_a.state --log evidence/e02_variant_a_cold.csv"
+variant_b      = "../../build/projects/e02-decision-loop/e02_variant_b --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --replay /tmp/e02_first_100.csv --threads 2 --state /tmp/e02_b.state --log evidence/e02_variant_b.csv"

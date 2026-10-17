@@ -29,12 +29,12 @@ path = "src/main.rs"
 # llama-cpp-2, is never compiled here: this project's engine is the C daemon, and
 # linking a second copy of the engine into the service would defeat the boundary the
 # chapter is about.
-edgellm = { path = "../../../common/rust/edgellm", default-features = false, features = [
-    "io",
-    "rules",
-    "elog",
-    "template",
-] }
+# io, rules, elog and template are modules of that crate and not cargo features of it:
+# it declares only "stub", its default, and "engine". Naming them in a features list made
+# cargo refuse this manifest before compiling a line, which no job noticed because the
+# repository's Rust loop globbed projects/*/Cargo.toml and this one is a level deeper.
+# e05's and e13's manifests carry exactly the line below, and both build.
+edgellm = { path = "../../../common/rust/edgellm", default-features = false }
 
 [features]
 # Off by default. The FFI backend links libedgellm_abi.so, which means the C half must

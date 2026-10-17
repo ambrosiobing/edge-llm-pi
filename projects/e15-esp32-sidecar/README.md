@@ -172,7 +172,7 @@ The UART2 pins are set by `uart_set_pin()` in the firmware, so the board's defau
 
 ![Figure 15.3. One budget event as a sequence diagram with six actors: the replay CSV, drawn dashed as the stand-in, then the loop, the rule, the ESP32 on UART2, the engine and the log, all solid.](../../figures/e15_seq.svg)
 
-*Figure 15.3. One budget event as a sequence diagram with six actors: the replay CSV, drawn dashed as the stand-in, then the loop, the rule, the ESP32 on UART2, the engine and the log, all solid. Solid arrows carry the budget, on-time and costs from the replay to the loop and the event from the loop to the rule; a dashed reply brings the index 0 to 3 back. A solid arrow carries the letter B and a newline from the loop to the ESP32 and a dashed reply brings pattern B back, with the note that the LED blinks. Over a blue activation bar on the engine, a solid arrow from the loop carries load\_state and then the user text, with a note that at most 8 tokens are sampled greedily and every one is checked against the grammar; a dashed reply returns the JSON decision PATTERN\_B to the loop, and the last solid arrow writes the row, rule PATTERN\_B, model PATTERN\_B, prompt ms and generate ms, into the log. A note says that the rule's letter reached the ESP32 before the model was asked and that the echo was checked.*
+*Figure 15.3. One budget event as a sequence diagram with six actors: the replay CSV, drawn dashed as the stand-in, then the loop, the rule, the ESP32 on UART2, the engine and the log, all solid. Solid arrows carry the budget, on-time and costs from the replay to the loop and the event from the loop to the rule; a dashed reply brings the index 0 to 3 back. A solid arrow carries the letter B and a newline from the loop to the ESP32 and a dashed reply brings pattern B back, with the note that the LED blinks. Over a blue activation bar on the engine, a solid arrow from the loop carries load\_state and then the user text, with a note that at most 16 tokens are sampled greedily and every one is checked against the grammar; a dashed reply returns the JSON decision PATTERN\_B to the loop, and the last solid arrow writes the row, rule PATTERN\_B, model PATTERN\_B, prompt ms and generate ms, into the log. A note says that the rule's letter reached the ESP32 before the model was asked and that the echo was checked.*
 
 ## States and data
 
@@ -217,13 +217,18 @@ sequenceDiagram
     L->>S: one letter and newline
     S-->>L: "pattern B", the LED runs it
     L->>E: load_state, then the user text
-    E-->>L: one of four literals, at most 8 tokens
+    E-->>L: one of four literals, at most 16 tokens
     L->>G: row: rule, model, prompt_ms, generate_ms
 ```
 
 ## Latency design
 
 The system prompt is 68 words, decoded once at start with `Llama.eval` and kept with `Llama.save_state`, which returns a state object in memory rather than a file; before every decision `Llama.load_state` restores it and the user text, about thirty tokens, is the only decode the event pays for. The binding's `generate` is called with `reset=False` so that it continues from the restored context rather than clearing it; the first bench run confirms that (to verify) by reading the `prompt_ms` column against [Project 1](../../chapters/01-bring-up-and-the-honest-tokens-per-second.md)'s tokens per second, since a figure that fits a full prompt decode means the state was not reused. The file route the C loop takes has no one-call equivalent in the binding, so a restart decodes the system prompt again, once. `n_ctx` 512, `n_predict` 8, greedy under the grammar, 4 threads; the bench run adds `--interval 1` so that the LED is seen changing pattern between decisions. What the interpreter adds per decision is the tokenize call, the state copy and the generator protocol around each sampled token, measured by the same two columns against [Project 2](../../chapters/02-the-decision-loop.md)'s C loop on the same board.
+
+> [!NOTE]
+> **The generation budget here is 16 and was 8 until Saturday 17 October 2026.** It was raised without being measured on this project, which is the honest description of it. On that day e02, on a Raspberry Pi 4 Model B, lost 949 rows of 1000 to a budget of 8: the Qwen2.5 tokenizer needs nine tokens for the ALERT path where NORMAL needs eight, and every short row was a legal prefix of its grammar that stopped before the closing brace, so no grammar error was raised anywhere and no counter in the repository moved. The sentence claiming that eight sufficed on every tokenizer of the ladder had never been checked against one tokenizer, and it is withdrawn wherever it appeared.
+>
+> The budget is now set generously rather than at a measured minimum because an unused token is free. The loop stops at the end-of-generation token, and this grammar's root ends at the closing brace with nothing optional after it, so once the object closes that token is the only legal continuation: a budget of 16 and a budget of 8 produce the same bytes and the same timings for every answer that fits in eight. A budget one token short, by contrast, costs the whole row and says nothing while doing it. What is still unmeasured is the token count of this project's own longest literal on this project's own tokenizer, and [Project 2](../../chapters/02-the-decision-loop.md)'s pitfall on exactly that is the one to read before trusting any figure here.
 
 ## Steps
 
@@ -325,13 +330,22 @@ Python, catalogue letter R8 in Python rather than Rust: the loop is a client of 
 Two recipes in `meta-edgellm/recipes-app/edgellm-e15/`, both on the `setuptools3` class and not on the layer's shared include, which is the C and C++ pattern. `python3-edgellm_0.1.bb` builds the shared package from `common/python/edgellm` in the tree the layer sits in, and runtime-depends on `python3-pyserial`; `edgellm-e15_0.1.bb` builds the project, installs the prompt, the grammar and the replay under `/usr/share/edgellm/e15`, carries the unit, and runtime-depends on the shared package, on pyserial, on the model package and on `python3-llama-cpp-python`. That last package has no recipe in poky or meta-openembedded: the wheel builds llama.cpp at install time, and a recipe would have to carry that CMake build against the layer's `llama-cpp` runtime recipe. The recipe names the dependency anyway, with a comment, so that the layer parse fails loudly rather than the service failing quietly on the board; the routes out are a `python3-llama-cpp-python` recipe under `recipes-runtime/` or `--stub` in the unit (to verify which, on the first parse). The unit runs the 200-row replay with the serial link and ends by itself; it is not auto-enabled, because the cable's by-id path has to be written into it on the board first. No overlay fragment: nothing on the header.
 
 ```text
+# The budget is 16 and not the core's default of 8. On Saturday 17 October 2026 e02's
+# thousand-decision run on a Raspberry Pi 4 Model B wrote 949 objects that never closed,
+# because the Qwen2.5 tokenizer needs nine tokens for its ALERT path where NORMAL takes
+# eight. Nothing here has been counted against a tokenizer either, so this budget is set
+# generously rather than tightly: the loop breaks at the end-of-generation token, and this
+# grammar's root ends at the closing brace with nothing optional after it, so an unused
+# budget token costs nothing while a budget one token short costs the whole row.
+# e15's chapter named this failure in its own pitfalls list, PATTERN_D is the longest
+# answer, and named the remedy, --n-predict 10, and then shipped 8 anyway.
 ExecStart=/usr/bin/edgellm-e15 --project e15 \
     --replay /usr/share/edgellm/e15/replay/budgets_200.csv \
     --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
     --grammar /usr/share/edgellm/e15/grammar.gbnf \
     --prompt /usr/share/edgellm/e15/prompt.txt \
     --log /var/lib/edgellm/e15.csv \
-    --threads 4 --n-predict 8 \
+    --threads 4 --n-predict 16 \
     --serial /dev/serial/by-id/<the-Renkforce-cable>
 ```
 
@@ -371,7 +385,7 @@ Over the 200 budgets as generated on Wednesday 14 October 2026 by `tools/make_re
 - **The wheel that builds the engine.** `pip install llama-cpp-python` on a Pi compiles llama.cpp from source; it takes long, and how long is unknown until measured, and a 1 GB board may need swap for it. The install is step 5, alone, with the throttle bits read after, and never the step before a timing run.
 - **The stub always answers the first literal.** A log where every model cell reads `{"decision":"PATTERN_A"}` and every engine cell reads stub is a CI log, and its 35.5 percent is the PATTERN\_A fraction of the replay, not a property of any model. Read the engine column before the agreement.
 - **The placeholder tie.** Until `evidence/pattern_costs_summary.csv` exists, B and D carry the same cost and the rule never answers D; an agreement table with an empty D row is then a property of the placeholder. The replay is regenerated from the measured means before the bench run, and the generator prints which costs it used.
-- **A literal that spends the token budget.** PATTERN\_D is the longest answer; if the object around it does not close inside eight tokens on the Qwen tokenizer the row has no literal. The first bench log's `n_generated` column says how many were spent; the fix is `--n-predict 10`, written into the manifest with the count that justified it.
+- **A literal that spends the token budget, and a pitfall that is not a gate.** PATTERN\_D is the longest answer; if the object around it does not close inside the budget the row has no literal. This entry named that failure and named its remedy, `--n-predict 10`, and the chapter shipped 8 regardless, which is how e02 came to lose 949 rows of 1000 to the same thing on Saturday 17 October 2026. The budget is now 16, set generously because an unused token is free: the loop stops at the end-of-generation token and this root ends at the closing brace. The first bench log's `n_generated` column says how many were actually spent, and that column, not this paragraph, is what settles whether PATTERN\_D fits.
 - **An echo that does not match.** The sidecar answers `pattern ?` to a letter it does not know and the loop counts an actuation error. A non-zero count in the summary line means the link or the firmware, never the model; the board's GPIOs are 3.3 V, and the cable's 5 V lead, if it has one, goes nowhere.
 
 ## Future and extra exercises
