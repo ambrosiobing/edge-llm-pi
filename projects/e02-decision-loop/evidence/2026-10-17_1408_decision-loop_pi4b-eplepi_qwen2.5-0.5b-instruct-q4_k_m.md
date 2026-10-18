@@ -152,8 +152,17 @@ trace. A per-row flush has since been added so a repeat leaves the rows that did
 **Why this waits on hardware rather than on another attempt.** The ratio is two means that have
 to be taken under the same conditions on the same board. A board that fails unpredictably
 under the exact load being measured cannot supply either half as evidence, however many
-attempts eventually produce a number. The supply has never been identified; a Pi 4 on four
-cores wants 5.1 V at 3 A over USB-C.
+attempts eventually produce a number. The supply had not been identified when this file was
+written.
+
+> **Correction of Sunday 18 October 2026.** It has since been identified. These runs, and
+> those of Friday 16 October 2026, were on an ISY IAD-1025-1 USB-C dock and not on the ISY
+> IAC-5065 charger the board carries today. The dock's exact topology on Friday 16 and Saturday 17 October 2026, meaning
+> which plug entered the Pi's own USB-C socket, is not confirmed. The cold pass was completed
+> on the charger on Sunday 18 October 2026 without a restart, and is recorded, together with
+> the reason it is nonetheless discarded, in
+> `2026-10-18_2133_cold-pass_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`. A Pi 4 on four
+> cores wants 5.1 V at 3 A over USB-C; the charger's 5 V rail is labelled 5.0 V at 3.0 A.
 
 ## What the four restarts say, and one claim withdrawn
 

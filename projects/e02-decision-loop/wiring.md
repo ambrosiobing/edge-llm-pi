@@ -160,13 +160,50 @@ part of what is being measured.
 `-j3` rather than `-j4` stays, not because three is safe but because it is less load than
 four on a supply that is failing, and the same for `--threads 2`.
 
-**This now blocks e02.** The second acceptance number is the ratio of two means that have to
-be measured under the same conditions on the same board. The restore half is in hand at
-1320.6 ms over a hundred rows. The cold half has been attempted once and lost to event 4.
-Until the supply is identified and replaced, every attempt at it is a run that may or may not
-survive long enough to print a figure, and a figure obtained from a board that fails
-unpredictably under the exact load being measured is not evidence of anything. A Raspberry Pi
-4 on four cores wants 5.1 V at 3 A over USB-C; this one has never been identified.
+**Where e02's second number stands, Sunday 18 October 2026.** The pair exists. Both halves
+were taken that evening in one sitting on one supply at two threads: restored prompt 1325.6 ms
+against 5927.5 ms cold over the first hundred rows, a ratio of **4.47** against an acceptance
+of at least 2.0. It is recorded in
+`evidence/2026-10-18_2208_pair_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`, together with the
+discarded single cold pass earlier the same evening in
+`evidence/2026-10-18_2133_cold-pass_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`.
+
+**It is not accepted, and the reason is one bit.** `get_throttled` read `0x0` before the pair
+and `0x80000` after, bit 19, the soft temperature limit since boot, where the acceptance asks
+for `0x0` at both ends. Bits 16, 17 and 18 stayed clear across the whole thirty minutes: no
+under-voltage, no frequency capping, no throttling. So the chapter has a decision to make,
+which belongs to it and not to this sheet: cool the board until a pair comes back clean, or
+separate bit 19 from bits 16, 17 and 18 in the acceptance and require a clock trace with any
+run that carries it. Until then the clause reads measured at 4.47 and not accepted.
+
+**The supply, identified on Sunday 18 October 2026.** All four restarts happened with the
+board fed through an ISY IAD-1025-1 USB-C dock, and the topology of those two days, meaning
+which plug entered the Pi's own USB-C socket, is not confirmed. Sunday 18 October 2026 ran on
+an ISY IAC-5065 65 W USB-C charger whose label gives its 5 V rail as 5.0 V at 3.0 A: the
+current is adequate, the voltage is 5.0 V where a Raspberry Pi 4 is specified at 5.1 V. The
+board held thirteen minutes of continuous load on it where three minutes had been enough to
+lose the run on the dock, which makes the dock the leading explanation and not the established
+cause. A Raspberry Pi 4 on four cores wants 5.1 V at 3 A over USB-C.
+
+**What a cooled sitting needs.** Reboot first, because bit 19 is sticky until boot and a run
+started on a dirty register cannot satisfy the acceptance however well it goes. Then both
+passes back to back on the one supply, restore first and cold second, reading `get_throttled`
+before the first and after the second.
+
+**Add the sampler.** Spot checks cannot give the cost of bit 19, because the limit toggles
+through a run and nothing was sampling how long it was engaged. A loop writing the time,
+`vcgencmd get_throttled`, `vcgencmd measure_clock arm` and `vcgencmd measure_temp` to a file
+once a second, started before the passes and stopped after them, turns that from an argument
+into a column. It costs nothing to run and it is the difference between a figure that carries
+its own conditions and one that needs a paragraph of explanation.
+
+**The thermal numbers to design against, measured Sunday 18 October 2026 on a bare board.**
+Idle sits at or below 53 degrees C and falls further. The restore pass took five minutes to
+reach 74.5 degrees C with the register still clean. The cold pass started at 56.9 degrees C,
+passed 75 degrees C inside two minutes, and settled between 80 and 83 degrees C for the rest
+of its twelve and a half minutes, with bit 3 toggling throughout. Once the load stopped the
+board fell from 80.3 to 67.2 degrees C in about forty seconds, so the cooling is adequate at
+idle and not under sustained load.
 
 The missing build target was found by reading e02 ahead of its sitting rather than during
 one, on Saturday 17 October 2026, which is the cheaper of the two places to find it. The
