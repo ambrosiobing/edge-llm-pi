@@ -126,11 +126,28 @@ enum Sample {
 
 // ---------------------------------------------------------------- the IIO source
 //
-// The shared crate common/rust/edgellm is not in this tree on Wednesday 14 October 2026:
-// common/rust/README.md says it belongs to the author of project e05 and common/ is not
-// this project's to write. So the accelerometer is read here, through the same two
-// sysfs attributes the shared crate's IIO source will expose, and the migration is one
-// use statement: read(), nothing else, moves to edgellm::iio::Accel.
+// This note read, until Sunday 18 October 2026: "The shared crate common/rust/edgellm is
+// not in this tree on Wednesday 14 October 2026 ... the migration is one use statement:
+// read(), nothing else, moves to edgellm::iio::Accel." The crate has been in the tree for
+// days, and that migration is not one use statement. Read against
+// common/rust/edgellm/src/io.rs on Sunday 18 October 2026:
+//
+//   - the type is edgellm::io::Iio, an IoSource, not edgellm::iio::Accel;
+//   - next() yields an Event carrying every in_*_raw attribute the directory scan found,
+//     each multiplied by its own scale, so m/s^2 for this device and not g. It computes no
+//     magnitude and takes off no resting 1 g, which is the whole of what read_peak_g below
+//     exists to do;
+//   - it paces itself, sleeping until its own interval is due, while this project's live
+//     reader samples on its own schedule in its own thread and wants a reading when it asks.
+//
+// So moving to the crate means adding a magnitude-in-g reader beside Iio, or keeping this
+// one. That is a decision and not a rename, and it is written down as such. e18's manifest
+// carried a note of the same shape, an interface recorded as planned and later read back as
+// fact, and it took a compiler to disprove.
+//
+// The dead-code warnings on Accel, open, read_peak_g and GRAVITY in a default build are
+// expected and not a sign that this is unused code: the only caller is live_reader, which
+// is behind the "live" feature, and the default feature set does not include it.
 
 mod iio {
     use std::fs;
