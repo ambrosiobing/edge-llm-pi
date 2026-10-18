@@ -83,6 +83,19 @@ jobs:
         run: python3 tools/line_check.py
       - name: python tools compile
         run: python3 -m py_compile tools/*.py
+      - name: shell tools parse
+        # The counterpart of the step above, and it did not exist until Sunday 18 October
+        # 2026, by which point tools/ held two shell scripts and every job enumerated only
+        # the Python ones. Green covers what the jobs list, so a syntax error in
+        # install-hooks.sh or throttle_log.sh would have reached a board before it reached
+        # a reader. sh -n parses without executing, which is the whole check these need:
+        # neither script can be run here, since one wants a git work tree and the other
+        # wants a Raspberry Pi's vcgencmd.
+        run: |
+          for f in tools/*.sh; do
+            echo "sh -n $f"
+            sh -n "$f"
+          done
 
   engine:
     runs-on: ubuntu-latest
