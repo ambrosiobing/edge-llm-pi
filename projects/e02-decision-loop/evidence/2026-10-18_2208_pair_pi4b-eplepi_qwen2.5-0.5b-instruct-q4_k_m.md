@@ -117,13 +117,19 @@ pass and then sat between 80 and 83 degrees C for ten minutes, so the cooling ha
 sustained load and not a burst. And it fell 13 degrees in about forty seconds once the load
 stopped, so the heat path is adequate at idle and the shortfall is under load.
 
-**What was missing and should exist before the cooled pair is taken.** A loop writing the
-time, `get_throttled`, `measure_clock arm` and `measure_temp` to a file once a second,
-started before the passes and stopped after. The readings above are spot checks taken by hand
-and they cannot give a duty cycle. Four readings in this file were first reported as settled
-values and then withdrawn when the next reading contradicted them: a plateau at 77 degrees C,
-a plateau at 81.3 degrees C, a clock cost of 1.4 percent, and a run believed finished that was
-not. A sampler removes the temptation.
+**What was missing, and now exists.** `tools/throttle_log.sh` writes the time,
+`get_throttled`, `measure_clock arm` and `measure_temp` to a CSV once a second. The readings
+above are spot checks taken by hand and they cannot give a duty cycle. Four readings in this
+file were first reported as settled values and then withdrawn when the next one contradicted
+them: a plateau at 77 degrees C, a plateau at 81.3 degrees C, a clock cost of 1.4 percent, and
+a run believed finished that was not.
+
+**And the sampler's own first run quantified why.** Five seconds on an idle board, Sunday 18
+October 2026 at 22:37, gave temperatures of 50.6, 52.1, 51.1, 51.1 and 50.6 degrees C: a spread
+of 1.5 degrees with no load at all. Every one of the four withdrawn conclusions rested on a
+difference of that size or on a window shorter than half a minute. The noise floor was always
+large enough to produce them, and nothing in this project had measured it until the instrument
+built to see past it measured itself.
 
 ## One condition no chapter records, now read
 

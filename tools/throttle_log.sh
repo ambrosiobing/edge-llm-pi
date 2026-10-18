@@ -29,9 +29,21 @@
 # instrument is the first suspect, so run it alone on an idle board for a minute and read the
 # temperature column before trusting a trace taken alongside a run.
 #
-# This script has never been run. Smoke-test it for five seconds before relying on it:
+# FIRST RUN, Sunday 18 October 2026 at 22:37 on the Raspberry Pi 4 Model B, card eplepi: five
+# samples in five seconds, every column populated, and the trap reported its count. The loop,
+# the trap, the interval and the timestamp format are verified; the refusal to overwrite an
+# existing file is not, and neither is the cost named above.
+#
+# That five-second trace also measured the noise this file exists to see past. On an idle board
+# the temperature column read 50.6, 52.1, 51.1, 51.1 and 50.6 degrees C in five consecutive
+# seconds, a spread of 1.5 degrees with nothing running, and the clock column alternated between
+# 1800457088 and 1800404352 Hz, a jitter of 52736 Hz or three thousandths of a percent. A
+# difference of one degree between two spot readings is therefore not a trend and never was,
+# which is what four withdrawn conclusions cost to learn by hand the same evening.
+#
+# Smoke-test it on any new board, or after changing it, before relying on a trace:
 #     sh ../../tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
-# Five header-plus-sample lines with no empty fields means it works on this board.
+# Five header-plus-sample lines with no empty fields means it works there too.
 set -u
 
 out=${1:-}

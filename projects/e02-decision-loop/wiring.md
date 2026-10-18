@@ -195,10 +195,21 @@ the limit toggles through a run and nothing was sampling how long it was engaged
 `tools/throttle_log.sh` writes the time, `get_throttled`, `measure_clock arm` and
 `measure_temp` to a CSV once a second, which turns that from an argument into a column.
 
-**It has never been run, so smoke-test it first, for five seconds.** A remedy named in a sheet
-is not a remedy until it has executed once, and this one was written on a laptop that has no
-`vcgencmd`. The board's clone needs the commit first, so push from the authoring laptop, pull
-here, and prove the file arrived before running anything:
+**It ran for the first time on Sunday 18 October 2026 at 22:37 on this board**, five samples
+in five seconds with every column populated. The loop, the trap, the interval and the timestamp
+format are verified there; the refusal to overwrite an existing file is not.
+
+**What that five-second trace measured, which is the point of having it.** On an idle board the
+temperature column read 50.6, 52.1, 51.1, 51.1 and 50.6 degrees C in five consecutive seconds.
+That is a spread of 1.5 degrees with nothing running, so a one-degree difference between two
+spot readings carries no information at all, and three readings spanning twenty-five seconds
+cannot show a plateau. Four conclusions were drawn from exactly that kind of window earlier the
+same evening and all four were withdrawn. The clock column jitters 52736 Hz at full speed,
+three thousandths of a percent, so only changes far larger than that mean anything.
+
+**Smoke-test it on a new board, or after changing it.** A remedy named in a sheet is not a
+remedy until it has executed there. The board's clone needs the commit first, so push from the
+authoring laptop, pull here, and prove the file arrived before running anything:
 
     cd ~/edge-llm-pi
     git pull
