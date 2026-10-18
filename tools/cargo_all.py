@@ -32,8 +32,14 @@ ROOT = Path(__file__).resolve().parent.parent
 KNOWN = {
     "projects/e18-industrial-logger/rust/Cargo.toml":
         "does not compile, first seen Saturday 17 October 2026: written against an "
-        "interface common/rust/edgellm never had. Four renames, plus two decisions, no "
-        "serial port in the crate and WINDOW 30 against RULE_HISTORY 16. The list is in "
+        "interface common/rust/edgellm never had. Eight errors then; four now. The window "
+        "half was settled on Sunday 18 October 2026, when RuleCtx gained a per-context "
+        "capacity so WINDOW stays 30, and the four E0061 call sites went with it. What "
+        "remains is the four unresolved imports: elog::Log and elog::Answer, which are "
+        "Elog and Decision; io::replay::Replay, which is io::Replay; template's two "
+        "chatml_ functions, which are wrap_system and wrap_user taking a Template; and "
+        "io::serial::Port, which does not exist in the crate at all and is the one piece "
+        "that is new code rather than a rename. The list is in "
         "projects/e18-industrial-logger/project.toml.",
 }
 

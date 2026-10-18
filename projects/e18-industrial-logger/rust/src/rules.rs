@@ -109,7 +109,7 @@ mod tests {
     /// afterwards. Returns the verdict for the last level.
     fn verdict_after(levels: &[f64]) -> usize {
         let rule = DriftRule;
-        let mut ctx = RuleCtx::new(WINDOW);
+        let mut ctx = RuleCtx::with_capacity(WINDOW);
         let mut idx = NOMINAL;
         for (i, &level) in levels.iter().enumerate() {
             let e = ev(i as f64 * 2.0, level);
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn a_frame_with_no_registers_is_nominal_and_not_a_guess() {
         let rule = DriftRule;
-        let ctx = RuleCtx::new(WINDOW);
+        let ctx = RuleCtx::with_capacity(WINDOW);
         let empty = Event { t_s: 0.0, tag: "rs485a".to_string(), v: vec![] };
         assert_eq!(rule.decide(&ctx, &empty), NOMINAL);
     }
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn the_span_is_reported_as_well_as_the_verdict() {
         let rule = DriftRule;
-        let mut ctx = RuleCtx::new(WINDOW);
+        let mut ctx = RuleCtx::with_capacity(WINDOW);
         let a = ev(0.0, 420.0);
         rule.decide(&ctx, &a);
         ctx.push(&a);

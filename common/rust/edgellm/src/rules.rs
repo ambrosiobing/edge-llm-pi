@@ -8,24 +8,56 @@
 
 use crate::io::Event;
 
-/// How many past events the loop keeps, as RULE_HISTORY in rules.h.
+/// How many past events a context made by new() keeps, as RULE_HISTORY in rules.h. It is
+/// the default and no longer the only possibility: with_capacity(n) keeps n.
 pub const RULE_HISTORY: usize = 16;
 
-/// The history a rule sees: oldest first, at most RULE_HISTORY events. The current event
-/// is not in it when the rule runs; the loop pushes it afterwards.
-#[derive(Debug, Clone, Default, PartialEq)]
+/// The history a rule sees: oldest first, at most this context's own capacity. The current
+/// event is not in it when the rule runs; the loop pushes it afterwards.
+///
+/// The capacity became per-context on Sunday 18 October 2026, for e18, whose rule is
+/// specified over a thirty-value window where this crate kept sixteen. Taking the
+/// compiler's advice on that call and dropping the argument would have halved the window in
+/// silence and left e18's own unit test asserting over a history the loop cannot produce.
+/// The change is additive: new() keeps RULE_HISTORY as before, so e05, e13 and e14 are
+/// untouched, and the C core stays fixed-size until someone wants a capacity field in
+/// rules.h to mirror this.
+#[derive(Debug, Clone, PartialEq)]
 pub struct RuleCtx {
     hist: Vec<Event>,
+    cap: usize,
+}
+
+/// Hand-written rather than derived: a derived Default would give a capacity of 0, and a
+/// context that can hold nothing is not a usable default.
+impl Default for RuleCtx {
+    fn default() -> RuleCtx {
+        RuleCtx::new()
+    }
 }
 
 impl RuleCtx {
+    /// A context keeping RULE_HISTORY events, which is what common/c keeps.
     pub fn new() -> RuleCtx {
-        RuleCtx { hist: Vec::with_capacity(RULE_HISTORY) }
+        RuleCtx::with_capacity(RULE_HISTORY)
     }
 
-    /// Push ev, dropping the oldest when full.
+    /// A context keeping n events. A capacity of 0 is raised to 1, so that a context always
+    /// holds at least the event just pushed and push can never run off an empty vector.
+    pub fn with_capacity(n: usize) -> RuleCtx {
+        let cap = if n == 0 { 1 } else { n };
+        RuleCtx { hist: Vec::with_capacity(cap), cap }
+    }
+
+    /// The capacity this context was made with.
+    pub fn capacity(&self) -> usize {
+        self.cap
+    }
+
+    /// Push ev, dropping the oldest while full. A loop rather than one remove, so that a
+    /// context whose capacity is smaller than its current length still converges.
     pub fn push(&mut self, ev: &Event) {
-        if self.hist.len() == RULE_HISTORY {
+        while self.hist.len() >= self.cap {
             self.hist.remove(0);
         }
         self.hist.push(ev.clone());
@@ -131,6 +163,37 @@ mod tests {
         assert_eq!(ctx.len(), RULE_HISTORY);
         assert_eq!(ctx.hist()[0].t_s, 4.0);
         assert_eq!(ctx.hist()[RULE_HISTORY - 1].t_s, 19.0);
+    }
+
+    #[test]
+    fn a_thirty_slot_window_keeps_the_newest_thirty() {
+        // e18's rule is specified over thirty. Forty pushed, thirty kept, and the oldest
+        // kept is the eleventh: the figure that would have silently become sixteen.
+        let mut ctx = RuleCtx::with_capacity(30);
+        for i in 0..40 {
+            ctx.push(&Event::new(i as f64, "t", &[i as f64]));
+        }
+        assert_eq!(ctx.capacity(), 30);
+        assert_eq!(ctx.len(), 30);
+        assert_eq!(ctx.hist()[0].t_s, 10.0);
+        assert_eq!(ctx.hist()[29].t_s, 39.0);
+    }
+
+    #[test]
+    fn the_default_and_new_both_keep_the_c_cores_history() {
+        // The other direction of the same change: adding a capacity field must not move
+        // what every other project gets. Default is hand-written for this reason, because
+        // a derived one would hand back a context of capacity 0.
+        assert_eq!(RuleCtx::new().capacity(), RULE_HISTORY);
+        assert_eq!(RuleCtx::default().capacity(), RULE_HISTORY);
+    }
+
+    #[test]
+    fn a_capacity_of_zero_still_holds_the_event_just_pushed() {
+        let mut ctx = RuleCtx::with_capacity(0);
+        ctx.push(&Event::new(1.0, "t", &[1.0]));
+        assert_eq!(ctx.len(), 1);
+        assert_eq!(ctx.hist()[0].t_s, 1.0);
     }
 
     #[test]

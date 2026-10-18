@@ -30,7 +30,10 @@
 //!                      Port::set_rs485(&mut self, rx_during_tx: bool)
 //!                      Port::write_all(&mut self, &[u8])
 //!                      Port::read_exact_timeout(&mut self, &mut [u8], Duration)
-//!   edgellm::rules     Rule (trait), RuleCtx::new(n) / push(&Event) / hist()
+//!   edgellm::rules     Rule (trait), RuleCtx::with_capacity(n) / push(&Event) /
+//!                      hist(). MET on Sunday 18 October 2026: the crate's capacity
+//!                      became per-context so that WINDOW stays 30 here, and new()
+//!                      still keeps RULE_HISTORY for every other project.
 //!   edgellm::elog      Log::create(path, engine) / Log::row(&Event, &str, Option<&Answer>)
 //!                      Answer { text, prompt_ms, generate_ms, n_generated }
 //!   edgellm::template  chatml_system(&str) -> String, chatml_user(&str) -> String
@@ -398,7 +401,7 @@ fn bench(o: &Options, engine: &mut Backend, n: usize) -> Result<(), String> {
 /// than of the prose.
 fn run(o: &Options, engine: &mut Backend) -> Result<(), String> {
     let rule = DriftRule;
-    let mut ctx = RuleCtx::new(rules::WINDOW);
+    let mut ctx = RuleCtx::with_capacity(rules::WINDOW);
     let mut source = if let Some(path) = &o.replay {
         Source::Replayed(Replay::open(path).map_err(|e| format!("{:?}: {}", path, e))?)
     } else {
