@@ -190,12 +190,31 @@ started on a dirty register cannot satisfy the acceptance however well it goes. 
 passes back to back on the one supply, restore first and cold second, reading `get_throttled`
 before the first and after the second.
 
-**Add the sampler.** Spot checks cannot give the cost of bit 19, because the limit toggles
-through a run and nothing was sampling how long it was engaged. A loop writing the time,
-`vcgencmd get_throttled`, `vcgencmd measure_clock arm` and `vcgencmd measure_temp` to a file
-once a second, started before the passes and stopped after them, turns that from an argument
-into a column. It costs nothing to run and it is the difference between a figure that carries
-its own conditions and one that needs a paragraph of explanation.
+**Run the sampler alongside the passes.** Spot checks cannot give the cost of bit 19, because
+the limit toggles through a run and nothing was sampling how long it was engaged.
+`tools/throttle_log.sh` writes the time, `get_throttled`, `measure_clock arm` and
+`measure_temp` to a CSV once a second, which turns that from an argument into a column.
+
+**It has never been run, so smoke-test it first, for five seconds.** A remedy named in a sheet
+is not a remedy until it has executed once, and this one was written on a laptop that has no
+`vcgencmd`:
+
+    cd ~/edge-llm-pi/projects/e02-decision-loop
+    ../../tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
+
+Five lines after the header, no empty fields, and a sample count on stderr means it works on
+this board. Then the real trace, started before the restore pass and stopped after the cold
+one, so both halves share one record:
+
+    cd ~/edge-llm-pi/projects/e02-decision-loop
+    ../../tools/throttle_log.sh evidence/e02_throttle_pair.csv &
+    # ... the two passes ...
+    kill %1
+
+It refuses to overwrite an existing file, so each sitting needs its own name. And its own cost
+is unmeasured: three `vcgencmd` calls a second on a board already at its thermal ceiling is not
+obviously free, so read the temperature column of a trace taken on an idle board before
+trusting one taken alongside a run. The instrument is the first suspect.
 
 **The thermal numbers to design against, measured Sunday 18 October 2026 on a bare board.**
 Idle sits at or below 53 degrees C and falls further. The restore pass took five minutes to
