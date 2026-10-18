@@ -164,20 +164,19 @@ On the board, with the real engine, `libllama` must already be built or installe
 
     cd ~/edge-llm-pi
     cmake -S projects/e18-industrial-logger/c -B build-e18c \
-      -DEDGELLM_LLAMA_INCLUDE_DIR=$HOME/llama.cpp/include \
-      -DEDGELLM_LLAMA_LIBRARY=$HOME/llama.cpp/build/bin/libllama.so
+      -DEDGELLM_LLAMA_INCLUDE_DIR=$HOME/edge-llm-pi/third_party/llama.cpp/include \
+      -DEDGELLM_LLAMA_LIBRARY=$HOME/edge-llm-pi/build/bin/libllama.so
     cmake --build build-e18c -j3
     cargo build --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml
 
-`$HOME/llama.cpp` is the clone project e01 makes at the pinned tag; building `llama-bench`
-there leaves `libllama.so` in its `build/bin/`, which is what these two options point at.
-**It does not exist on this bench yet**, because e01's run of Friday 16 October 2026 used the
-repository's submodule build for its reference rather than the standalone clone its own steps
-prescribe; that is recorded as a deviation in `projects/e01-bringup/evidence`. Either create
-the clone as e01 step 3 says, or point these two options at
-`$HOME/edge-llm-pi/third_party/llama.cpp/include` and `$HOME/edge-llm-pi/build/bin/libllama.so`,
-which carry the same tag. The decision belongs with e01's and not with this chapter, since it
-is the same question: whether the engine on a board is upstream's build or this repository's.
+These two options point at this repository's own submodule build: e01 builds `llama-bench`
+out of it, which leaves `libllama.so` in `build/bin/` beside the tool. Settled on Sunday 18
+October 2026, and it is the same question for e01, e04 and this chapter, which is why one
+decision closed all three: the engine on a board is this repository's submodule at the
+pinned tag, not a separate upstream clone. It is also what the bench already did. e01's run
+of Friday 16 October 2026 used the submodule against its own steps and that was carried as a
+deviation in `projects/e01-bringup/evidence`; the steps now say what was done, so the
+deviation is retired.
 
 `-j3` rather than `-j4` on the bench Pi 4B, for the reason in
 `projects/e01-bringup/wiring.md`: that board has gone under-voltage under sustained four-core

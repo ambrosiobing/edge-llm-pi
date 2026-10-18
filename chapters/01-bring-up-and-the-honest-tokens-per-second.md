@@ -195,23 +195,24 @@ cd ~; free -m; grep -E 'MemTotal|MemAvailable' /proc/meminfo
 cd ~; vcgencmd get_throttled; vcgencmd measure_temp
 ```
 
-**Step 3.** Build the engine at the pinned tag on the Pi 4B, natively, with the CPU flags of the board it runs on. The same three commands run on the Pi 3B+ and the Pi 3B with `-j2` in place of `-j4`, because a 1 GB board swaps at four parallel compiles of this tree.
+**Step 3.** Build the engine at the pinned tag on the Pi 4B, natively, with the CPU flags of the board it runs on. It comes from this repository's own submodule and not from a separate clone, so the reference and the harness of the step below are two binaries out of one build tree with one set of flags. That matters for what this chapter measures: the acceptance compares those two binaries within 10 percent, and building them in different trees with different flags would put a difference inside the comparison that the comparison cannot see. The same three commands run on the Pi 3B+ and the Pi 3B with `-j2` in place of `-j3`, because a 1 GB board swaps at four parallel compiles of this tree.
 
 **There is a second reason to drop the job count, and it is about the supply rather than the memory.** On this bench the `-j4` build took the Pi 4B down: the board simply vanished, forty-odd minutes in, leaving no entry in any log because that installation keeps no persistent journal. Later the same evening the throttle register recorded an under-voltage event under sustained four-core load on a bare header with nothing attached. A Raspberry Pi 4 on four cores wants 5.1 V at 3 A over USB-C, and a supply that is merely close behaves exactly like this: steady at idle, sagging under a long compile, and occasionally dropping the board outright. **The symptom is an absence rather than an error**, so it is easy to read as a hung build, which is what happened here. Where the supply is not known to be good, build with `-j3`: it costs a few minutes and removes a failure that leaves nothing behind to diagnose. A benchmark can be protected by a settling pause between stages, as the pitfall below describes; a compile has no such pause to give it.
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~; git clone --branch v0.6.0 --depth 1 https://github.com/ggml-org/llama.cpp.git
+cd ~/edge-llm-pi; git submodule update --init --depth 1 third_party/llama.cpp
 ```
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~/llama.cpp; cmake -S . -B build -DGGML_NATIVE=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF
+cd ~/edge-llm-pi; cmake -S . -B build -DGGML_NATIVE=ON -DCMAKE_BUILD_TYPE=Release \
+  -DLLAMA_CURL=OFF -DEDGELLM_BUILD_TESTS=OFF
 ```
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~/llama.cpp; cmake --build build --config Release -j4 --target llama-bench llama-cli
+cd ~/edge-llm-pi; cmake --build build --config Release -j3 --target llama-bench llama-cli
 ```
 
 **Step 4.** Cross build for the NanoPi NEO Air in skyhorizon's WSL. The board is armv7 with 512 MB and an eMMC, and a native build would need swap on that eMMC for an hour or more and wear it for nothing; the choice is the cross build, and its cost is the toolchain package on the WSL side, one `scp`, and the flags below, which are read from the H3's Cortex-A7 (NEON with VFPv4) and are confirmed by the first run of `llama-bench` printing its system line.
@@ -246,21 +247,11 @@ cd ~/src/nano-llama; scp build-armv7/bin/llama-bench nanopi:
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~/llama.cpp; build/bin/llama-bench -m ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+cd ~/edge-llm-pi; build/bin/llama-bench -m ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   -p 64 -n 32 -t 1,2,3,4 -r 5 -o md
 ```
 
-**Step 7.** Build and run the harness on the same board against the same file, at 4 threads. The repository builds the engine from its submodule at the pinned tag, so the submodule is fetched first. Its table has the same seven columns and the same two test names, with `+/-` written in ASCII, followed by the VmRSS line and the engine's system line.
-
-```bash
-# Raspberry Pi 4 Model B, card eplepi
-cd ~/edge-llm-pi; git submodule update --init --depth 1 third_party/llama.cpp
-```
-
-```bash
-# Raspberry Pi 4 Model B, card eplepi
-cd ~/edge-llm-pi; cmake -S . -B build -DGGML_NATIVE=ON -DEDGELLM_BUILD_TESTS=OFF
-```
+**Step 7.** Build and run the harness on the same board against the same file, at 4 threads. The submodule and the configure are already done, in the step that built the reference, and that is the point of doing them there: one tree, one set of flags, two binaries. Its table has the same seven columns and the same two test names, with `+/-` written in ASCII, followed by the VmRSS line and the engine's system line.
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi

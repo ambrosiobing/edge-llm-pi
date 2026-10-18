@@ -45,17 +45,17 @@ fit under 60 percent of `MemAvailable`; at 0.27 GB it does on every Pi 4B varian
 
 In one terminal, or as the unit `files/edgellm-llama-server.service`:
 
-    cd ~/llama.cpp
+    cd ~/edge-llm-pi
     build/bin/llama-server -m ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
       --host 127.0.0.1 --port 8080 -c 512 -t 4
 
-`~/llama.cpp` is the clone project e01 makes at the pinned tag, and the chapter adds the
-server target to that existing build rather than compiling the engine twice. It does not
-exist on this bench yet: e01's run of Friday 16 October 2026 used the repository's submodule
-build for its reference instead of the standalone clone its own steps prescribe, which is
-recorded as a deviation in `projects/e01-bringup/evidence`. Either create the clone as e01
-step 3 says, or point these commands at `~/edge-llm-pi` and its `build/bin/`, which carries
-the same binaries from the same tag. The choice belongs with e01's, not with this chapter.
+`build/bin/` is this repository's own build, out of the submodule at the pinned tag, and the
+chapter adds the server target to that existing build rather than compiling the engine twice.
+Settled on Sunday 18 October 2026: the engine on a board is this repository's submodule build
+and not a separate upstream clone. That is what e01's run of Friday 16 October 2026 actually
+used, against its own steps, and it was recorded as a deviation in
+`projects/e01-bringup/evidence`; the steps now say what the bench did, so the deviation is
+retired rather than carried.
 
 and from a second terminal, before the client, `curl -s http://127.0.0.1:8080/health` must
 print `{"status":"ok"}`.

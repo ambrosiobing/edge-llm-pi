@@ -246,12 +246,12 @@ cd ~/src/edge-llm-pi; python projects/e04-thermal-narrator/tools/mock_server.py 
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
-cd ~/llama.cpp; cmake --build build --config Release -j4 --target llama-server
+cd ~/edge-llm-pi; cmake --build build --config Release -j3 --target llama-server
 ```
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi, first terminal
-cd ~/llama.cpp; build/bin/llama-server -m ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
+cd ~/edge-llm-pi; build/bin/llama-server -m ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
   --host 127.0.0.1 --port 8080 -c 512 -t 4
 # second terminal, once the model has loaded
 cd ~; curl -s http://127.0.0.1:8080/health; curl -s http://127.0.0.1:8080/props
