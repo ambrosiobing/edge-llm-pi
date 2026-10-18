@@ -40,11 +40,15 @@ KNOWN = {
         "taking a Template. One of those four was not the rename it looked like: "
         "Source::next returns std::io::Result because its live arm's port calls do, and "
         "the crate's Replay::next returns the crate's own Error with no From impl between "
-        "them, so that conversion is now explicit. What remains is io::serial::Port and "
-        "its four methods, which do not exist in the crate at all and are new code over "
-        "termios rather than anything that can be renamed. That port has not been "
-        "compiled: this script's next run is its first test. The list is in "
-        "projects/e18-industrial-logger/project.toml.",
+        "them, so that conversion is now explicit. io::serial::Port and its four methods "
+        "were written on Sunday 18 October 2026, behind the crate's \"serial\" feature so "
+        "that e05, e13 and e14 keep their dependency set, which leaves this project with "
+        "no unresolved import. The entry stays because that is not the same as compiling: "
+        "this project's body has never been type-checked at all, the imports having "
+        "stopped the compiler first every time, and the unused parameter that surfaced in "
+        "bench() when four errors became one is what that looks like. If this run reports "
+        "no error, remove this entry, which is the failure the script raises for exactly "
+        "that case. The list is in projects/e18-industrial-logger/project.toml.",
 }
 
 

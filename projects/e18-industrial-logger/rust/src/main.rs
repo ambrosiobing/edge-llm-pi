@@ -29,10 +29,18 @@
 //!                      next(&mut self) -> Result<Option<Event>, edgellm::Error>, MET as
 //!                      the IoSource trait method, so IoSource must be in scope, and the
 //!                      error is the crate's and not std::io::Error
-//!                      serial::Port::open(path, baud) -> io::Result<Port>
-//!                      Port::set_rs485(&mut self, rx_during_tx: bool)
-//!                      Port::write_all(&mut self, &[u8])
-//!                      Port::read_exact_timeout(&mut self, &mut [u8], Duration)
+//!                      Port::open(path, baud) -> io::Result<Port>, MET on Sunday 18
+//!                      October 2026 at io::serial, behind the crate's "serial"
+//!                      feature, which this project's Cargo.toml enables
+//!                      Port::set_rs485(&mut self, bool) -> io::Result<()>, MET, and
+//!                      the one piece with no counterpart in common/c: its two flag
+//!                      bits are from linux/serial.h and are not yet confirmed
+//!                      against the board's own header, so the RS485 echo figure is
+//!                      not evidence until that one line has been run
+//!                      Port::write_all(&mut self, &[u8]) -> io::Result<()>, MET
+//!                      Port::read_exact_timeout(&mut self, &mut [u8], Duration) ->
+//!                      io::Result<usize>, MET; a short read is Ok(n), a deadline
+//!                      with nothing read is TimedOut
 //!   edgellm::rules     Rule (trait), RuleCtx::with_capacity(n) / push(&Event) /
 //!                      hist(). MET on Sunday 18 October 2026: the crate's capacity
 //!                      became per-context so that WINDOW stays 30 here, and new()
@@ -388,7 +396,7 @@ fn echo_test(o: &Options) -> Result<(), String> {
 /// `--bench N`: N decisions on one fixed prompt through the chosen boundary. The
 /// figure this prints is the Rust side of the chapter's comparison; the C side comes
 /// from `e18_abi_test`, which times the same engine with no boundary at all.
-fn bench(o: &Options, engine: &mut Backend, n: usize) -> Result<(), String> {
+fn bench(engine: &mut Backend, n: usize) -> Result<(), String> {
     let user = wrap_user(Template::ChatMl, BENCH_TEXT);
     let mut us = Vec::with_capacity(n);
     for i in 0..n {
@@ -576,7 +584,7 @@ fn main() -> ExitCode {
         }
     };
     let outcome = if o.bench > 0 {
-        bench(&o, &mut engine, o.bench)
+        bench(&mut engine, o.bench)
     } else {
         run(&o, &mut engine)
     };

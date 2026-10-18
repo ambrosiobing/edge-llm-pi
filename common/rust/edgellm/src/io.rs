@@ -16,6 +16,11 @@ use std::time::{Duration, Instant};
 use crate::{err, Error};
 
 /// How many values an event may carry, as IO_MAX_VALUES in io.h.
+/// One serial line over termios, behind the "serial" feature so that the projects
+/// with no serial line do not take libc. e18 is the only one that enables it.
+#[cfg(feature = "serial")]
+pub mod serial;
+
 pub const IO_MAX_VALUES: usize = 16;
 
 /// One event: a timestamp, a tag naming the sensor or channel, and up to IO_MAX_VALUES

@@ -34,7 +34,11 @@ path = "src/main.rs"
 # cargo refuse this manifest before compiling a line, which no job noticed because the
 # repository's Rust loop globbed projects/*/Cargo.toml and this one is a level deeper.
 # e05's and e13's manifests carry exactly the line below, and both build.
-edgellm = { path = "../../../common/rust/edgellm", default-features = false }
+# "serial" brings io::serial::Port, which this service needs for RS232 and the two
+# RS485 channels. Neither engine feature is enabled: the engine here is the C daemon.
+edgellm = { path = "../../../common/rust/edgellm", default-features = false, features = [
+    "serial",
+] }
 
 [features]
 # Off by default. The FFI backend links libedgellm_abi.so, which means the C half must

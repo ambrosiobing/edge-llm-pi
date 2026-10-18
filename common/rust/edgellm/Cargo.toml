@@ -17,6 +17,9 @@ publish = false
 default = ["stub"]
 stub = []
 engine = ["dep:llama-cpp-2"]
+# io::serial, for a project that drives its own RS232 or RS485 line. Optional because
+# e05, e13 and e14 have no serial line and should not take libc for one.
+serial = ["dep:libc"]
 
 [dependencies]
 # Pinned on Wednesday 14 October 2026: 0.1.159 is the newest release on crates.io, published
@@ -27,3 +30,8 @@ engine = ["dep:llama-cpp-2"]
 # grammar helper and its libcommon.a) and the OpenMP default; the loop needs neither, and
 # ggml's own thread pool serves the four threads of a Pi.
 llama-cpp-2 = { version = "=0.1.159", optional = true, default-features = false }
+# For io::serial only, behind the "serial" feature: termios, poll, read and write.
+# 0.2 is the published major line; the resolved patch is whatever the lockfile on the
+# building machine picks, and this crate pins nothing tighter because it calls only
+# the long-stable POSIX surface.
+libc = { version = "0.2", optional = true }
