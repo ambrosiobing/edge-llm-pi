@@ -197,19 +197,31 @@ the limit toggles through a run and nothing was sampling how long it was engaged
 
 **It has never been run, so smoke-test it first, for five seconds.** A remedy named in a sheet
 is not a remedy until it has executed once, and this one was written on a laptop that has no
-`vcgencmd`:
+`vcgencmd`. The board's clone needs the commit first, so push from the authoring laptop, pull
+here, and prove the file arrived before running anything:
+
+    cd ~/edge-llm-pi
+    git pull
+    grep -c "unix_s,iso_time,throttled,arm_hz,temp_c" tools/throttle_log.sh
+
+That count must be 1. A `git pull` that succeeds proves only what the remote had, so if it
+prints 0 the commit is still sitting on the laptop and nothing below will work. Then:
 
     cd ~/edge-llm-pi/projects/e02-decision-loop
-    ../../tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
+    sh ../../tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
 
 Five lines after the header, no empty fields, and a sample count on stderr means it works on
 this board. Then the real trace, started before the restore pass and stopped after the cold
 one, so both halves share one record:
 
     cd ~/edge-llm-pi/projects/e02-decision-loop
-    ../../tools/throttle_log.sh evidence/e02_throttle_pair.csv &
+    sh ../../tools/throttle_log.sh evidence/e02_throttle_pair.csv &
     # ... the two passes ...
     kill %1
+
+`sh` and not `./`, because the file is committed 100644 like `tools/install-hooks.sh`, which
+the README already invokes as `sh tools/install-hooks.sh`. Calling it directly gives
+"Permission denied".
 
 It refuses to overwrite an existing file, so each sitting needs its own name. And its own cost
 is unmeasured: three `vcgencmd` calls a second on a board already at its thermal ceiling is not

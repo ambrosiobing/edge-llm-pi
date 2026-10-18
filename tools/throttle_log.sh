@@ -4,9 +4,14 @@
 # attached instead of with spot checks taken by hand.
 #
 # Usage, from the project folder whose evidence/ should hold the trace:
-#     tools/throttle_log.sh evidence/eNN_throttle_2026-10-18.csv &
+#     sh ../../tools/throttle_log.sh evidence/eNN_throttle_2026-10-18.csv &
 #     ... run the passes ...
 #     kill %1
+#
+# Invoked through sh, not as ./throttle_log.sh, because this file is committed 100644 like
+# tools/install-hooks.sh beside it. A tracked execute bit is a mode the index has to carry and
+# that a Windows checkout cannot set, so the repository's convention is to name the interpreter
+# instead. Calling it directly gives "Permission denied" and nothing else.
 #
 # Columns: unix_s, iso_time, throttled, arm_hz, temp_c
 #
@@ -25,7 +30,7 @@
 # temperature column before trusting a trace taken alongside a run.
 #
 # This script has never been run. Smoke-test it for five seconds before relying on it:
-#     tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
+#     sh ../../tools/throttle_log.sh /tmp/smoke.csv & sleep 5; kill %1; cat /tmp/smoke.csv
 # Five header-plus-sample lines with no empty fields means it works on this board.
 set -u
 
