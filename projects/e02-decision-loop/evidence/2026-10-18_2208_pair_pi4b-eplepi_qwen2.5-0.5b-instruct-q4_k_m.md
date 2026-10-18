@@ -13,6 +13,9 @@ acceptance asks for and what no earlier attempt had.
 | Threads | 2 |
 | Rows | 100 each pass, the first hundred of `replay/synthetic_1000.csv` |
 | Full ARM clock | 1.800 GHz, read with `vcgencmd measure_clock arm` |
+| Board revision | `d03114`, Raspberry Pi 4 Model B Rev 1.4, 8 GB, Sony UK |
+| Firmware | Monday 14 September 2026, `a86983925695a7e63166327d7c002d64040ed31d` |
+| Clock setting | `arm_boost=1` in `/boot/firmware/config.txt` |
 | Result | ratio **4.47** against an acceptance of at least 2.0 |
 | Verdict | **measured, not accepted**: the register ended at `0x80000` |
 
@@ -122,9 +125,37 @@ values and then withdrawn when the next reading contradicted them: a plateau at 
 a plateau at 81.3 degrees C, a clock cost of 1.4 percent, and a run believed finished that was
 not. A sampler removes the temptation.
 
-## One condition no chapter records
+## One condition no chapter records, now read
 
-This board's full ARM clock is 1.800 GHz. The volume's measurement protocol pins the model
-file, the thread count and the engine tag and says nothing about frequency, so a reader
-reproducing these figures on a Raspberry Pi 4 Model B at a different `arm_freq` has no way to
-see why their numbers differ. What `config.txt` sets on this card is **to verify**.
+This board's full ARM clock is 1.800 GHz, and `arm_boost=1` in `/boot/firmware/config.txt` is
+the line that asks for it. That option is the documented switch for the Raspberry Pi 4's boost
+clock. What this board runs at without the line has not been measured and is not asserted
+here.
+
+The volume's measurement protocol pins the model file, the thread count and the engine tag and
+says nothing about frequency, so a reader reproducing these figures without that line would not
+be at 1.800 GHz and would have nothing in the chapter to explain the gap. Three values make the
+condition reproducible, all read on Sunday 18 October 2026 and all in the header table above:
+the revision code, the firmware version, and `arm_boost=1`.
+
+**How this was nearly missed, which is the part worth keeping.** The first search of
+`config.txt` looked for `arm_freq`, `over_voltage`, `force_turbo`, `temp_soft_limit` and
+`temp_limit`. It returned nothing, and that empty result was reported as "no override, so
+1.800 GHz is the firmware default". The conclusion was wrong because the search did not include
+the key that was there. A grep that returns nothing rules out only what it looked for, and a
+confident negative from an incomplete needle list is the same failure as a counter that reads
+zero because it counted the wrong noun. The fix was to stop guessing keys and print every line
+the firmware acts on:
+
+    grep -vE "^\s*(#|$)" /boot/firmware/config.txt
+
+**Checked and clean, so nobody need check it again.** There are two files named `config.txt` on
+this card. `/boot/firmware/config.txt` is the live one, on the boot partition.
+`/boot/config.txt` is 91 bytes on the root filesystem and holds a Raspberry Pi OS placeholder
+saying not to edit it and that the file has moved, so it is harmless by design rather than a
+setting being silently ignored.
+
+**Also in the live file and worth knowing for other projects:** `dtparam=spi=on`,
+`dtparam=i2c_arm=on`, `enable_uart=1` and `dtoverlay=w1-gpio`, which claims a GPIO of its own.
+There are no CAN overlay lines, so the note recording that this card gave both SPI0 chip
+selects describes a state it is no longer in.
