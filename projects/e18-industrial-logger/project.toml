@@ -64,7 +64,22 @@ abi      = "projects/e18-industrial-logger/c/abi.h"
 # re-specified to 16, or this project keeps its own history and does not use RuleCtx.
 #
 # The C half is unaffected and green: it configures, builds and passes its ctest.
-blocked_on = "the Rust half: no serial port in the shared crate, and WINDOW 30 against RULE_HISTORY 16"
+# Both halves build and both test suites pass as of Sunday 18 October 2026: the C half
+# 1 ctest, the Rust half 22 unit tests and 2 oracle tests, including the 600-frame
+# replay across the ABI. What is left is not a build problem, and is hardware:
+#
+#   - io::serial::Port compiles and nothing has run it. Its write and its timed read
+#     are exercised by no test, because a serial line needs a line. The first thing
+#     to run them is this board with the WS-28164 fitted.
+#   - set_rs485 carries the two flag bits confirmed on Sunday 18 October 2026 against
+#     /usr/include/linux/serial.h on the card eplepi, _BITUL(0) and _BITUL(4). What is
+#     still unknown is whether the SC16IS752 channels implement TIOCSRS485 at all: a
+#     UART doing direction control in hardware may answer ENOTTY and work anyway, so
+#     the errno is returned rather than swallowed and the echo acceptance will say
+#     which of the two happened.
+#   - the 1000-frame RS485 echo and the agreement table are the acceptance, and both
+#     need the HAT on the Pi 4 Model B, card B.
+blocked_on = "nothing in software; the acceptance needs the WS-28164 on card B"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned

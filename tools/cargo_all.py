@@ -13,14 +13,14 @@ dependency on the shared crate could name four cargo features that crate does no
 and no run said so. The glob is now a walk, and the walk lives here so that it can be read
 and run on a laptop rather than only by the runner.
 
-KNOWN is the other half of that lesson. e18's Rust half does not compile: it was written
-against an interface the shared crate never had, and two of the eight errors are decisions
-rather than repairs (there is no serial port in the crate at all, and this rule's window is
-30 against the crate's fixed 16). Its own project.toml carries the full list. Leaving the
-walk narrow would hide that again; letting the job fail on every push would teach a reader
-to ignore the job, which is how the first failure survived. So a known failure is named,
-dated and allowed, and **a KNOWN entry that starts passing fails this script**, because a
-list of excuses that nobody has to maintain is the thing that rots.
+KNOWN is the other half of that lesson, and it is empty as of Sunday 18 October 2026. It
+held one entry for one day. e18's Rust half did not compile: it had been written against an
+interface the shared crate never had, eight errors, of which two were decisions rather than
+repairs. Both were made that day and the entry came out the same evening, not because
+someone remembered to tidy it but because **a KNOWN entry that starts passing fails this
+script**, and it did, naming the two places to edit. That is the whole reason the mechanism
+is shaped this way: a list of excuses nobody has to maintain is the thing that rots. Add an
+entry only with the reason and the date, and expect the script to take it away from you.
 """
 import argparse
 import subprocess
@@ -29,27 +29,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-KNOWN = {
-    "projects/e18-industrial-logger/rust/Cargo.toml":
-        "does not compile, first seen Saturday 17 October 2026: written against an "
-        "interface common/rust/edgellm never had. Eight errors then. Two of the three "
-        "pieces were settled on Sunday 18 October 2026: RuleCtx gained a per-context "
-        "capacity so WINDOW stays 30, which took the four E0061 call sites with it, and "
-        "the four unresolved imports were ported to the crate's real names, Elog and "
-        "Decision, io::Replay with IoSource in scope, and wrap_system and wrap_user "
-        "taking a Template. One of those four was not the rename it looked like: "
-        "Source::next returns std::io::Result because its live arm's port calls do, and "
-        "the crate's Replay::next returns the crate's own Error with no From impl between "
-        "them, so that conversion is now explicit. io::serial::Port and its four methods "
-        "were written on Sunday 18 October 2026, behind the crate's \"serial\" feature so "
-        "that e05, e13 and e14 keep their dependency set, which leaves this project with "
-        "no unresolved import. The entry stays because that is not the same as compiling: "
-        "this project's body has never been type-checked at all, the imports having "
-        "stopped the compiler first every time, and the unused parameter that surfaced in "
-        "bench() when four errors became one is what that looks like. If this run reports "
-        "no error, remove this entry, which is the failure the script raises for exactly "
-        "that case. The list is in projects/e18-industrial-logger/project.toml.",
-}
+KNOWN = {}
 
 
 # Where Rust lives in this tree. common/rust is here because nothing ran the shared crate's

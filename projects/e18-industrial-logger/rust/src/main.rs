@@ -33,10 +33,10 @@
 //!                      October 2026 at io::serial, behind the crate's "serial"
 //!                      feature, which this project's Cargo.toml enables
 //!                      Port::set_rs485(&mut self, bool) -> io::Result<()>, MET, and
-//!                      the one piece with no counterpart in common/c: its two flag
-//!                      bits are from linux/serial.h and are not yet confirmed
-//!                      against the board's own header, so the RS485 echo figure is
-//!                      not evidence until that one line has been run
+//!                      the one piece with no counterpart in common/c. Its two flag
+//!                      bits were confirmed against the board's own linux/serial.h on
+//!                      Sunday 18 October 2026; whether the SC16IS752 implements the
+//!                      ioctl at all is still open and the echo run will say
 //!                      Port::write_all(&mut self, &[u8]) -> io::Result<()>, MET
 //!                      Port::read_exact_timeout(&mut self, &mut [u8], Duration) ->
 //!                      io::Result<usize>, MET; a short read is Ok(n), a deadline

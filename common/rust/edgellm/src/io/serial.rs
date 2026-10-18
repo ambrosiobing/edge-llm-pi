@@ -16,11 +16,12 @@
 //!
 //! set_rs485 has no counterpart: common/c/src/io_serial.c mentions RS485 nowhere, because
 //! the C projects that use a serial line use RS232. The ioctl request comes from libc so
-//! that it is not a number written from memory, but the two flag bits are from
-//! linux/serial.h and are NOT yet confirmed against the board's own header. Until they
-//! are, the RS485 echo figure that e18's acceptance asks for is not evidence: a wrong bit
-//! here is silent, it compiles and it configures something else. The check is one line on
-//! the board and the note in e18's project.toml says so.
+//! that it is not a number written from memory, and the two flag bits were read off the
+//! board's own linux/serial.h on Sunday 18 October 2026 rather than recalled. What is still
+//! unknown is one layer down and cannot be settled by a header: whether the driver behind
+//! a given port implements TIOCSRS485 at all. The WS-28164's SC16IS752 channels have not
+//! been tried, a UART that does direction control in hardware may answer ENOTTY and work
+//! anyway, and that is why the errno is returned rather than swallowed.
 //!
 //! read_exact_timeout has no counterpart either: the C backend sets VMIN 1 and VTIME 0 and
 //! blocks until a byte arrives, which is right for a reader that has nothing else to do.
@@ -29,6 +30,10 @@
 //! is a little generous: a short read is Ok(n) and the caller decodes the n bytes it got,
 //! which is what e18 does, while a deadline that passes with nothing read is TimedOut
 //! rather than Ok(0), so an echo that never came back is counted as the failure it is.
+//!
+//! Nothing has run this module. The baud map and the two refusal paths have tests; write_all
+//! and read_exact_timeout are compiled and unexercised, because exercising them needs a
+//! line. The first thing to run them is the Pi 4 Model B, card B, with the HAT fitted.
 
 use std::ffi::CString;
 use std::io;
@@ -36,9 +41,11 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-/// From linux/serial.h. TO VERIFY on the target with
-///     grep -E "SER_RS485_(ENABLED|RX_DURING_TX)" /usr/include/linux/serial.h
-/// and record the date beside these two lines once it has been run.
+/// From linux/serial.h, CONFIRMED on Sunday 18 October 2026 against
+/// /usr/include/linux/serial.h on the card eplepi, which carries
+///     #define SER_RS485_ENABLED        _BITUL(0)
+///     #define SER_RS485_RX_DURING_TX   _BITUL(4)
+/// so the two values below are the target's own and not a recollection.
 const SER_RS485_ENABLED: u32 = 1 << 0;
 const SER_RS485_RX_DURING_TX: u32 = 1 << 4;
 
