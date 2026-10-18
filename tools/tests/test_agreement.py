@@ -1,6 +1,7 @@
 """The first acceptance clause of every chapter, checked against the log that defeated it.
 
-Each project in this volume carries a clause of the form "the count of rows without a literal
+Each project in this volume carries a clause of the form "the count of rows whose model
+column is not one of the rule's decisions
 must be zero", and names tools/agreement.py as the thing that measures it. Until Saturday
 17 October 2026 the tool could not fail that clause at all. "empty model column" counts only
 an empty string; a grammar-constrained answer cut short by the generation budget is a

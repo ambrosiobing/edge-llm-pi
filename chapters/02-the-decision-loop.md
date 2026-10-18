@@ -216,7 +216,7 @@ cd ~/src/edge-llm-pi; ctest --test-dir build -R rules_test --output-on-failure
 cd ~/src/edge-llm-pi; ctest --test-dir build -R edgellm-e02-oracle --output-on-failure
 ```
 
-**Step 5.** Run the same stub loop by hand and score the log with the agreement tool, to see the table the CI number comes from: 82.3 percent, with every disagreement the stub calling a WATCH or an ALERT event NORMAL, and zero rows without a literal.
+**Step 5.** Run the same stub loop by hand and score the log with the agreement tool, to see the table the CI number comes from: 82.3 percent, with every disagreement the stub calling a WATCH or an ALERT event NORMAL, and zero rows whose model column is not one of the rule's decisions.
 
 ```bash
 # win11 skyhorizon, WSL side

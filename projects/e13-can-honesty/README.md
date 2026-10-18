@@ -20,7 +20,7 @@
 > - **Model:** Qwen2.5-0.5B-Instruct Q4\_K\_M, 491 MB, Apache 2.0
 > - **Decision:** per node, one of PRESENT, MODELLED, ABSENT through the grammar, plus one sentence naming the node and the counter that decided it
 > - **Control rule:** a vcan source is MODELLED; three heartbeat periods with nothing heard, or never heard at all, is ABSENT; otherwise PRESENT
-> - **Acceptance:** 1000 heartbeat periods with injected dropouts, the agreement table, zero rows without a literal; bus-off observed and the recovery seen through `ip -details -statistics link show`; every recorded measurement names the controller and never only the interface
+> - **Acceptance:** 1000 heartbeat periods with injected dropouts, the agreement table, zero rows whose model column is not one of the rule's decisions; bus-off observed and the recovery seen through `ip -details -statistics link show`; every recorded measurement names the controller and never only the interface
 > - **Difficulty:** 4 of 5
 > - **Effort:** two evenings on the host for the service, the generator and the oracle, one evening in skyhorizon's WSL for the first Rust build, one afternoon on the Pi 4B for the bring-up, and one sitting for the 1000-period run and the wire out of the terminal
 

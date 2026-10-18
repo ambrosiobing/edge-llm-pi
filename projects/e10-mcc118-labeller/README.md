@@ -251,7 +251,7 @@ cd ~/src/edge-llm-pi; cmake -S . -B build -DEDGELLM_STUB_MODEL=ON; cmake --build
 cd ~/src/edge-llm-pi; ctest --test-dir build -R 'rules_test|edgellm-e10-oracle' --output-on-failure
 ```
 
-**Step 4.** Run the same stub loop by hand and score it, to see the table the CI number comes from: 33.3 percent, every disagreement the stub calling a RAMP or a STEP window NOISE, and zero rows without a literal.
+**Step 4.** Run the same stub loop by hand and score it, to see the table the CI number comes from: 33.3 percent, every disagreement the stub calling a RAMP or a STEP window NOISE, and zero rows whose model column is not one of the rule's decisions.
 
 ```bash
 # win11 skyhorizon, WSL side

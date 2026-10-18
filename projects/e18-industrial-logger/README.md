@@ -335,7 +335,7 @@ cd ~/edge-llm-pi; build-e18c/edgellm-e18-daemon --socket /run/edgellm/e18-daemon
   --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 64 &
 ```
 
-**Step 9.** Run the 600 frames over the socket with the RS232 line driven, read the bits again, and score the log. The count of rows without a literal must be zero and the overrun count goes into the table with its date.
+**Step 9.** Run the 600 frames over the socket with the RS232 line driven, read the bits again, and score the log. The count of rows whose model column is not one of the rule's decisions must be zero and the overrun count goes into the table with its date.
 
 ```bash
 # Raspberry Pi 4 Model B, card B

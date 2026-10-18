@@ -74,7 +74,7 @@ The system prompt, decoded once and never again during a run, is 73 words and re
 
 One of four literals and one sentence of 10 to 160 characters, in one object, with `n_predict` 64 and temperature 0.3. One property of the shared engine matters and is easy to get wrong: the sampler chain is built once, the grammar first and then either a greedy sampler at temperature 0 or a temperature sampler followed by a distribution sampler, and that one chain serves every token. So at temperature 0.3 the decision literal is sampled from the distribution as well, not greedily; what keeps it bounded is the grammar, which admits nothing but the four literals in that position. The distribution sampler is seeded 1 and the chain is reset before every decision, so a rerun with the same model and scenarios reproduces the same sentences.
 
-An answer that has not closed its object inside 64 tokens is counted by `tools/agreement.py` as a row without a literal; that is this chapter's own failure and not the model's, and the knob is `n_predict` 96, turned only with the count that justified it beside it. In CI there is no model file: the stub expands the grammar's first alternative on every path and every character class to nothing, so it answers `{"decision":"I60","reason":"."}` with timings of zero and the engine column reading stub, and the loop, the log, the oracle check and the agreement tool are exercised end to end on a runner with no engine, no module and no instrument.
+An answer that has not closed its object inside 64 tokens is counted by `tools/agreement.py` as a row whose model column is not one of the rule's decisions; that is this chapter's own failure and not the model's, and the knob is `n_predict` 96, turned only with the count that justified it beside it. In CI there is no model file: the stub expands the grammar's first alternative on every path and every character class to nothing, so it answers `{"decision":"I60","reason":"."}` with timings of zero and the engine column reading stub, and the loop, the log, the oracle check and the agreement tool are exercised end to end on a runner with no engine, no module and no instrument.
 
 ## Control rule
 
@@ -292,7 +292,7 @@ cd ~/src/edge-llm-pi; ctest --test-dir build -R e16_battery_test --output-on-fai
 cd ~/src/edge-llm-pi; ctest --test-dir build -R "rules_test|edgellm-e16-oracle" --output-on-failure
 ```
 
-**Step 4.** Run the same stub loop by hand and score the log, to see the table the CI number comes from: 48.0 percent, every disagreement of one kind, zero rows without a literal.
+**Step 4.** Run the same stub loop by hand and score the log, to see the table the CI number comes from: 48.0 percent, every disagreement of one kind, zero rows whose model column is not one of the rule's decisions.
 
 ```bash
 # win11 skyhorizon, WSL side
@@ -356,7 +356,7 @@ cd ~/src/edge-llm-pi; python projects/e16-nbiot-sleep-interval/tools/profile_sum
   --granted 3600
 ```
 
-**Step 10.** Run the hundred decisions on the Pi 3B with the real model, read the throttle bits before and after, and score the log. The count of rows without a literal must be zero; the agreement is whatever it is and goes into the table below with the date of the run.
+**Step 10.** Run the hundred decisions on the Pi 3B with the real model, read the throttle bits before and after, and score the log. The count of rows whose model column is not one of the rule's decisions must be zero; the agreement is whatever it is and goes into the table below with the date of the run.
 
 ```bash
 # Raspberry Pi 3 Model B Rev 1.2, card eplepi
@@ -427,7 +427,7 @@ Over the hundred scenarios as generated on Wednesday 14 October 2026 by `tools/m
 | I900, 9 | 9 | 0 | 0 | 0 | the stub in CI; bench: not measured |
 | I3600, 37 | 37 | 0 | 0 | 0 | the stub in CI; bench: not measured |
 | agreement | 48.0 percent |  |  |  | the stub in CI; bench: not measured, no SIM and no capture |
-| rows without a literal | 0 |  |  |  | the stub in CI, by construction: the grammar admits nothing else |
+| not a decision of the rule | 0 |  |  |  | the stub in CI, by construction: the grammar admits nothing else |
 
 The rule column is worth one more table, because its shape is set by the granted window and not by the battery. Of the 48 I60 rows, 19 are rows where the network granted nothing the timer tables could decode; the other 29 are rows where a longer interval was granted and the battery target refused it. And because the computed life rises with the interval, the rule's answer is always either I60 or the largest interval the grant allows: on 52 rows it is that largest interval and on the other 48 the fallback. No row has the rule choosing a middle interval while a longer one is granted, which is a property of the arithmetic and the first thing to check in a log that claims otherwise.
 

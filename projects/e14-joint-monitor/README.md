@@ -381,7 +381,7 @@ Over the hundred minutes as generated on Wednesday 14 October 2026 by `projects/
 | OK, 92 minutes | 92 | 0 | the stub in the daemon, in CI; bench: not measured |
 | INSPECT, 8 minutes | 8 | 0 | the stub in the daemon, in CI; bench: not measured |
 | agreement | 92.0 percent |  | the stub in CI; bench: not measured, the hundred minutes on the Pi 4B are pending |
-| rows without a literal | 0 |  | the oracle test compares all hundred model cells letter for letter |
+| not a decision of the rule | 0 |  | the oracle test compares all hundred model cells letter for letter |
 
 ## Measured data
 

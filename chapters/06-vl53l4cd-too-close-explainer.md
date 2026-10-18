@@ -18,7 +18,7 @@
 > - **Model:** SmolLM2-360M-Instruct Q4\_K\_M, 0.27 GB, Apache 2.0; Qwen2.5-0.5B-Instruct Q4\_K\_M, 491 MB, if the 360M agreement is poor
 > - **Decision:** one of CLEAR, APPROACHING, TOO\_CLOSE through the grammar, plus one bounded sentence under the key beam; the stub answers CLEAR with an empty sentence in CI
 > - **Control rule:** TOO\_CLOSE when this range and the one before are both under 300 mm; APPROACHING when each of the last five ranges is lower than the one before; else CLEAR; a sample whose range status is not 0 carries no range
-> - **Acceptance:** 200 approaches by hand at three speeds with the agreement table over the model-answered rows and zero rows without a literal; repeatability at a fixed 200 mm over 100 samples, mean and spread published; the decision latency of one answer against the approach time at each speed; throttle bits `0x0` before and after
+> - **Acceptance:** 200 approaches by hand at three speeds with the agreement table over the model-answered rows and zero rows whose model column is not one of the rule's decisions; repeatability at a fixed 200 mm over 100 samples, mean and spread published; the decision latency of one answer against the approach time at each speed; throttle bits `0x0` before and after
 > - **Difficulty:** 3 of 5
 > - **Effort:** one evening on the host for the rule, the replay and the oracle; one afternoon on the Pi 3B for the ULD build, the wiring and the repeatability; one afternoon, Thursday 29 October 2026, for the 200 approaches
 
@@ -244,7 +244,7 @@ cd ~/src/edge-llm-pi; cmake -S . -B build -DEDGELLM_STUB_MODEL=ON; cmake --build
 cd ~/src/edge-llm-pi; ctest --test-dir build -R 'rules_test|edgellm-e06-oracle' --output-on-failure
 ```
 
-**Step 4.** Run the same stub loop by hand and score the log with the agreement tool, to see the table the CI number comes from: 46.7 percent, every disagreement the stub calling an APPROACHING or a TOO\_CLOSE row CLEAR, and zero rows without a literal.
+**Step 4.** Run the same stub loop by hand and score the log with the agreement tool, to see the table the CI number comes from: 46.7 percent, every disagreement the stub calling an APPROACHING or a TOO\_CLOSE row CLEAR, and zero rows whose model column is not one of the rule's decisions.
 
 ```bash
 # win11 skyhorizon, WSL side
@@ -309,7 +309,7 @@ cd ~/edge-llm-pi; build/projects/e06-vl53l4cd-too-close/edgellm-e06 --project e0
   --log projects/e06-vl53l4cd-too-close/evidence/e06_run.csv; vcgencmd get_throttled
 ```
 
-**Step 9.** Score the log and take the latency: the agreement table over the model-answered rows, the count of rule-only rows, and the mean of prompt and generate time, which is <span class="math">L</span>. The count of rows without a literal must be zero.
+**Step 9.** Score the log and take the latency: the agreement table over the model-answered rows, the count of rule-only rows, and the mean of prompt and generate time, which is <span class="math">L</span>. The count of rows whose model column is not one of the rule's decisions must be zero.
 
 ```bash
 # Raspberry Pi 3 Model B Rev 1.2, over SSH

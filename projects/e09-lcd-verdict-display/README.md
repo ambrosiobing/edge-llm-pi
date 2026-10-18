@@ -238,7 +238,7 @@ cd ~/src/edge-llm-pi; cmake -S . -B build -DEDGELLM_STUB_MODEL=ON; cmake --build
 cd ~/src/edge-llm-pi; ctest --test-dir build -R 'rules_test|edgellm-e09-oracle' --output-on-failure
 ```
 
-**Step 3.** Run the stub loop by hand and score the log, to see the table the CI number comes from: 50.0 percent, every disagreement the stub calling a TAP, TILT or FREEFALL event NONE, zero asked rows without a literal.
+**Step 3.** Run the stub loop by hand and score the log, to see the table the CI number comes from: 50.0 percent, every disagreement the stub calling a TAP, TILT or FREEFALL event NONE, zero asked rows whose model column is not one of the rule's decisions.
 
 ```bash
 # win11 skyhorizon, WSL side
@@ -408,7 +408,7 @@ Over the replay as generated on Wednesday 14 October 2026 by `tools/make_replay.
 | --- | --- | --- | --- |
 | largest frame time after a decision | not measured | under 200 ms | steady\_clock in main.cpp, the panel log; run pending |
 | touches that toggled a pane | not measured | 50 of 50 | the evdev queue, the panel log; run pending |
-| asked rows without a literal | not measured | 0 | tools/agreement.py; run pending |
+| asked rows, not a decision of the rule | not measured | 0 | tools/agreement.py; run pending |
 | decision time, prompt plus generate | not measured | reported, not bounded | the per-event log; [Project 1](../../chapters/01-bring-up-and-the-honest-tokens-per-second.md)'s table gives the expectation |
 | frame transfer floor | 77 ms at 32 MHz, 154 ms at 16 MHz |  | 2.46 Mbit per frame divided by the clock; a calculation, not a reading |
 
@@ -428,7 +428,7 @@ Over the replay as generated on Wednesday 14 October 2026 by `tools/make_replay.
 - **The ADXL345 bus at 100 kHz, and in m/s^2.** The current leads answered nothing at 400 kHz on Friday 9 October 2026, so the `i2c_arm_baudrate` line is not optional; and the IIO driver reports metres per second squared with a scale of 0.038312 per LSB at 16 g full scale while the thresholds are in g, so `--g-per-unit 0.1019716` is the one conversion, and a run without it calls every reading a TAP.
 - **A polled sensor misses most taps.** The loop reads the raw registers at 10 Hz and a tap by hand lasts milliseconds, so a tap is caught only when the sample lands on it; tilts and freefalls are caught every time. [Project 5](../../chapters/05-adxl345-event-reporter.md) reads the part's own tap detection on INT1; this chapter counts the taps it saw and says how many it tried.
 - **The verdict shows seconds before the answer.** On the Pi 3 a decision is seconds, and the glass shows the rule's verdict and the LED colour long before the model's pane fills. That is not a defect to hide with a spinner: it is the chapter's argument on camera, the rule acts now and the model explains later.
-- **A tokenizer that splits FREEFALL.** The longest literal may be three tokens on the SmolLM2 tokenizer, and with the braces, the key and the quotes the object must still close inside eight; step 7 counts it before the run, and an object that never closes is a row without a literal, charged to the chapter.
+- **A tokenizer that splits FREEFALL.** The longest literal may be three tokens on the SmolLM2 tokenizer, and with the braces, the key and the quotes the object must still close inside eight; step 7 counts it before the run, and an object that never closes is a row whose model column is not one of the rule's decisions, charged to the chapter.
 
 ## Future and extra exercises
 
