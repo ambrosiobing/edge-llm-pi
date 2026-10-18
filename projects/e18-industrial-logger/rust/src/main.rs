@@ -24,8 +24,11 @@
 //!
 //! ```text
 //!   edgellm::io        Event { t_s: f64, tag: String, v: Vec<f64> }
-//!                      replay::Replay::open(path) -> io::Result<Replay>
-//!                      Replay::next(&mut self)    -> io::Result<Option<Event>>
+//!                      Replay::open(path) -> Result<Replay, edgellm::Error>, MET, at
+//!                      io::Replay and not io::replay::Replay
+//!                      next(&mut self) -> Result<Option<Event>, edgellm::Error>, MET as
+//!                      the IoSource trait method, so IoSource must be in scope, and the
+//!                      error is the crate's and not std::io::Error
 //!                      serial::Port::open(path, baud) -> io::Result<Port>
 //!                      Port::set_rs485(&mut self, rx_during_tx: bool)
 //!                      Port::write_all(&mut self, &[u8])
@@ -34,9 +37,11 @@
 //!                      hist(). MET on Sunday 18 October 2026: the crate's capacity
 //!                      became per-context so that WINDOW stays 30 here, and new()
 //!                      still keeps RULE_HISTORY for every other project.
-//!   edgellm::elog      Log::create(path, engine) / Log::row(&Event, &str, Option<&Answer>)
-//!                      Answer { text, prompt_ms, generate_ms, n_generated }
-//!   edgellm::template  chatml_system(&str) -> String, chatml_user(&str) -> String
+//!   edgellm::elog      Elog::open(path, engine) / Elog::row(&Event, &str,
+//!                      Option<&Decision>), MET under those names; the answer type is
+//!                      edgellm::Decision, which carries those four fields and two more
+//!   edgellm::template  wrap_system(Template, &str) and wrap_user(Template, &str), MET
+//!                      under those names, taking the template rather than naming it
 //! ```
 //!
 //!     edgellm-e18 (--replay <csv> | --live) --grammar <gbnf> --prompt <txt>
@@ -54,11 +59,12 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
-use edgellm::elog::{Answer, Log};
+use edgellm::elog::Elog;
+use edgellm::Decision;
 use edgellm::io::serial::Port;
-use edgellm::io::{replay::Replay, Event};
+use edgellm::io::{Event, IoSource, Replay};
 use edgellm::rules::{Rule, RuleCtx};
-use edgellm::template::{chatml_system, chatml_user};
+use edgellm::template::{wrap_system, wrap_user, Template};
 
 use abi::{Backend, EngineConfig, EngineError, Socket, Stub, EXPECTED_ABI_VERSION};
 use registers::{Frame, FrameError, FRAME_LEN, FUNC_READ_HOLDING, N_REGISTERS};
@@ -195,7 +201,10 @@ enum Source {
 impl Source {
     fn next(&mut self) -> std::io::Result<Option<(Event, Result<Frame, FrameError>)>> {
         match self {
-            Source::Replayed(r) => match r.next()? {
+            Source::Replayed(r) => match r
+                .next()
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            {
                 None => Ok(None),
                 Some(ev) => {
                     let frame = encode_row(&ev);
@@ -380,7 +389,7 @@ fn echo_test(o: &Options) -> Result<(), String> {
 /// figure this prints is the Rust side of the chapter's comparison; the C side comes
 /// from `e18_abi_test`, which times the same engine with no boundary at all.
 fn bench(o: &Options, engine: &mut Backend, n: usize) -> Result<(), String> {
-    let user = chatml_user(BENCH_TEXT);
+    let user = wrap_user(Template::ChatMl, BENCH_TEXT);
     let mut us = Vec::with_capacity(n);
     for i in 0..n {
         let start = Instant::now();
@@ -415,7 +424,8 @@ fn run(o: &Options, engine: &mut Backend) -> Result<(), String> {
         None => None,
     };
     let engine_id = format!("e18-{}-abi{}", engine.name(), EXPECTED_ABI_VERSION);
-    let mut log = Log::create(&o.log, &engine_id).map_err(|e| format!("{:?}: {}", o.log, e))?;
+    let mut log = Elog::open(&o.log, &engine_id)
+        .map_err(|e| format!("{:?}: {}", o.log, e))?;
 
     let mut frames = 0usize;
     let mut bad_frames = 0usize;
@@ -452,7 +462,7 @@ fn run(o: &Options, engine: &mut Backend) -> Result<(), String> {
             }
         }
         let answer = if decoded.is_ok() {
-            let user = chatml_user(&format_prompt(&ev, span));
+            let user = wrap_user(Template::ChatMl, &format_prompt(&ev, span));
             let start = Instant::now();
             match engine.decide(&user) {
                 Ok(text) => {
@@ -467,8 +477,12 @@ fn run(o: &Options, engine: &mut Backend) -> Result<(), String> {
                     // service will not invent a split it cannot see. generate_ms is
                     // the whole call as the caller paid for it, which is the figure
                     // worth publishing anyway.
-                    Some(Answer { text, prompt_ms: 0.0, generate_ms: call_us / 1000.0,
-                                  n_generated: 0 })
+                    // Decision carries two fields beyond the four this service can
+                    // fill, n_prompt_tokens and stub, and both are left at their defaults
+                    // for the same reason the two below are zero: nothing crosses the ABI
+                    // that would let this side invent them.
+                    Some(Decision { text, prompt_ms: 0.0, generate_ms: call_us / 1000.0,
+                                    n_generated: 0, ..Decision::default() })
                 }
                 Err(EngineError::Version { want, got }) => {
                     return Err(format!("abi version {} against {}", got, want));
@@ -536,7 +550,7 @@ fn main() -> ExitCode {
     // engine reads the file itself, on whichever side of the boundary it sits.
     match std::fs::read_to_string(&o.prompt) {
         Ok(text) => {
-            let _ = chatml_system(text.trim_end());
+            let _ = wrap_system(Template::ChatMl, text.trim_end());
             eprintln!("e18: system prompt {} words from {:?}",
                       text.split_whitespace().count(), o.prompt);
         }

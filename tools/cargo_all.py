@@ -32,14 +32,18 @@ ROOT = Path(__file__).resolve().parent.parent
 KNOWN = {
     "projects/e18-industrial-logger/rust/Cargo.toml":
         "does not compile, first seen Saturday 17 October 2026: written against an "
-        "interface common/rust/edgellm never had. Eight errors then; four now. The window "
-        "half was settled on Sunday 18 October 2026, when RuleCtx gained a per-context "
-        "capacity so WINDOW stays 30, and the four E0061 call sites went with it. What "
-        "remains is the four unresolved imports: elog::Log and elog::Answer, which are "
-        "Elog and Decision; io::replay::Replay, which is io::Replay; template's two "
-        "chatml_ functions, which are wrap_system and wrap_user taking a Template; and "
-        "io::serial::Port, which does not exist in the crate at all and is the one piece "
-        "that is new code rather than a rename. The list is in "
+        "interface common/rust/edgellm never had. Eight errors then. Two of the three "
+        "pieces were settled on Sunday 18 October 2026: RuleCtx gained a per-context "
+        "capacity so WINDOW stays 30, which took the four E0061 call sites with it, and "
+        "the four unresolved imports were ported to the crate's real names, Elog and "
+        "Decision, io::Replay with IoSource in scope, and wrap_system and wrap_user "
+        "taking a Template. One of those four was not the rename it looked like: "
+        "Source::next returns std::io::Result because its live arm's port calls do, and "
+        "the crate's Replay::next returns the crate's own Error with no From impl between "
+        "them, so that conversion is now explicit. What remains is io::serial::Port and "
+        "its four methods, which do not exist in the crate at all and are new code over "
+        "termios rather than anything that can be renamed. That port has not been "
+        "compiled: this script's next run is its first test. The list is in "
         "projects/e18-industrial-logger/project.toml.",
 }
 
