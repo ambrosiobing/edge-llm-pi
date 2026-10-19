@@ -1,0 +1,22 @@
+status,claim,published,counted,source
+CONFIRMED,rows in the thousand-decision run,1000,1000,e02_run.csv
+CONFIRMED,objects that never closed,949,949,e02_run.csv
+CONFIRMED,rule column NORMAL,823,823,e02_run.csv
+CONFIRMED,rule column WATCH,110,110,e02_run.csv
+CONFIRMED,rule column ALERT,67,67,e02_run.csv
+CONFIRMED,"agreement on the quiet hundred, budget 12",4 of 100,4 of 100,e02_npredict12.csv
+CONFIRMED,"restore mean prompt_ms, Saturday 17 October 2026",1320.6,1320.6,e02_variant_a_restore_2026-10-17.csv
+CONFIRMED,discarded cold mean prompt_ms,5830.4,5830.4,e02_variant_a_cold_2026-10-18_discarded.csv
+CONFIRMED,pair restore mean prompt_ms,1325.6,1325.6,e02_variant_a_restore_pair.csv
+CONFIRMED,pair cold mean prompt_ms,5927.5,5927.5,e02_variant_a_cold_pair.csv
+CONFIRMED,pair restore mean generate_ms,1524.8,1524.8,e02_variant_a_restore_pair.csv
+CONFIRMED,pair cold mean generate_ms,1560.6,1560.6,e02_variant_a_cold_pair.csv
+CONFIRMED,the ratio of the two means,4.47,4.471,e02_variant_a_restore_pair.csv and e02_variant_a_cold_pair.csv
+CONFIRMED,repaired agreement over the full thousand,unmeasured,"unmeasured, 117 usable rows",e02_run_npredict12.csv
+NEW,generation budget was reached on every row,not stated,n_generated is 8 on 1000 of 1000,e02_run.csv
+NEW,tokens an object needs at budget 12,not stated,"ALERT 9, NORMAL 8, so the failure was one token",e02_npredict12.csv
+NEW,agreement of the malformed run has two values,not stated,"21 of 1000 closed-only, 87 of 1000 by literal in the text",e02_run.csv
+NEW,rows of the pair below the acceptance of 2.0,not stated,"0 of 100, per-row ratio 4.265 to 4.547",e02_variant_a_restore_pair.csv and e02_variant_a_cold_pair.csv
+NEW,thermal drift within the cold pass,not stated,"5896.9 ms first quarter to 5978.6 ms last, 1.4 percent",e02_variant_a_cold_pair.csv
+NEW,first row is not an outlier in either pass,not stated,"restore -0.1 percent, cold -0.5 percent against rows 1 on",e02_variant_a_restore_pair.csv and e02_variant_a_cold_pair.csv
+DEFECT,bytes of the interrupted log that are zeroed,not stated,"562 of 13645, about 5 rows counted in the size and lost",e02_run_npredict12.csv
