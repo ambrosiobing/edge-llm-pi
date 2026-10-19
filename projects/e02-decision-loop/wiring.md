@@ -190,8 +190,23 @@ board held thirteen minutes of continuous load on it where three minutes had bee
 lose the run on the dock, which makes the dock the leading explanation and not the established
 cause. A Raspberry Pi 4 on four cores wants 5.1 V at 3 A over USB-C.
 
-**The log is not durable across a restart, and the record said otherwise until Monday
-19 October 2026.** The interrupted run of Saturday 17 October 2026,
+**The log is now durable across a restart, and what that costs is measured.** Settled on
+Monday 19 October 2026: `common/c/src/elog.c` calls `fsync` after every row, not only `fflush`.
+On this board, writing to ext4 on the SD card, `tools/fsync_cost.py` puts the sync at 6.594 ms
+per row against 0.005 ms for the flush alone, so it is about thirteen hundred times the cost of
+what was there and still only 0.233 percent of a 2827 ms decision. Over the eighty-five minute
+run it adds about 6.6 seconds. The sync happens after the decision and not inside it, so it
+cannot move `prompt_ms` or `generate_ms`; it can only make a run slightly longer. Re-measure
+with
+
+    cd ~/edge-llm-pi
+    python3 tools/fsync_cost.py projects/e02-decision-loop/evidence
+
+if the card is ever replaced, and point it at that folder rather than `/tmp`, because `fsync`
+on a tmpfs touches no device and the tool refuses to pretend otherwise.
+
+**Why it was needed, and the record that said otherwise until Monday 19 October 2026.**
+The interrupted run of Saturday 17 October 2026,
 `evidence/e02_run_npredict12.csv`, is 13645 bytes of which the last 562 are NUL. Its size was
 recorded and its content never reached the card. So it holds 117 usable rows, not the 679 a
 `grep -c ""` reports, because grep counts a NUL run as hundreds of lines. The note saying a

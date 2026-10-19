@@ -21,6 +21,21 @@
  * generate_ms. Decided by Joseph on Monday 19 October 2026 for the eighty-five minute
  * agreement run, which is the longest in this volume and the one whose finished rows
  * must survive an interruption.
+ *
+ * WHAT IT COSTS, MEASURED AND NOT ESTIMATED, so nobody has to measure it again. On the bench
+ * Raspberry Pi 4 Model B on Monday 19 October 2026, writing to ext4 on the SD card, over two
+ * hundred rows per loop with a control loop that flushed without syncing:
+ *
+ *     flush only      0.005 ms per row
+ *     flush + fsync   6.599 ms per row
+ *     the sync        6.594 ms per row
+ *
+ * That is 0.233 percent of a 2827 ms decision, and about 6.6 seconds added to the
+ * eighty-five minute agreement run. It is also roughly thirteen hundred times the cost of the
+ * fflush that was here before, which is the honest way to read the pair: the old call was
+ * nearly free and bought nothing against a power loss, and the new one costs six milliseconds
+ * and buys the rows. tools/fsync_cost.py takes the measurement and refuses to take it on a
+ * tmpfs, where fsync reaches no device and would read as free.
  */
 #define _GNU_SOURCE
 #include "elog.h"
