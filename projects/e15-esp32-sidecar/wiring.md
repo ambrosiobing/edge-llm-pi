@@ -81,6 +81,7 @@ three runs is within 5 percent. Then the replay is regenerated from the measured
 
     cd ~/edge-llm-pi
     edgellm-e15 --project e15 \
+      --n-predict 16 \
       --replay projects/e15-esp32-sidecar/replay/budgets_200.csv \
       --grammar projects/e15-esp32-sidecar/grammar.gbnf \
       --prompt projects/e15-esp32-sidecar/prompt.txt \
@@ -88,6 +89,21 @@ three runs is within 5 percent. Then the replay is regenerated from the measured
       --log projects/e15-esp32-sidecar/evidence/e15_run.csv \
       --serial /dev/serial/by-id/<the Renkforce cable>
     vcgencmd get_throttled
+
+**`--n-predict 16`, and why it is on the bench command and not only in the unit.** The core's
+default budget is 8. That number is what truncated 949 objects out of 1000 in e02 on Saturday
+17 October 2026, and 64dfa5c raised this project's budget to 16 in its systemd unit for exactly
+that reason. The unit is the Yocto deployment; the block above is what a person pastes on the
+bench, and until Monday 19 October 2026 it passed no budget at all and therefore ran at 8. The
+same gap was found and closed in e02's sheet the same day, which makes three projects where the
+remedy reached the unit and missed the command.
+
+It would have been caught rather than published, because `tools/agreement.py` returns non-zero
+on any row whose object did not close and lists them. What it would have cost is the sitting:
+this run is not a thing to repeat casually with the hardware mounted. Sixteen is generous on
+purpose, since an unused token is free, the loop stops at the end-of-generation token and the
+root ends at the closing brace. The `n_generated` column of the first real log says how many
+were actually spent, and that column settles it rather than this paragraph.
 
 ## Acceptance
 
