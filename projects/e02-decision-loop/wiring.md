@@ -185,6 +185,33 @@ board held thirteen minutes of continuous load on it where three minutes had bee
 lose the run on the dock, which makes the dock the leading explanation and not the established
 cause. A Raspberry Pi 4 on four cores wants 5.1 V at 3 A over USB-C.
 
+**The log is not durable across a restart, and the record said otherwise until Monday
+19 October 2026.** The interrupted run of Saturday 17 October 2026,
+`evidence/e02_run_npredict12.csv`, is 13645 bytes of which the last 562 are NUL. Its size was
+recorded and its content never reached the card. So it holds 117 usable rows, not the 679 a
+`grep -c ""` reports, because grep counts a NUL run as hundreds of lines. The note saying a
+per-row flush was added "so a repeat leaves the rows that did finish" does not cover this: a
+flush moves bytes to the kernel, not to the card, and about five rows were counted in the size
+and lost anyway. Durability needs `fsync`, which at one row per few seconds costs nothing and
+should be measured rather than assumed.
+
+Three consequences for the eighty-five minute run, in the order they bite:
+
+1. **Run it detached.** A dropped connection kills a foreground run and this bench has seen
+   one. `nohup`, `setsid` or `screen`, whichever you prefer, with stdout redirected to a file.
+   That removes the likeliest interruption without touching any code.
+2. **Check the log before counting its rows**, with `tools/log_tail.py`. It exits 1 when a
+   file is truncated, so it can gate a figure rather than only inform one:
+
+       cd ~/edge-llm-pi
+       python3 tools/log_tail.py projects/e02-decision-loop/evidence/*.csv
+
+   On the eight logs there it reports seven INTACT and one TRUNCATED: the interrupted run of
+   Saturday 17 October 2026, 117 usable rows inside a recorded 13645 bytes. Rows after the
+   first NUL are absent whatever the size says.
+3. **An interrupted run is not a short run.** Rows the program printed are not rows the card
+   holds, so a partial log is evidence of how far it got and not of what it measured.
+
 **What a cooled sitting needs.** Reboot first, because bit 19 is sticky until boot and a run
 started on a dirty register cannot satisfy the acceptance however well it goes. Then both
 passes back to back on the one supply, restore first and cold second, reading `get_throttled`
