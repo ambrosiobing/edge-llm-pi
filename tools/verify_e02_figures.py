@@ -15,6 +15,14 @@ chapter whose prose drifts from its logs should fail something. Exit status is 2
 are not in this clone, loudly rather than as a skip, because a check that passes by finding
 nothing has told you nothing.
 
+--ci softens exactly one thing and nothing else, and it is a deliberate choice rather than an
+oversight. Joseph's rule for this gate, Monday 19 October 2026: fail only on contradiction, not
+on missing evidence. So under --ci absent logs print NOT CHECKED and return 0 while a mismatch
+still returns 1. The cost is the one this repository has been bitten by before, that a skip
+exits 0 and reads like a pass, so the message is made unmissable and the job step is named for
+what it gates. The logs are tracked, so the only way to reach that branch is to remove one,
+which is a change a reader of the diff would see.
+
 EVERY CLAIM CARRIES ITS OWN TOLERANCE, and that is not fussiness. The first version of this
 file compared everything with one relative tolerance of 0.6 percent. Asked to reject a
 published 948 against a counted 949 it reported no mismatch and exited 0, because 1 is well
@@ -245,15 +253,21 @@ def main():
     ap.add_argument("--csv", help="also write the table to this path")
     ap.add_argument("--self-test", action="store_true",
                     help="mutate published values and require each to be caught")
+    ap.add_argument("--ci", action="store_true",
+                    help="fail only on a mismatch; absent logs print NOT CHECKED and pass")
     args = ap.parse_args()
 
     missing = [n for n in NEEDED if not os.path.exists(os.path.join(EV, n))]
     if missing:
-        print("verify_e02_figures: the logs are not in this clone: %s" % ", ".join(missing),
-              file=sys.stderr)
-        print("verify_e02_figures: nothing was checked, which is not the same as passing",
-              file=sys.stderr)
-        return 2
+        bar = "!" * 78
+        for line in (bar,
+                     "verify_e02_figures: NOT CHECKED. These logs are not in this clone:",
+                     "    " + ", ".join(missing),
+                     "Nothing was compared, which is not the same as nothing being wrong.",
+                     "The figures in e02's chapter are unverified in this run.",
+                     bar):
+            print(line, file=sys.stderr)
+        return 0 if args.ci else 2
 
     if args.self_test:
         return self_test()

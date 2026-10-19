@@ -83,6 +83,23 @@ jobs:
         run: python3 tools/line_check.py
       - name: python tools compile
         run: python3 -m py_compile tools/*.py
+      - name: e02's published figures still match their logs
+        # Added Monday 19 October 2026. Every figure e02's chapter states is recounted from the
+        # log column it came from, so prose that drifts from the evidence fails a job instead of
+        # being noticed by someone rereading the chapter. The logs are tracked for this reason.
+        #
+        # --self-test runs first and is not optional: it mutates four published values and
+        # requires each to be caught. The checker shipped twice as one that confirms anything,
+        # once with a relative tolerance that swallowed a count off by one and once with a
+        # substring test that passed "measured" against "unmeasured". A gate nobody has seen
+        # fail is not known to be a gate.
+        #
+        # --ci fails only on a contradiction. Absent logs print NOT CHECKED and pass, which is
+        # Joseph's rule for this gate: enforce that cited figures match the logs, and do not
+        # fail a build because evidence is missing.
+        run: |
+          python3 tools/verify_e02_figures.py --self-test
+          python3 tools/verify_e02_figures.py --ci
       - name: shell tools parse
         # The counterpart of the step above, and it did not exist until Sunday 18 October
         # 2026, by which point tools/ held two shell scripts and every job enumerated only

@@ -171,10 +171,15 @@ discarded single cold pass earlier the same evening in
 **It is not accepted, and the reason is one bit.** `get_throttled` read `0x0` before the pair
 and `0x80000` after, bit 19, the soft temperature limit since boot, where the acceptance asks
 for `0x0` at both ends. Bits 16, 17 and 18 stayed clear across the whole thirty minutes: no
-under-voltage, no frequency capping, no throttling. So the chapter has a decision to make,
-which belongs to it and not to this sheet: cool the board until a pair comes back clean, or
-separate bit 19 from bits 16, 17 and 18 in the acceptance and require a clock trace with any
-run that carries it. Until then the clause reads measured at 4.47 and not accepted.
+under-voltage, no frequency capping, no throttling.
+
+**The acceptance is not being rewritten, decided Monday 19 October 2026.** The clause keeps the
+form it was published with, a ratio of at least 2.0 with the register clean at both ends, and
+cooling is a condition of the run rather than an amendment to the criterion. A goalpost moved
+after the measurement that failed to reach it is not a protocol change however well argued. So
+this sheet's job is to get the board cool enough that a clean pair is takeable, not to find a
+reading of the register that lets this pair through. The clause reads measured at 4.47 and not
+accepted, which is a different statement from unmeasured.
 
 **The supply, identified on Sunday 18 October 2026.** All four restarts happened with the
 board fed through an ISY IAD-1025-1 USB-C dock, and the topology of those two days, meaning

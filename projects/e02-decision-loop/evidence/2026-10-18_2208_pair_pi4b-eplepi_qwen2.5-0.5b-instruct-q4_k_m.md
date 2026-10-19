@@ -78,19 +78,42 @@ time-averaged cost on these figures is **not known** and is not stated. What can
 that an intermittent reduction whose observed extremes are 1.4 and 4.1 percent cannot carry
 4.47 down to 2.0.
 
-## The decision this leaves, which is not mine to make
+## The decision, taken on Monday 19 October 2026
 
-Either:
+**The acceptance is not rewritten. Cooling is a condition of the run.**
 
-1. **Cool the board** until a pair returns with the register clean at both ends, and accept
-   the figure then. The thermal numbers below say what cooling has to achieve.
-2. **Change the acceptance** to separate bit 19 from bits 16, 17 and 18: require those three
-   clear, and permit the soft temperature limit on a run that carries its own clock trace.
+The clause keeps the form it was published with: a ratio of at least 2.0 with `get_throttled`
+reading `0x0` before and after. It was open whether to separate bit 19 from bits 16, 17 and 18
+instead, permitting the soft temperature limit on a run that carries its own clock trace, and
+the measurements in the previous section would have supported that reading. They are not used
+for it. A goalpost moved after the measurement that failed to reach it is not a protocol change
+however well it is argued, and the argument being available is the reason to be careful rather
+than a reason to proceed.
 
-The second is defensible on the measurements in the previous section and would be
-indefensible without them, which is the difference between changing a protocol and weakening
-one. Until one is chosen the clause reads measured at 4.47 and not accepted, which is a
-different statement from unmeasured.
+So this pair stands as **measured at 4.47 and not accepted**, which is a different statement
+from unmeasured, and the conditions below sit beside the figures instead of inside the rule.
+The next attempt is a cooled board, and the thermal trace that follows says what cooling has to
+achieve.
+
+**Six findings from the columns, none of which becomes a criterion.** Counted on Monday
+19 October 2026 by `tools/verify_e02_figures.py`, which recounts every figure the chapter
+publishes against its source column and found all fourteen unchanged. A criterion added after
+the measurement that suggested it is the same error as a criterion loosened after one, so these
+are recorded as observations and left that way.
+
+| What the columns say | Figure |
+|---|---|
+| the budget bound every decision, not most of them | `n_generated` is 8 on 1000 rows of 1000 |
+| the shortfall was one token | at budget 12, ALERT costs 9 tokens and NORMAL 8 |
+| the malformed run has two defensible agreement figures | 21 of 1000 closed-only, 87 of 1000 by literal |
+| the saving is uniform row by row | per-row ratios 4.265 to 4.547, median 4.463, 0 of 100 below 2.0 |
+| the first row is not an outlier in either pass | restore 0.1 percent, cold 0.5 percent below their own passes |
+| the thermal drift is in the log, not only in the register | 5896.9 ms first quarter to 5978.6 ms last, 1.4 percent |
+
+The fourth is the one worth reading twice. The clause asks for a ratio of the two means, and
+the per-row ratios say every single row clears it on its own, which the means cannot show. The
+third is the sharpest statement of why a run whose objects do not close has no agreement figure
+at all: two honest ways of counting it differ by a factor of four.
 
 ## The thermal trace, for whoever designs the cooling
 
