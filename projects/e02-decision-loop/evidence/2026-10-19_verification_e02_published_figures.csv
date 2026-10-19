@@ -12,7 +12,20 @@ CONFIRMED,pair cold mean prompt_ms,5927.5,5927.5,e02_variant_a_cold_pair.csv
 CONFIRMED,pair restore mean generate_ms,1524.8,1524.8,e02_variant_a_restore_pair.csv
 CONFIRMED,pair cold mean generate_ms,1560.6,1560.6,e02_variant_a_cold_pair.csv
 CONFIRMED,the ratio of the two means,4.47,4.471,e02_variant_a_restore_pair.csv and e02_variant_a_cold_pair.csv
-CONFIRMED,repaired agreement over the full thousand,unmeasured,"unmeasured, 117 usable rows",e02_run_npredict12.csv
+CONFIRMED,the interrupted budget-12 run is still 117 usable rows,117,117,e02_run_npredict12.csv
+CONFIRMED,clause one's verdict,PASSES,PASSES,e02_run_1000_npredict12.csv
+CONFIRMED,"clause one, rows in the repaired thousand",1000,1000,e02_run_1000_npredict12.csv
+CONFIRMED,"clause one, objects that never closed",0,0,e02_run_1000_npredict12.csv
+CONFIRMED,"clause one, tokens the budget of 12 actually needed","8,9","8,9",e02_run_1000_npredict12.csv
+CONFIRMED,agreement over the repaired thousand,87 of 1000,87 of 1000,e02_run_1000_npredict12.csv
+CONFIRMED,"the model's literal split, repaired","949 ALERT, 51 NORMAL","949 ALERT, 51 NORMAL",e02_run_1000_npredict12.csv
+CONFIRMED,rows choosing the same literal at both budgets,1000 of 1000,1000 of 1000,e02_run.csv and e02_run_1000_npredict12.csv
+CONFIRMED,WATCH recall over the thousand,0 of 110,0 of 110,e02_run_1000_npredict12.csv
+CONFIRMED,ALERT recall over the thousand,66 of 67,66 of 67,e02_run_1000_npredict12.csv
+CONFIRMED,what a constant NORMAL would score,823 of 1000,823 of 1000,e02_run_1000_npredict12.csv
+CONFIRMED,repaired mean prompt_ms,2993.3,2993.3,e02_run_1000_npredict12.csv
+CONFIRMED,repaired mean generate_ms,2008.1,2008.1,e02_run_1000_npredict12.csv
+CONFIRMED,dirty-register samples in the clause-one trace,0 of 6000,0 of 6000,e02_throttle_1000.csv
 NEW,generation budget was reached on every row,not stated,n_generated is 8 on 1000 of 1000,e02_run.csv
 NEW,tokens an object needs at budget 12,not stated,"ALERT 9, NORMAL 8, so the failure was one token",e02_npredict12.csv
 NEW,agreement of the malformed run has two values,not stated,"21 of 1000 closed-only, 87 of 1000 by literal in the text",e02_run.csv

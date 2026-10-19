@@ -57,9 +57,16 @@ RES_SAT = "e02_variant_a_restore_2026-10-17.csv"
 COLD_DISC = "e02_variant_a_cold_2026-10-18_discarded.csv"
 RES_PAIR = "e02_variant_a_restore_pair.csv"
 COLD_PAIR = "e02_variant_a_cold_pair.csv"
-NEEDED = (RUN, HUNDRED12, CUT12, RES_SAT, COLD_DISC, RES_PAIR, COLD_PAIR)
+RUN12 = "e02_run_1000_npredict12.csv"      # the clause-one run of Monday 19 October 2026
+TRACE12 = "e02_throttle_1000.csv"          # its register, clock and temperature trace
+NEEDED = (RUN, HUNDRED12, CUT12, RES_SAT, COLD_DISC, RES_PAIR, COLD_PAIR, RUN12, TRACE12)
 
 EXACT = "exact"        # the two strings must be identical
+# HEAD has no claim using it since Monday 19 October 2026, when the one word-valued claim
+# it served was renamed. It is kept because the bug it was written for is worth not
+# reintroducing: a substring test passed a published "measured" against a counted
+# "unmeasured, 117 usable rows". Any future claim whose value is a word uses this, never
+# CONTAINS.
 HEAD = "head"          # the published text must equal the counted text up to the first comma
 CONTAINS = "contains"  # the published text must appear in the counted text
 UNCHECKED = "n/a"      # a NEW or DEFECT row: there is no published value to compare against
@@ -132,6 +139,25 @@ def build(mutate=None):
     cut = rows(CUT12)
     rp, cp = rows(RES_PAIR), rows(COLD_PAIR)
     rs, cd = rows(RES_SAT), rows(COLD_DISC)
+    r12, tr = rows(RUN12), rows(TRACE12)
+
+    # Clause one's own numbers, recounted rather than carried.
+    closed12 = [closes(x["model"]) for x in r12]
+    malformed12 = sum(1 for c in closed12 if c is None)
+    agree12 = sum(1 for x, c in zip(r12, closed12) if c == x["rule"])
+    split12 = {}
+    for c in closed12:
+        split12[c] = split12.get(c, 0) + 1
+    rule12 = {}
+    for x in r12:
+        rule12[x["rule"]] = rule12.get(x["rule"], 0) + 1
+    watch_hit = sum(1 for x, c in zip(r12, closed12) if x["rule"] == "WATCH" and c == "WATCH")
+    alert_hit = sum(1 for x, c in zip(r12, closed12) if x["rule"] == "ALERT" and c == "ALERT")
+    # The literal each run chose, to show the budget changed closure and not choice.
+    lit8 = [literal_in(x["model"]) for x in run]
+    lit12 = [literal_in(x["model"]) for x in r12]
+    same_lit = sum(1 for a, b in zip(lit8, lit12) if a == b)
+    dirty = sum(1 for x in tr if x["throttled"] != "0x0")
 
     rule = {}
     for x in run:
@@ -168,8 +194,41 @@ def build(mutate=None):
          "%.1f" % mean_of(cp, "generate_ms"), COLD_PAIR, 0.05),
         ("CONFIRMED", "the ratio of the two means", "4.47",
          "%.3f" % (statistics.mean(pc) / statistics.mean(pr)), PAIR, 0.005),
-        ("CONFIRMED", "repaired agreement over the full thousand", "unmeasured",
-         "unmeasured, %d usable rows" % len(cut), CUT12, HEAD),
+        # Until Monday 19 October 2026 this read "unmeasured" and the interrupted log was
+        # its only evidence. It is measured now, so the claim changed rather than the file.
+        ("CONFIRMED", "the interrupted budget-12 run is still 117 usable rows", "117",
+         "%d" % len(cut), CUT12, EXACT),
+
+        ("CONFIRMED", "clause one's verdict", "PASSES",
+         "PASSES" if (malformed12 == 0 and len(r12) == 1000
+                      and not any(not x["model"] for x in r12)) else "FAILS",
+         RUN12, EXACT),
+        ("CONFIRMED", "clause one, rows in the repaired thousand", "1000",
+         "%d" % len(r12), RUN12, EXACT),
+        ("CONFIRMED", "clause one, objects that never closed", "0",
+         "%d" % malformed12, RUN12, EXACT),
+        ("CONFIRMED", "clause one, tokens the budget of 12 actually needed", "8,9",
+         ",".join(str(v) for v in sorted({int(x["n_generated"]) for x in r12})),
+         RUN12, EXACT),
+        ("CONFIRMED", "agreement over the repaired thousand", "87 of 1000",
+         "%d of %d" % (agree12, len(r12)), RUN12, EXACT),
+        ("CONFIRMED", "the model's literal split, repaired", "949 ALERT, 51 NORMAL",
+         "%d ALERT, %d NORMAL" % (split12.get("ALERT", 0), split12.get("NORMAL", 0)),
+         RUN12, EXACT),
+        ("CONFIRMED", "rows choosing the same literal at both budgets", "1000 of 1000",
+         "%d of %d" % (same_lit, len(r12)), RUN + " and " + RUN12, EXACT),
+        ("CONFIRMED", "WATCH recall over the thousand", "0 of 110",
+         "%d of %d" % (watch_hit, rule12.get("WATCH", 0)), RUN12, EXACT),
+        ("CONFIRMED", "ALERT recall over the thousand", "66 of 67",
+         "%d of %d" % (alert_hit, rule12.get("ALERT", 0)), RUN12, EXACT),
+        ("CONFIRMED", "what a constant NORMAL would score", "823 of 1000",
+         "%d of %d" % (rule12.get("NORMAL", 0), len(r12)), RUN12, EXACT),
+        ("CONFIRMED", "repaired mean prompt_ms", "2993.3",
+         "%.1f" % mean_of(r12, "prompt_ms"), RUN12, 0.05),
+        ("CONFIRMED", "repaired mean generate_ms", "2008.1",
+         "%.1f" % mean_of(r12, "generate_ms"), RUN12, 0.05),
+        ("CONFIRMED", "dirty-register samples in the clause-one trace", "0 of 6000",
+         "%d of %d" % (dirty, len(tr)), TRACE12, EXACT),
 
         ("NEW", "generation budget was reached on every row", "not stated",
          "n_generated is 8 on %d of %d" % (
@@ -222,11 +281,18 @@ def run_table(T, quiet=False):
 
 def self_test():
     """Mutate four published values and require every one to be caught."""
+    # One case per comparison kind the table actually uses: an exact integer, an exact
+    # string, a numeric tolerance and a word. The fourth case named
+    # "repaired agreement over the full thousand" until Monday 19 October 2026, when that
+    # claim was renamed because the figure stopped being unmeasured. The self-test then
+    # failed, correctly: it was mutating a claim no longer in the table, so nothing could be
+    # caught. A mutation list is itself a thing that goes stale, and the only reason that was
+    # noticed is that this test requires every case to be caught rather than reporting a rate.
     cases = {
         "objects that never closed": "948",
+        "agreement over the repaired thousand": "88 of 1000",
         "pair cold mean prompt_ms": "5927.6",
-        "the ratio of the two means": "4.48",
-        "repaired agreement over the full thousand": "measured",
+        "clause one's verdict": "FAILS",
     }
     print("self-test: four mutations, each must be caught")
     missed = []
