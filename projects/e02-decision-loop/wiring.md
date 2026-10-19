@@ -260,7 +260,7 @@ flush moves bytes to the kernel, not to the card, and about five rows were count
 and lost anyway. Durability needs `fsync`, which at one row per few seconds costs nothing and
 should be measured rather than assumed.
 
-Three consequences for the eighty-five minute run, in the order they bite:
+Four consequences for the eighty-five minute run, in the order they bite:
 
 1. **Run it detached.** A dropped connection kills a foreground run and this bench has seen
    one. `nohup`, `setsid` or `screen`, whichever you prefer, with stdout redirected to a file.
@@ -276,6 +276,15 @@ Three consequences for the eighty-five minute run, in the order they bite:
    first NUL are absent whatever the size says.
 3. **An interrupted run is not a short run.** Rows the program printed are not rows the card
    holds, so a partial log is evidence of how far it got and not of what it measured.
+4. **The launch line can no longer be pasted twice, and that is now enforced in the program
+   rather than in this sheet.** On Sunday 18 October 2026 it was pasted twice: two engines at
+   two threads each against `evidence/e02_run.csv`, the second emptied the first one's file,
+   and the run was lost. Since Tuesday 20 October 2026 `elog_open` takes an exclusive lock on
+   the log before it empties it, so the second start prints one line naming the live writer and
+   stops without touching a row. `tests/elog_guard_test.c` makes it refuse and then measures
+   the bytes it protected. A reminder in a sheet protects only the sheet, and this one had no
+   reminder in it at all: the only guard in place on Sunday 18 October 2026 was a line in a
+   hand-over message.
 
 **What a cooled sitting needs.** Reboot first, because bit 19 is sticky until boot and a run
 started on a dirty register cannot satisfy the acceptance however well it goes. Then both

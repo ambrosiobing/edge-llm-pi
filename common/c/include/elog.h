@@ -17,6 +17,13 @@ extern "C" {
 
 typedef struct elog elog;
 
+/* elog_open TAKES AN EXCLUSIVE LOCK ON THE LOG and returns NULL, with a line on stderr,
+ * when another live process already holds it. One writer per log: a launch command pasted
+ * twice stops instead of interleaving two runs into one file. It still replaces a log
+ * left by a run that has finished, so a restarting service reopens its own log normally;
+ * the lock is taken before the file is emptied, so a refused start destroys nothing. The
+ * reason, the run it cost and what it deliberately does not cover are in elog.c.
+ */
 elog *elog_open(const char *csv_path, const char *engine_version);
 int   elog_row(elog *l, const io_event *ev, const char *rule, const edgellm_result *model);
 void  elog_close(elog *l);

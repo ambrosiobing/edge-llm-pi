@@ -36,14 +36,21 @@
  * nearly free and bought nothing against a power loss, and the new one costs six milliseconds
  * and buys the rows. tools/fsync_cost.py takes the measurement and refuses to take it on a
  * tmpfs, where fsync reaches no device and would read as free.
+ *
+ * THE SECOND WAY A RUN WAS LOST was two processes writing one log, and the guard against
+ * it sits in elog_open below with the reasoning for its exact shape. Durability and
+ * exclusivity are separate concerns and they failed on separate days.
  */
 #define _GNU_SOURCE
 #include "elog.h"
 
+#include <errno.h>
+#include <fcntl.h>    /* open, O_CREAT, O_CLOEXEC */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>   /* fsync, and fileno is POSIX; _GNU_SOURCE above exposes both */
+#include <sys/file.h> /* flock */
+#include <unistd.h>   /* fsync, close, ftruncate; fileno is POSIX, _GNU_SOURCE exposes it */
 
 struct elog {
     FILE *fp;
@@ -75,15 +82,72 @@ static void write_quoted(FILE *fp, const char *text)
     fputc('"', fp);
 }
 
+/* ONE WRITER PER LOG, AND THE ORDER OF THE TWO CALLS BELOW IS THE WHOLE GUARD.
+ *
+ * What this prevents, which cost a run. The launch command for a long run is one line and
+ * can be pasted twice. On Sunday 18 October 2026 it was: two engines started against
+ * projects/e02-decision-loop/evidence/e02_run.csv at two threads each, the second
+ * truncated what the first had written, and both then wrote through their own file
+ * offsets into the one file. The pair had to be stopped, the log deleted and the board
+ * restarted, and the run taken again from the beginning. The remedy at the time was a
+ * pgrep line added to that project's hand-over sheet, which is a named pitfall and not a
+ * gate: it protects the one sheet it is written on, and only while whoever reads it runs
+ * the whole line. An advisory lock protects every caller of this function without being
+ * read.
+ *
+ * LOCK FIRST, TRUNCATE SECOND. The file is opened without O_TRUNC, the lock is taken, and
+ * only then is the file emptied with ftruncate. Written the obvious way round, with
+ * O_TRUNC on the open or fopen(csv_path, "w"), the kernel empties the first writer's file
+ * before this process finds out it may not have it, so the refusal would arrive after the
+ * damage rather than instead of it. The lock is released by the kernel when the process
+ * ends however it ends, including kill -9 and a power loss, so it cannot strand a path.
+ *
+ * WHAT THIS DOES NOT DO, stated because the alternative was tried and rejected. It does
+ * not refuse a log left by a run that has FINISHED: a deliberate second run on the same
+ * path still replaces it. Refusing that as well, with O_CREAT|O_EXCL, was written first
+ * and then taken out, because 21 of this volume's systemd units carry Restart= with a
+ * fixed --log path and none of them could have restarted, and e08's chapter demonstrates
+ * its console surviving kill -9. A guard that stops the failure that happened is worth
+ * more than one that also stops a second failure and breaks every restarting service.
+ * What covers the finished-log case instead: the logs that figures are quoted from are
+ * committed the same day, which is what lets tools/verify_e02_figures.py recount them,
+ * and tools/log_tail.py reports damage when something else goes wrong.
+ */
 elog *elog_open(const char *csv_path, const char *engine_version)
 {
     elog *l;
     FILE *fp;
+    int fd;
     if (csv_path == NULL)
         return NULL;
-    fp = fopen(csv_path, "w");
-    if (fp == NULL)
+    /* No O_TRUNC here on purpose; see the paragraph above. 0644 is what fopen's "w" gave
+     * under the bench umask of 022, so the mode on the card does not change. */
+    fd = open(csv_path, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
+    if (fd < 0) {
+        fprintf(stderr, "elog: cannot open %s: %s\n", csv_path, strerror(errno));
         return NULL;
+    }
+    if (flock(fd, LOCK_EX | LOCK_NB) != 0) {
+        if (errno == EWOULDBLOCK)
+            fprintf(stderr, "elog: %s is being written by another process, so this one "
+                            "will not start: do not run two on one log\n", csv_path);
+        else
+            fprintf(stderr, "elog: cannot lock %s: %s\n", csv_path, strerror(errno));
+        close(fd);
+        return NULL;
+    }
+    /* The lock is held, so emptying the file now can only discard this caller's own
+     * earlier run and never a live one's rows. */
+    if (ftruncate(fd, 0) != 0) {
+        fprintf(stderr, "elog: cannot empty %s: %s\n", csv_path, strerror(errno));
+        close(fd);
+        return NULL;
+    }
+    fp = fdopen(fd, "w");
+    if (fp == NULL) {
+        close(fd);
+        return NULL;
+    }
     l = calloc(1, sizeof(*l));
     if (l == NULL) {
         fclose(fp);

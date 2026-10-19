@@ -33,6 +33,14 @@ target_link_libraries(rules_test PRIVATE edgellm_core)
 target_compile_options(rules_test PRIVATE -Wall -Wextra)
 add_test(NAME rules_test COMMAND rules_test)
 
+# elog's refusal to overwrite a log. Registered in every build and not only the stub one,
+# because it loads no model and makes no decision: it opens files and reads their size.
+# The scratch directory is the build tree, so the test writes nothing into the source.
+add_executable(elog_guard_test elog_guard_test.c)
+target_link_libraries(elog_guard_test PRIVATE edgellm_core)
+target_compile_options(elog_guard_test PRIVATE -Wall -Wextra)
+add_test(NAME elog_guard_test COMMAND elog_guard_test "${CMAKE_CURRENT_BINARY_DIR}")
+
 # The C++ wrapper compiles in every build; its run needs the stub.
 add_executable(cpp_wrapper_test cpp_wrapper_test.cpp)
 target_link_libraries(cpp_wrapper_test PRIVATE edgellm_cpp)
