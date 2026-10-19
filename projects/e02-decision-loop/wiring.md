@@ -36,14 +36,48 @@ SD-card paging, not a decision latency.
 ## The run
 
     cd ~/edge-llm-pi
-    build/projects/e02-decision-loop/edgellm-e02 --project e02 \
+    vcgencmd get_throttled
+    nohup sh tools/throttle_log.sh \
+      projects/e02-decision-loop/evidence/e02_throttle_1000.csv 1 6000 \
+      > /tmp/throttle_log.out 2>&1 &
+    nohup build/projects/e02-decision-loop/edgellm-e02 --project e02 \
+      --threads 2 --n-predict 12 \
       --replay projects/e02-decision-loop/replay/synthetic_1000.csv \
       --grammar projects/e02-decision-loop/grammar.gbnf \
       --prompt projects/e02-decision-loop/prompt.txt \
       --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
       --state /tmp/e02.state \
-      --log projects/e02-decision-loop/evidence/e02_run.csv
+      --log projects/e02-decision-loop/evidence/e02_run_1000_npredict12.csv \
+      > /tmp/e02_run_1000.out 2>&1 &
+    # ... about 85 minutes ...
     vcgencmd get_throttled
+    python3 tools/log_tail.py \
+      projects/e02-decision-loop/evidence/e02_run_1000_npredict12.csv
+
+**Three things that command carries and the version here before Monday 19 October 2026 did
+not.** Each was already settled elsewhere in the project and missing from the line someone
+would actually paste.
+
+`--n-predict 12`, because the core's default is still 8 and 8 is the number that produced 949
+truncated objects out of 1000. The chapter's Step 7 and the systemd unit both carry it and this
+sheet did not, so this block as it previously stood reproduced the published failure. The budget
+is not a property of the grammar and cannot be fixed there, which that file's own header says.
+
+`--threads 2`, because this sheet says further down that two threads is the condition every
+other figure was taken at, and because four threads is the continuous load that took this board
+down three times. The first attempt at this run was lost at row 880 at four threads.
+
+`nohup` with a trailing `&` on both, because 85 minutes is long enough for a dropped session to
+cost the whole run and this bench has had one. The sampler is capped at 6000 samples, a little
+over the 5112 seconds the run needs, so a detached sampler cannot outlive the measurement and
+write to the card until it is full.
+
+**And 85 minutes is computed rather than carried over.** The hundred-row run at this budget and
+thread count averaged 3081.2 ms of prompt and 2023.2 ms of generation on Saturday 17 October
+2026, so 5104.5 ms a thousand times is 5105 seconds. The sheet and the chapter said
+seventy-five until Monday 19 October 2026, which is the budget-8 duration: those thousand rows
+average 4546.3 ms each, for 75.8 minutes. Raising the budget raised generation by 29 percent,
+more than the extra token accounts for, most likely because the board was warmer by then.
 
 ## Acceptance
 

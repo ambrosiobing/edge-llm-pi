@@ -8,6 +8,13 @@
 #     ... run the passes ...
 #     kill %1
 #
+# Third argument is a sample cap, after which it stops by itself; 0 or absent means it runs
+# until killed. A detached sampler beside a detached run needs one, because if the run dies
+# early nothing kills the sampler and it writes to the card until the card is full. For the
+# eighty-five minute agreement run the sheet passes 6000, a little over the 5112 seconds the
+# run needs:
+#     nohup sh tools/throttle_log.sh evidence/e02_throttle_1000.csv 1 6000 &
+#
 # Invoked through sh, not as ./throttle_log.sh, because this file is committed 100644 like
 # tools/install-hooks.sh beside it. A tracked execute bit is a mode the index has to carry and
 # that a Windows checkout cannot set, so the repository's convention is to name the interpreter
@@ -48,11 +55,18 @@ set -u
 
 out=${1:-}
 interval=${2:-1}
+max=${3:-0}
 
 if [ -z "$out" ]; then
-    echo "usage: $0 <output.csv> [interval_seconds]" >&2
+    echo "usage: $0 <output.csv> [interval_seconds] [max_samples]" >&2
     exit 2
 fi
+case "$max" in
+    ''|*[!0-9]*)
+        echo "$0: max_samples must be a whole number, got '$max'" >&2
+        exit 2
+        ;;
+esac
 if ! command -v vcgencmd >/dev/null 2>&1; then
     echo "$0: vcgencmd not found, so this is not a Raspberry Pi and there is nothing to read" >&2
     exit 2
@@ -75,11 +89,17 @@ trap report INT TERM
 
 # A failed vcgencmd writes an empty field and the loop continues, because a gap in a trace is
 # itself worth recording and is more useful than a trace that stops at the first hiccup.
+count=0
 while :; do
     thr=$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2) || thr=
     hz=$(vcgencmd measure_clock arm 2>/dev/null | cut -d= -f2) || hz=
     deg=$(vcgencmd measure_temp 2>/dev/null | cut -d= -f2 | tr -d "'C") || deg=
     printf '%s,%s,%s,%s,%s\n' \
         "$(date +%s)" "$(date +%Y-%m-%dT%H:%M:%S%z)" "$thr" "$hz" "$deg" >> "$out"
+    count=$((count + 1))
+    if [ "$max" -gt 0 ] && [ "$count" -ge "$max" ]; then
+        echo "$0: $count samples in $out, which is the cap" >&2
+        exit 0
+    fi
     sleep "$interval"
 done

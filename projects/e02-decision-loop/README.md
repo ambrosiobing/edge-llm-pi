@@ -245,7 +245,11 @@ cd ~/edge-llm-pi; cmake -S . -B build -DGGML_NATIVE=ON; cmake --build build -j4
 cd ~; vcgencmd get_throttled
 ```
 
-**Step 7.** Run the 1000 decisions with the real model and read the bits again. The log's engine column must name the build, not the stub. At about five seconds a decision this is some seventy-five minutes, so run it detached with `nohup` and a trailing `&`: a dropped session ends a foreground run, and the first attempt at four threads was lost at row 880 to a restart that `uptime` was the only witness to.
+**Step 7.** Run the 1000 decisions with the real model and read the bits again. The log's engine column must name the build, not the stub. **About 85 minutes**, and the figure is computed from the only measurement of this budget there is: the hundred-row run of Saturday 17 October 2026 at `--n-predict 12` and two threads averaged 3081.2 ms of prompt and 2023.2 ms of generation, so 5104.5 ms a thousand times is 5105 seconds. The `fsync` added to the logger on Monday 19 October 2026 costs 6.594 ms a row on this card and moves that by six seconds, which is why it was measured before being left in.
+
+This step said seventy-five minutes until Monday 19 October 2026, and that number was not wrong so much as borrowed. It is the duration of the budget-8 run, whose thousand rows average 4546.3 ms each for 75.8 minutes, and it stayed here when the step changed to the repaired budget. Raising the budget from 8 to 12 raised generation from 1564.6 to 2023.2 ms a decision, which is more than the extra token accounts for and is most likely the board being warmer by then, since that run followed the other one by eighteen minutes. The 85 minutes is therefore the honest estimate and not a tight one.
+
+Run it detached with `nohup` and a trailing `&`, because a dropped session ends a foreground run, this bench has had one, and the first attempt at four threads was lost at row 880 to a restart that `uptime` was the only witness to. Start `tools/throttle_log.sh` beside it with a sample cap, so the run arrives with its own register and clock trace and a sampler that cannot outlive it.
 
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
