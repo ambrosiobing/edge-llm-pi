@@ -207,13 +207,24 @@ and `0x80000` after, bit 19, the soft temperature limit since boot, where the ac
 for `0x0` at both ends. Bits 16, 17 and 18 stayed clear across the whole thirty minutes: no
 under-voltage, no frequency capping, no throttling.
 
-**The acceptance is not being rewritten, decided Monday 19 October 2026.** The clause keeps the
+**The acceptance was not rewritten, and it was satisfied the same day.** The clause kept the
 form it was published with, a ratio of at least 2.0 with the register clean at both ends, and
-cooling is a condition of the run rather than an amendment to the criterion. A goalpost moved
-after the measurement that failed to reach it is not a protocol change however well argued. So
-this sheet's job is to get the board cool enough that a clean pair is takeable, not to find a
-reading of the register that lets this pair through. The clause reads measured at 4.47 and not
-accepted, which is a different statement from unmeasured.
+cooling was treated as a condition of the run rather than an amendment to the criterion. The
+cooling turned out to be free: the MCC 118 off the header, the board powered down, and the pair
+started from 37.0 degrees C.
+
+**Clause two passes**, measured Monday 19 October 2026 at 14:30:57: restored mean `prompt_ms`
+1318.6 against 5867.3 cold, a ratio of **4.4495**, zero of 100 rows below 2.0, `get_throttled`
+`0x0` before and after with zero dirty samples in 1328, no sample below 1.7 GHz inside either
+pass, and a peak of 72.5 degrees C. It is recorded in
+`evidence/2026-10-19_1448_clause-two-accepted_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`.
+
+**What to repeat it with.** Start from a cold board; 37 degrees C bought seven degrees of lower
+peak than the 53.5 start of the eighty-minute run, and that was the difference between a clean
+register and a dirty one. Keep the header clear. Run both halves in one sitting at two threads
+with the sampler beside them. The discarded pair of Sunday 18 October 2026 turned out accurate
+to half a percent, so a repeat that lands within one percent is the expected outcome rather than
+a surprise.
 
 **The supply, identified on Sunday 18 October 2026.** All four restarts happened with the
 board fed through an ISY IAD-1025-1 USB-C dock, and the topology of those two days, meaning

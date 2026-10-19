@@ -59,7 +59,11 @@ RES_PAIR = "e02_variant_a_restore_pair.csv"
 COLD_PAIR = "e02_variant_a_cold_pair.csv"
 RUN12 = "e02_run_1000_npredict12.csv"      # the clause-one run of Monday 19 October 2026
 TRACE12 = "e02_throttle_1000.csv"          # its register, clock and temperature trace
-NEEDED = (RUN, HUNDRED12, CUT12, RES_SAT, COLD_DISC, RES_PAIR, COLD_PAIR, RUN12, TRACE12)
+RES_OK = "e02_variant_a_restore_2026-10-19.csv"   # the accepted pair, restore half
+COLD_OK = "e02_variant_a_cold_2026-10-19.csv"     # the accepted pair, cold half
+TRACE_OK = "e02_throttle_pair_2026-10-19.csv"     # the accepted pair's trace
+NEEDED = (RUN, HUNDRED12, CUT12, RES_SAT, COLD_DISC, RES_PAIR, COLD_PAIR, RUN12, TRACE12,
+          RES_OK, COLD_OK, TRACE_OK)
 
 EXACT = "exact"        # the two strings must be identical
 # HEAD has no claim using it since Monday 19 October 2026, when the one word-valued claim
@@ -140,6 +144,22 @@ def build(mutate=None):
     rp, cp = rows(RES_PAIR), rows(COLD_PAIR)
     rs, cd = rows(RES_SAT), rows(COLD_DISC)
     r12, tr = rows(RUN12), rows(TRACE12)
+    rok, cok, trok = rows(RES_OK), rows(COLD_OK), rows(TRACE_OK)
+
+    # Clause two, recounted. The low-clock question needs the span and not the minimum: a
+    # minimum over a whole trace cannot tell the idle governor from a reduction, and the
+    # samples that matter are the ones inside the two passes.
+    prok = [float(x["prompt_ms"]) for x in rok]
+    pcok = [float(x["prompt_ms"]) for x in cok]
+    ratio_ok = statistics.mean(pcok) / statistics.mean(prok)
+    perok = [c / r for c, r in zip(pcok, prok)]
+    dirty_ok = sum(1 for x in trok if x["throttled"] != "0x0")
+    t0 = int(trok[0]["unix_s"])
+    in_pass = [x for x in trok if 12 <= int(x["unix_s"]) - t0 <= 1047]
+    low_in_pass = sum(1 for x in in_pass if int(x["arm_hz"]) < 1700000000)
+    peak_ok = max(float(x["temp_c"]) for x in trok)
+    gok = statistics.mean(float(x["generate_ms"]) for x in rok)
+    gcok = statistics.mean(float(x["generate_ms"]) for x in cok)
 
     # Clause one's own numbers, recounted rather than carried.
     closed12 = [closes(x["model"]) for x in r12]
@@ -198,6 +218,28 @@ def build(mutate=None):
         # its only evidence. It is measured now, so the claim changed rather than the file.
         ("CONFIRMED", "the interrupted budget-12 run is still 117 usable rows", "117",
          "%d" % len(cut), CUT12, EXACT),
+
+        ("CONFIRMED", "clause two's verdict", "PASSES",
+         "PASSES" if (ratio_ok >= 2.0 and dirty_ok == 0 and len(rok) == 100
+                      and len(cok) == 100) else "FAILS",
+         RES_OK + " and " + COLD_OK, EXACT),
+        ("CONFIRMED", "the accepted ratio", "4.45",
+         "%.4f" % ratio_ok, RES_OK + " and " + COLD_OK, 0.005),
+        ("CONFIRMED", "accepted restore mean prompt_ms", "1318.6",
+         "%.1f" % statistics.mean(prok), RES_OK, 0.05),
+        ("CONFIRMED", "accepted cold mean prompt_ms", "5867.3",
+         "%.1f" % statistics.mean(pcok), COLD_OK, 0.05),
+        ("CONFIRMED", "accepted rows below the acceptance of 2.0", "0 of 100",
+         "%d of %d" % (sum(1 for v in perok if v < 2.0), len(perok)),
+         RES_OK + " and " + COLD_OK, EXACT),
+        ("CONFIRMED", "dirty-register samples in the accepted pair", "0 of 1328",
+         "%d of %d" % (dirty_ok, len(trok)), TRACE_OK, EXACT),
+        ("CONFIRMED", "low-clock samples inside either accepted pass", "0",
+         "%d" % low_in_pass, TRACE_OK, EXACT),
+        ("CONFIRMED", "the accepted pair's peak temperature", "72.5",
+         "%.1f" % peak_ok, TRACE_OK, 0.05),
+        ("CONFIRMED", "generation across the accepted pair", "0.91 percent",
+         "%.2f percent" % abs(100 * (gcok / gok - 1)), RES_OK + " and " + COLD_OK, EXACT),
 
         ("CONFIRMED", "clause one's verdict", "PASSES",
          "PASSES" if (malformed12 == 0 and len(r12) == 1000
