@@ -70,6 +70,27 @@ def declared_msrv(rel):
     return None
 
 
+# Feature sets the --msrv pass checks in addition to each manifest's defaults, with the
+# reason, because until Tuesday 20 October 2026 no job named a cargo feature at all and both
+# runs in this file used defaults. The default build is the stub one, which is what the
+# oracle tests exercise; "live" is the bench build, the socketcan reader that runs on the Pi
+# with the CAN HAT, and it had never been compiled by anything. e13 and e14 are the two
+# projects whose chapters are the signature video pieces.
+#
+# WHAT IS DELIBERATELY NOT HERE, so that this list is not mistaken for full coverage.
+# "engine" is absent from every entry: it pulls llama-cpp-2, which builds its own copy of
+# llama.cpp from source at minutes per crate, and the workflow's engine job already pays
+# that cost once for the C projects' different copy. "ffi", e18's, is absent for the reason
+# its own manifest gives: it links libedgellm_abi.so, so the C half must be built first and
+# the linker handed its path. Both remain uncompiled by any job and that is a known gap, not
+# an oversight. edgellm's own "serial" feature needs no entry because e18 depends on the
+# crate with it enabled, so checking e18 compiles that module.
+EXTRA_FEATURES = {
+    "projects/e13-can-honesty/Cargo.toml": ["live"],
+    "projects/e14-joint-monitor/Cargo.toml": ["live"],
+}
+
+
 def as_version(text):
     """(1, 75, 0) from "1.75" or "1.75.0", or None when it is not a version at all.
 
@@ -113,14 +134,27 @@ def msrv_check(found, want):
         elif as_version(got) != as_version(want):
             print("FAIL %s declares rust-version %s, this gate checks %s" % (rel, got, want))
             problems += 1
+    stale = [k for k in EXTRA_FEATURES if k not in found]
+    for k in stale:
+        print("FAIL EXTRA_FEATURES names %s, which is not in the tree" % k)
+        problems += 1
+
+    runs = 0
     for rel in found:
-        print("\n== %s  at %s" % (rel, want))
-        r = subprocess.run(["cargo", "+" + want, "check", "--manifest-path", rel],
-                           cwd=str(ROOT))
-        if r.returncode != 0:
-            print("FAIL %s does not compile under %s, which is what the image uses" % (rel, want))
-            problems += 1
-    print("\ncargo_all --msrv %s: %d manifests, %d problems" % (want, len(found), problems))
+        for feats in [None] + [[f] for f in EXTRA_FEATURES.get(rel, [])]:
+            label = "defaults" if feats is None else "--features " + ",".join(feats)
+            print("\n== %s  at %s, %s" % (rel, want, label))
+            cmd = ["cargo", "+" + want, "check", "--manifest-path", rel]
+            if feats is not None:
+                cmd += ["--features", ",".join(feats)]
+            r = subprocess.run(cmd, cwd=str(ROOT))
+            runs += 1
+            if r.returncode != 0:
+                print("FAIL %s (%s) does not compile under %s, which is what the image uses"
+                      % (rel, label, want))
+                problems += 1
+    print("\ncargo_all --msrv %s: %d manifests, %d checks, %d problems"
+          % (want, len(found), runs, problems))
     return 1 if problems else 0
 
 
