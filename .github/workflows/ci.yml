@@ -100,6 +100,23 @@ jobs:
         run: |
           python3 tools/verify_e02_figures.py --self-test
           python3 tools/verify_e02_figures.py --ci
+      - name: the generation budget agrees across all three places that set it
+        # Added Tuesday 20 October 2026. The budget is decided in three places, not two: the
+        # binary's own default, the systemd unit, and the wiring sheet a person pastes on the
+        # bench. Four projects once ran at 8, the number that truncated 949 objects out of
+        # 1000, because their sheets passed nothing while their units had been raised.
+        #
+        # --self-test first and it is not optional: it drives the decision table against six
+        # fabricated cases, one of them the case the first version of this comparison got
+        # wrong by assuming every binary defaults to 8.
+        #
+        # --ci and not --strict. --strict also fails when the tool cannot read a project's
+        # default, which would stop a push over missing information rather than over a
+        # contradiction. Same rule as the e02 verifier above: enforce the agreement, and do
+        # not fail a build because something could not be determined.
+        run: |
+          python3 tools/budget_agree.py --self-test
+          python3 tools/budget_agree.py --ci
       - name: shell tools parse
         # The counterpart of the step above, and it did not exist until Sunday 18 October
         # 2026, by which point tools/ held two shell scripts and every job enumerated only

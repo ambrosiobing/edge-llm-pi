@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 """Does each project's generation budget agree across the three places that decide it?
 
-    python3 tools/budget_agree.py           # print the table
-    python3 tools/budget_agree.py --strict  # exit 1 on a real disagreement
+    python3 tools/budget_agree.py             # print the table
+    python3 tools/budget_agree.py --strict    # exit 1 on a disagreement OR an unreadable default
+    python3 tools/budget_agree.py --ci        # exit 1 on a disagreement only
+    python3 tools/budget_agree.py --self-test # exercise the decision table both ways
+
+--ci is what continuous integration runs, and it differs from --strict on purpose. --strict
+also fails when this tool cannot read a project's default, which is the right answer for a
+person checking the tree by hand and the wrong one for a build: it would stop a push over
+missing information rather than over a contradiction. That is Joseph's rule for the e02
+figure verifier, set on Monday 19 October 2026, and this gate follows it. An unreadable
+default is printed under --ci as a line to look at by hand and does not fail the job.
 
 THERE ARE THREE SOURCES OF TRUTH, NOT TWO, AND THAT IS THE WHOLE POINT OF THIS FILE.
 
@@ -130,10 +139,71 @@ def units_of(slug):
     return [os.path.join(app, n) for n in sorted(os.listdir(app)) if n.endswith(".service")]
 
 
+def verdict_for(sheet, units, dflt):
+    """The decision table, kept apart from the file reading so --self-test can drive it.
+
+    Returns (text, kind) with kind one of "ok", "bad", "unknown" or "no-unit". The order of
+    the branches is load bearing and is the thing the self-test below pins: the sheet is
+    consulted first, because where the sheet passes the option the default cannot be reached
+    and an unreadable default is not a finding.
+    """
+    if not units:
+        return "no unit budget", "no-unit"
+    if sheet:
+        if sheet != units:
+            return "SHEET DISAGREES WITH UNIT", "bad"
+        return "sheet sets it and agrees", "ok"
+    if dflt is None:
+        return "SHEET SILENT and default unreadable, look by hand", "unknown"
+    if dflt not in units:
+        return "SHEET MISSING and default %d is not the unit's" % dflt, "bad"
+    return "sheet relies on the default, which agrees", "ok"
+
+
+# (sheet, units, default, expected kind, what the case stands for). Six cases covering both
+# directions, because a check nobody has watched fail is not known to be a check, and because
+# the fourth case here is precisely the one the first version of this comparison got wrong:
+# it compared sheet against unit, assumed every binary defaults to 8, and reported e07, e13
+# and e19 as defects when all three set 64 in their own main and needed no option at all.
+SELF_TEST_CASES = (
+    ([12], [12], 8, "ok",
+     "the sheet passes the unit's budget, so the default cannot be reached"),
+    ([8], [12], 8, "bad",
+     "the sheet passes a budget the unit does not, which was e02's defect"),
+    ([], [12], 8, "bad",
+     "a silent sheet whose default is below the unit, which was e09, e10 and e15"),
+    ([], [64], 64, "ok",
+     "a silent sheet whose default already agrees, which was e07, e13 and e19"),
+    ([], [16], None, "unknown",
+     "a silent sheet and an unreadable default, a look by hand and not a build failure"),
+    ([], [], None, "no-unit",
+     "a project whose units pass no budget at all"),
+)
+
+
+def self_test():
+    failures = 0
+    for sheet, units, dflt, want, what in SELF_TEST_CASES:
+        _, kind = verdict_for(sheet, units, dflt)
+        if kind != want:
+            failures += 1
+        print("%-4s want %-8s got %-8s  %s"
+              % ("pass" if kind == want else "FAIL", want, kind, what))
+    print("budget_agree --self-test: %d of %d failed" % (failures, len(SELF_TEST_CASES)))
+    return 1 if failures else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--ci", action="store_true",
+                    help="exit 1 on a real disagreement only, never on an unreadable default")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run the decision table against fabricated cases and exit")
     args = ap.parse_args()
+
+    if args.self_test:
+        return self_test()
 
     projects = os.path.join(ROOT, "projects")
     if not os.path.isdir(projects):
@@ -155,26 +225,11 @@ def main():
         units = sorted({v for u in units_of(slug) for v in option_values(u)})
         dflt, where = own_default(proj)
 
-        verdict = ""
-        if not units:
-            verdict = "no unit budget"
-        elif sheet:
-            # The sheet passes the option, so the default cannot be reached and does not
-            # matter. This branch goes first for that reason: an unreadable default is only
-            # a finding where the sheet is silent and the default is what runs.
-            if sheet != units:
-                verdict = "SHEET DISAGREES WITH UNIT"
-                bad += 1
-            else:
-                verdict = "sheet sets it and agrees"
-        elif dflt is None:
-            verdict = "SHEET SILENT and default unreadable, look by hand"
-            unknown += 1
-        elif dflt not in units:
-            verdict = "SHEET MISSING and default %d is not the unit's" % dflt
+        verdict, kind = verdict_for(sheet, units, dflt)
+        if kind == "bad":
             bad += 1
-        else:
-            verdict = "sheet relies on the default, which agrees"
+        elif kind == "unknown":
+            unknown += 1
 
         print("%-26s %-8s %-7s %-22s %s"
               % (slug, dflt if dflt is not None else "?",
@@ -186,6 +241,12 @@ def main():
         print("A bench run at a default below the unit's budget is caught by")
         print("tools/agreement.py, which returns non-zero on any unclosed object, so the cost")
         print("is the sitting and not the figure.")
+    if args.ci and unknown:
+        print("NOT CHECKED: %d default(s) this tool cannot read. Under --ci that is a line to"
+              % unknown)
+        print("look at by hand and not a build failure; --strict fails on it.")
+    if args.ci:
+        return 1 if bad else 0
     return 1 if ((bad or unknown) and args.strict) else 0
 
 
