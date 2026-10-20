@@ -388,6 +388,9 @@ impl Answerer {
         }
     }
 
+    // `user` reaches the engine only under the engine feature; the stub answers from the
+    // grammar alone and ignores it, which the compiler reports unless told it is deliberate.
+    #[cfg_attr(not(feature = "engine"), allow(unused_variables))]
     fn answer(&mut self, user: &str) -> (String, f64, f64, u32) {
         match self {
             Answerer::Stub { text } => (text.clone(), 0.0, 0.0, 0),

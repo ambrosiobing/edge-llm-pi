@@ -28,13 +28,20 @@ use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process;
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
+use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(feature = "live")]
+use std::time::Instant;
 
 use engine_client::EngineClient;
 use rules::{Decision, Minute, NodeState, NODE_TABLE};
 
+// Read only by iio::Accel, which only the live reader constructs. allow rather than cfg
+// throughout this file for the same reason: the stub build is the only build any job
+// compiles, since the live feature's socketcan 4.0.0 cannot be parsed by the image's cargo
+// 1.75, so gating these out would leave them compiled by nothing.
+#[cfg_attr(not(feature = "live"), allow(dead_code))]
 const GRAVITY: f64 = 9.80665;
 
 // ---------------------------------------------------------------- options
@@ -109,6 +116,7 @@ fn parse_args() -> Options {
 
 // ---------------------------------------------------------------- what the reader sends
 
+#[cfg_attr(not(feature = "live"), allow(dead_code))] // constructed by the live reader
 enum Sample {
     /// One whole minute, from a replay row: the cumulative error counter, the peak and
     /// how many nodes answered.
@@ -149,6 +157,7 @@ enum Sample {
 // expected and not a sign that this is unused code: the only caller is live_reader, which
 // is behind the "live" feature, and the default feature set does not include it.
 
+#[cfg_attr(not(feature = "live"), allow(dead_code))] // used by the live reader
 mod iio {
     use std::fs;
     use std::io;

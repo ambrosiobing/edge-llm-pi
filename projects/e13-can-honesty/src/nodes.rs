@@ -51,14 +51,13 @@ pub enum Source {
 }
 
 impl Source {
-    pub fn is_vcan(self) -> bool {
-        matches!(self, Source::Vcan { .. })
-    }
-
     pub fn is_hardware(self) -> bool {
         matches!(self, Source::Hardware { .. })
     }
 
+    // Called only by the live reader. allow rather than cfg, because the stub build is the
+    // only build any job compiles and gating this out would remove its only compile.
+    #[cfg_attr(not(feature = "live"), allow(dead_code))]
     pub fn is_absent(self) -> bool {
         matches!(self, Source::Absent { .. })
     }
@@ -214,6 +213,7 @@ pub fn bind_for_replay(nodes: &mut [Node]) {
 ///
 /// Returns one line per hardware node saying what it bound to, for the log and the
 /// evidence file. A node whose driver is not present stays unbound and is reported.
+#[cfg_attr(not(feature = "live"), allow(dead_code))] // live reader only; see is_absent
 pub fn bind_by_driver(nodes: &mut [Node]) -> Result<Vec<String>, String> {
     let mut found: Vec<(String, String)> = Vec::new();
     let entries = fs::read_dir("/sys/class/net")

@@ -46,6 +46,14 @@ pub const IDX_MODELLED: usize = 1;
 pub const IDX_ABSENT: usize = 2;
 
 /// The names, in the grammar's order.
+///
+/// This table and the literal inside names() below are two copies of one thing, held equal
+/// by the test the_name_table_is_the_grammar_order. names() cannot simply return &NAMES yet,
+/// because chapter 13 prints that function with its literal and the chapter is generated
+/// from the catalogue's sections/e13.tex; changing the file without the source would make
+/// the printed code wrong. Until that source is edited and the chapter regenerated, the
+/// table is read only by the test, and the bin build is told so rather than warned.
+#[cfg_attr(not(test), allow(dead_code))]
 pub const NAMES: [&str; 3] = ["PRESENT", "MODELLED", "ABSENT"];
 
 /// The source class an event carries; a short event is read as a hardware node, which the
@@ -86,7 +94,15 @@ impl Rule for PresenceRule {
 /// A node-period event, the one shape the rule, the log and the oracle all read.
 pub fn node_event(t_s: f64, name: &str, frames: u32, missed: u32, silent_s: f64, source: f64)
                   -> Event {
-    Event::new(t_s, name, &[frames as f64, missed as f64, silent_s, source])
+    // Built through the V_ indices rather than positionally, so the layout the four
+    // constants document is the layout this function writes and neither can drift from the
+    // other. Positional, the two the rule does not read were unused and the compiler said so.
+    let mut v = [0.0_f64; 4];
+    v[V_FRAMES] = frames as f64;
+    v[V_MISSED] = missed as f64;
+    v[V_SILENT] = silent_s;
+    v[V_SOURCE] = source;
+    Event::new(t_s, name, &v)
 }
 
 #[cfg(test)]

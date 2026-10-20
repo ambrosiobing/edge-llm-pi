@@ -42,6 +42,9 @@ pub const fn abi_major(version: u32) -> u32 {
     version / 1000
 }
 
+// Engine and TooLong are constructed only by the ffi backend. allow rather than cfg: the
+// ffi feature is compiled by no job, so the default build is this enum's only compile.
+#[cfg_attr(not(feature = "ffi"), allow(dead_code))]
 #[derive(Debug)]
 pub enum EngineError {
     /// The library or the daemon reports a major version this service was not built
@@ -84,6 +87,7 @@ impl From<std::io::Error> for EngineError {
 /// How long an answer may be. The grammar's longest object is well inside this; the
 /// buffer is generous so that a refusal here means the grammar changed, not that the
 /// buffer was mean.
+#[cfg_attr(not(feature = "ffi"), allow(dead_code))] // read by the ffi backend only
 pub const ANSWER_MAX: usize = 1024;
 
 // ---------------------------------------------------------------- the FFI binding

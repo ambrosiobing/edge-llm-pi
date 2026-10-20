@@ -95,9 +95,6 @@ impl EngineClient {
         (self.reconnects, self.unavailable)
     }
 
-    pub fn socket_path(&self) -> &Path {
-        &self.path
-    }
 
     fn connect(&mut self) -> Result<(), Unavailable> {
         let stream = UnixStream::connect(&self.path).map_err(|e| Unavailable {
