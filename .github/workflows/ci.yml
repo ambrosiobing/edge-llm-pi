@@ -180,7 +180,33 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libgpiod-dev libclang-dev
+      # THE ORDER OF THESE TWO IS LOAD BEARING. This action makes the toolchain it installs
+      # the default, so the newer one has to come second: with stable first and 1.75.0
+      # second, the "cargo test in every Rust project" step below would quietly have run on
+      # 1.75.0 instead of on stable, and the two steps exist to test different toolchains.
+      # The 1.75.0 step names its toolchain explicitly with cargo +1.75.0 and does not rely
+      # on being the default.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.75.0"
       - uses: dtolnay/rust-toolchain@stable
+      - name: every Rust crate compiles under the toolchain the image supplies
+        # Added Tuesday 20 October 2026, and the step below is why it was needed. That one
+        # runs cargo test on stable, which was 1.99.0 the day this was written. The layer
+        # pins poky at scarthgap, whose rust is 1.75.0, and e05, e13, e14 and e18 inherit
+        # cargo, so scarthgap's compiler is what actually cross-builds them. Every job had
+        # been green for days while e18's control rule multiplied two f64 constants inside a
+        # const fn body, which 1.75 refuses outright with E0658. Green covered the toolchain
+        # the jobs happened to use and not the one the deployment uses.
+        #
+        # The same pass requires every manifest to declare this floor, in both directions. A
+        # floor above it would be refused on the image; a floor below it is worse, because
+        # cargo then permits a toolchain the code does not compile under, which is what
+        # e18's "1.74" did.
+        #
+        # 1.75.0 is written here rather than derived, so raising the floor means editing
+        # this line and noticing that scarthgap has to be able to supply the new value.
+        run: python3 tools/cargo_all.py --msrv 1.75.0
       - name: cargo test in every Rust project
         # tools/cargo_all.py walks the tree instead of globbing one level deep, which is how
         # e18 was reached for the first time on Saturday 17 October 2026, and it names the

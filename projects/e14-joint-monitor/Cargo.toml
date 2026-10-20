@@ -24,7 +24,12 @@
 name = "edgellm-e14"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.74"
+# 1.75, raised from 1.74 on Tuesday 20 October 2026, because 1.74 was a number nobody had
+# tested and 1.75.0 is what poky at scarthgap supplies to cross-build this project. Checked
+# clean under 1.75.0; the reasoning is in common/rust/edgellm/Cargo.toml. A floor below what
+# the code needs is the worse direction of this defect: cargo permits the toolchain and the
+# compiler fails later, which is exactly what e18 did with E0658.
+rust-version = "1.75"
 license = "MIT"
 description = "Joint monitor: one CAN bus, one ADXL345, a rule, a model in another process"
 publish = false

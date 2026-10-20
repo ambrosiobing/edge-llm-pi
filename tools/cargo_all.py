@@ -3,6 +3,8 @@
 
     python tools/cargo_all.py            run them all
     python tools/cargo_all.py --list     print what would run, and run nothing
+    python tools/cargo_all.py --msrv 1.75  cargo +1.75 check them, and require that
+                                          floor to be what each manifest declares
 
 Every Cargo.toml under projects/ and under common/rust/, which is every one in the tree.
 
@@ -57,15 +59,86 @@ def manifests():
     return found
 
 
+def declared_msrv(rel):
+    """The rust-version of one manifest, read off a live line, or None."""
+    for line in (ROOT / rel).read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith("#"):
+            continue
+        if s.startswith("rust-version"):
+            return s.split("=", 1)[1].strip().strip('"')
+    return None
+
+
+def as_version(text):
+    """(1, 75, 0) from "1.75" or "1.75.0", or None when it is not a version at all.
+
+    Both spellings are legal in a manifest and rustup names its toolchains with all three
+    components, so a string comparison here would report a disagreement that does not
+    exist. Compared numerically for that reason.
+    """
+    try:
+        parts = [int(x) for x in text.split(".")]
+    except ValueError:
+        return None
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts[:3])
+
+
+def msrv_check(found, want):
+    """cargo +<want> check every manifest, and require each to declare <want>.
+
+    WHY A SECOND TOOLCHAIN, and it is the whole reason this option exists. The default run
+    above uses whatever `cargo` is on the machine, which on skyhorizon's WSL is 1.99.0 and
+    on the runner is the stable of the day. The layer pins poky at scarthgap, whose rust is
+    1.75.0, and e05, e13, e14 and e18 inherit cargo, so scarthgap's compiler is what
+    actually cross-builds them. A green `cargo test` on stable says nothing about that.
+
+    It said nothing about it on Tuesday 20 October 2026, when the five crates were checked
+    under 1.75.0 for the first time: e18's control rule multiplied two f64 constants inside
+    a const fn body, which 1.75 refuses with E0658, and every job had been green for days.
+
+    The declaration is checked in the same pass and in both directions. A manifest that
+    raises its floor above the toolchain this gate installs is a build that would be refused
+    on the image, and a manifest below it is the worse case, since cargo then permits a
+    toolchain the code does not compile under, which is what e18's "1.74" did.
+    """
+    problems = 0
+    for rel in found:
+        got = declared_msrv(rel)
+        if got is None:
+            print("FAIL %s declares no rust-version, so nothing pins its toolchain" % rel)
+            problems += 1
+        elif as_version(got) != as_version(want):
+            print("FAIL %s declares rust-version %s, this gate checks %s" % (rel, got, want))
+            problems += 1
+    for rel in found:
+        print("\n== %s  at %s" % (rel, want))
+        r = subprocess.run(["cargo", "+" + want, "check", "--manifest-path", rel],
+                           cwd=str(ROOT))
+        if r.returncode != 0:
+            print("FAIL %s does not compile under %s, which is what the image uses" % (rel, want))
+            problems += 1
+    print("\ncargo_all --msrv %s: %d manifests, %d problems" % (want, len(found), problems))
+    return 1 if problems else 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true", help="print the manifests and exit")
+    ap.add_argument("--msrv", metavar="VERSION",
+                    help="cargo +VERSION check every manifest and require each to declare "
+                         "VERSION; this is the toolchain the Yocto layer supplies")
     args = ap.parse_args(argv)
 
     found = manifests()
     if not found:
         print("cargo_all: no Cargo.toml under projects/, which cannot be right")
         return 1
+
+    if args.msrv:
+        return msrv_check(found, args.msrv)
 
     if args.list:
         for rel in found:

@@ -31,10 +31,31 @@ pub const DRIFT_FRACTION: f64 = 0.10;
 /// installation's level register is expected to be flat.
 pub const WINDOW: usize = 30;
 
+// The multiply sits in a const item rather than in the const fn below, which reads like an
+// indirection and is not one. Floating point arithmetic inside a const fn body is a late
+// stabilisation, and the toolchain that cross-builds this project is not new: the layer pins
+// poky at scarthgap, whose rust is 1.75.0, and it refuses the obvious form outright.
+//
+//     error[E0658]: floating point arithmetic is not allowed in constant functions
+//       --> src/rules.rs:37:5
+//
+// A const item has always allowed the arithmetic and a const fn may read one, so the name,
+// the signature and the constness all survive. That matters beyond taste: the chapter and
+// this project's README both print the call, and lint compares a printed block against the
+// file it came from.
+//
+// Found Tuesday 20 October 2026, by checking all five Rust crates under 1.75.0 for the first
+// time. Four passed and this one did not. Nothing had said so, because tools/cargo_all.py
+// runs cargo test on stable, which is 1.99.0 on the building machine: a green run proves the
+// crate compiles with the toolchain the job happens to use, not with the one the image uses.
+// This crate also declares rust-version = "1.74", which is below what its own code needed,
+// so cargo permitted the toolchain and the failure arrived from the compiler instead.
+const DRIFT_THRESHOLD_COUNTS: f64 = DRIFT_FRACTION * REG_RANGE;
+
 /// The threshold in counts, 100.0, named once so the prompt and the chapter quote the
 /// same arithmetic.
 pub const fn drift_threshold() -> f64 {
-    DRIFT_FRACTION * REG_RANGE
+    DRIFT_THRESHOLD_COUNTS
 }
 
 /// The index of the register the rule watches inside an event's value list.
