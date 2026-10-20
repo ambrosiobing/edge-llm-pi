@@ -8,7 +8,19 @@
 name = "edgellm"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+# 1.75 and not 1.80, corrected Tuesday 20 October 2026 and lowered on a compile rather than
+# on an argument. The layer pins poky at scarthgap, whose rust is 1.75.0, and e05, e13, e14
+# and e18 inherit cargo, so scarthgap's cargo is what cross-builds them. With 1.80 declared
+# it refused outright: "package `edgellm v0.1.0` cannot be built because it requires rustc
+# 1.80 or newer, while the currently active rustc version is 1.75.0". The first image build
+# of e05 or e13 would have stopped there, and no image has been built yet, so nothing had
+# said so.
+#
+# The floor was never derived: all three crates that carried 1.80 took it in the initial
+# commit 949fd16 with no comment, and all three check clean under 1.75.0 with
+# --ignore-rust-version, which is how this value was chosen. Raise it only for a feature
+# that is actually used, and then only if scarthgap can supply it.
+rust-version = "1.75"
 license = "MIT"
 description = "The decision loop over a grammar-constrained local model, in Rust"
 publish = false

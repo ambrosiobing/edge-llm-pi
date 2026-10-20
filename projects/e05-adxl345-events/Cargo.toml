@@ -7,7 +7,10 @@
 name = "edgellm-e05"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+# 1.75, not 1.80: scarthgap's rust is 1.75.0 and it cross-builds this project. Checked
+# clean at 1.75.0 on Tuesday 20 October 2026; the reasoning is in
+# common/rust/edgellm/Cargo.toml.
+rust-version = "1.75"
 license = "MIT"
 description = "e05, the ADXL345 event reporter: one executable over the shared edgellm crate"
 publish = false
