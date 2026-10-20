@@ -70,7 +70,6 @@ def test_a_second_writer_on_one_log_is_refused(tmp_path):
     second.close()
 
 
-@posix_only
 def test_file_has_header_and_rows(tmp_path):
     path = tmp_path / "log.csv"
     with EventLog(path, "stub") as log:

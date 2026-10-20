@@ -25,8 +25,22 @@ repeated here. In short:
   writer's file before this process finds out it may not have it. A log left by a run that
   has finished is still replaceable, because 21 of this volume's systemd units carry
   Restart= with a fixed --log path and have to reopen their own log.
+
+OFF POSIX THERE IS NO flock AND THE GUARD IS ABSENT, which this file says out loud on
+stderr rather than leaving to be discovered. Every machine that writes a log here is
+Linux: the bench Raspberry Pi, skyhorizon's WSL and the runner. Windows has no bench and
+no card, and the fallback exists so that the suites of this package and of e15 and e20
+still run on the authoring laptop; making the lock mandatory broke four of their tests
+there, which is how the fallback came to be written. os.fsync is not in that branch
+because it works on every platform.
 """
 import os
+import sys
+
+try:
+    import fcntl
+except ImportError:          # Windows; see the header's last paragraph
+    fcntl = None
 
 COLUMNS = "t_s,tag,raw,rule,model,prompt_ms,generate_ms,n_generated,engine"
 
@@ -66,27 +80,27 @@ class EventLog:
     """elog_open, elog_row, elog_close."""
 
     def __init__(self, path, engine_version):
-        # fcntl is imported here and not at the top so that importing edgellm stays
-        # possible off POSIX; edgellm/__init__.py pulls EventLog in at import time, and
-        # the row formatting above is useful to a test on any machine. Opening a log is
-        # the part that is POSIX only, exactly as common/c/src/elog.c is.
-        import fcntl
-
         self.path = str(path)
         self.engine = engine_version or ""
         self.rows = 0
-        fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_CLOEXEC, 0o644)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            os.close(fd)
-            raise RuntimeError(
-                "%s is being written by another process, so this one will not start: "
-                "do not run two on one log" % self.path)
-        # The lock is held, so emptying the file now can only discard this caller's own
-        # earlier run and never a live one's rows.
-        os.ftruncate(fd, 0)
-        self._fh = os.fdopen(fd, "w", encoding="ascii", newline="\n")
+        self.locked = fcntl is not None
+        if not self.locked:
+            sys.stderr.write("elog: this platform has no flock, so the one-writer guard "
+                             "is off for %s\n" % self.path)
+            self._fh = open(self.path, "w", encoding="ascii", newline="\n")
+        else:
+            fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_CLOEXEC, 0o644)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                os.close(fd)
+                raise RuntimeError(
+                    "%s is being written by another process, so this one will not start: "
+                    "do not run two on one log" % self.path)
+            # The lock is held, so emptying the file now can only discard this caller's
+            # own earlier run and never a live one's rows.
+            os.ftruncate(fd, 0)
+            self._fh = os.fdopen(fd, "w", encoding="ascii", newline="\n")
         self._fh.write(COLUMNS + "\n")
         self._flush_and_sync()
 
