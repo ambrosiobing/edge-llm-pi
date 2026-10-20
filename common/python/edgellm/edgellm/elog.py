@@ -23,7 +23,7 @@ repeated here. In short:
   One writer per log. The file is opened without truncating, an exclusive lock is taken,
   and only then is it emptied. That order is the guard: opening with "w" empties the first
   writer's file before this process finds out it may not have it. A log left by a run that
-  has finished is still replaceable, because 21 of this volume's systemd units carry
+  has finished is still replaceable, because 16 of this volume's systemd units carry
   Restart= with a fixed --log path and have to reopen their own log.
 
 OFF POSIX THERE IS NO flock AND THE GUARD IS ABSENT, which this file says out loud on

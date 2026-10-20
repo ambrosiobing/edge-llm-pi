@@ -105,10 +105,19 @@ static void write_quoted(FILE *fp, const char *text)
  * WHAT THIS DOES NOT DO, stated because the alternative was tried and rejected. It does
  * not refuse a log left by a run that has FINISHED: a deliberate second run on the same
  * path still replaces it. Refusing that as well, with O_CREAT|O_EXCL, was written first
- * and then taken out, because 21 of this volume's systemd units carry Restart= with a
+ * and then taken out, because 16 of this volume's systemd units carry Restart= with a
  * fixed --log path and none of them could have restarted, and e08's chapter demonstrates
  * its console surviving kill -9. A guard that stops the failure that happened is worth
  * more than one that also stops a second failure and breaks every restarting service.
+ *
+ * That 16 is the conjunction and it has to be recounted as one. First written here as 21,
+ * which is how many units carry Restart= at all; five of those pass no --log, being the
+ * daemon halves of e08, e14 and e18, e04's llama-server and e17's sampler, and they write
+ * no log of any kind. The claim needs both columns, so count both:
+ *
+ *   grep -rl --include=*.service -e '^[[:space:]]*Restart=' meta-edgellm projects \
+ *     | xargs grep -l -- --log | wc -l
+ *
  * What covers the finished-log case instead: the logs that figures are quoted from are
  * committed the same day, which is what lets tools/verify_e02_figures.py recount them,
  * and tools/log_tail.py reports damage when something else goes wrong.

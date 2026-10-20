@@ -16,7 +16,7 @@
  *      call was fopen(path, "w") until Tuesday 20 October 2026, and even the fixed version
  *      would fail here if it emptied the file before taking the lock instead of after
  *   4  the same path opens again once the first log is closed. This is deliberate and it
- *      is asserted rather than left implicit: 21 of this volume's systemd units carry
+ *      is asserted rather than left implicit: 16 of this volume's systemd units carry
  *      Restart= with a fixed --log path, and e08's chapter demonstrates its console
  *      surviving kill -9, so a finished log has to be reopenable
  *   5  a path whose directory does not exist fails, and leaves nothing behind

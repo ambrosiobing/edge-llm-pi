@@ -63,7 +63,7 @@ def test_a_second_writer_on_one_log_is_refused(tmp_path):
         EventLog(path, "stub")
     assert path.read_bytes() == before, "the refusal must not touch the first writer's rows"
     first.close()
-    # A finished log stays replaceable: 21 of this volume's units carry Restart= with a
+    # A finished log stays replaceable: 16 of this volume's units carry Restart= with a
     # fixed --log path and have to reopen their own log.
     second = EventLog(path, "stub")
     assert path.read_bytes() == COLUMNS.encode("ascii") + b"\n"
