@@ -393,6 +393,12 @@ fn expand(grammar: &str, name: &str, depth: u32) -> Result<String, EngineError> 
 // ---------------------------------------------------------------- the three together
 
 /// What an engine needs to open, whichever boundary it sits behind.
+///
+/// Every field is read inside the ffi backend and nowhere else: the stub answers from the
+/// grammar alone and the socket backend hands configuration to the daemon on its own
+/// command line. allow rather than cfg, because ffi is compiled by no job and the default
+/// build is this struct's only compile; see KNOWN_FEATURE_FAILURES in tools/cargo_all.py.
+#[cfg_attr(not(feature = "ffi"), allow(dead_code))]
 #[derive(Debug, Clone)]
 pub struct EngineConfig {
     pub model: Option<String>,

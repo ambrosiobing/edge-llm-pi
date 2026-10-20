@@ -60,21 +60,16 @@ pub enum NodeState {
     Absent,
 }
 
-impl NodeState {
-    pub fn name(self) -> &'static str {
-        match self {
-            NodeState::Present => "PRESENT",
-            NodeState::Modelled => "MODELLED",
-            NodeState::Absent => "ABSENT",
-        }
-    }
-}
-
 /// One row of e13's node table. The bus of this project is the WS-28164's two
 /// controllers wired to each other with two jumper wires, so two rows are hardware and
 /// the third is the Nucleo step that has not been taken.
 pub struct NodeRow {
     pub id: u32,
+    // Read by nothing yet. The three labels describe the bench wiring of each node and the
+    // right reader is the prompt or the log, which would name the node a verdict is about;
+    // that is a behavioural change with an oracle behind it and is not made here. Kept as
+    // documentation, and the compiler is told so rather than left to say it on every build.
+    #[allow(dead_code)]
     pub label: &'static str,
     pub period_ms: u64,
 }
