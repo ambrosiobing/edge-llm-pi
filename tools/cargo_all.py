@@ -90,6 +90,42 @@ EXTRA_FEATURES = {
     "projects/e14-joint-monitor/Cargo.toml": ["live"],
 }
 
+# Feature checks that are allowed to fail, keyed by "<manifest> --features <list>", with the
+# reason and the date, and with the same rule KNOWN has: AN ENTRY THAT STARTS PASSING FAILS
+# THIS SCRIPT, so a list of excuses cannot quietly become permanent.
+#
+# Both entries are one finding, made on Tuesday 20 October 2026 by the first run of this
+# check. It is not in this repository's code. socketcan 4.0.0, which e13 and e14 both name,
+# publishes a manifest in edition 2024 and declares rust-version 1.89. Cargo 1.75 cannot
+# parse an edition-2024 manifest at all, so it stops before compiling anything:
+#
+#     feature `edition2024` is required
+#     The package requires the Cargo feature called `edition2024`, but that feature is not
+#     stabilized in this version of Cargo (1.75.0)
+#
+# The layer pins poky at scarthgap, whose rust is 1.75.0, so as things stand e13 and e14
+# cannot be cross-built into an image at all, and no image has been built yet to say so.
+# This is the dependency half of the floor problem, named as a risk in 6de23ff's message
+# before it was observed: our own code compiles at 1.75, and a dependency's does not.
+#
+# The options, with their costs, and the choice is Joseph's rather than this file's:
+#
+#   socketcan 3.6.2 is edition 2021 and declares rust-version 1.75, which is exactly what
+#     scarthgap supplies. Cheapest for the build, unknown for the code, because e13 and e14
+#     are written against the 4.0 API and a major bump usually moves something.
+#   a newer rust for Yocto, through a newer poky branch or meta-rust-bin, which changes the
+#     release the whole bench shares with embedded-linux-bench and is not e13's decision.
+#   do not image these two, and deploy them on Raspberry Pi OS only, which the volume
+#     already supports as the first of its two deployment routes; the chapters would say so.
+#   call the kernel's CAN socket interface through libc and drop the crate.
+KNOWN_FEATURE_FAILURES = {
+    "projects/e13-can-honesty/Cargo.toml --features live":
+        "socketcan 4.0.0 is an edition-2024 manifest declaring rust-version 1.89, which "
+        "cargo 1.75.0 cannot parse; see the note above KNOWN_FEATURE_FAILURES",
+    "projects/e14-joint-monitor/Cargo.toml --features live":
+        "the same socketcan 4.0.0 manifest, through this project's own dependency on it",
+}
+
 
 def as_version(text):
     """(1, 75, 0) from "1.75" or "1.75.0", or None when it is not a version at all.
@@ -134,27 +170,44 @@ def msrv_check(found, want):
         elif as_version(got) != as_version(want):
             print("FAIL %s declares rust-version %s, this gate checks %s" % (rel, got, want))
             problems += 1
-    stale = [k for k in EXTRA_FEATURES if k not in found]
-    for k in stale:
+    for k in [k for k in EXTRA_FEATURES if k not in found]:
         print("FAIL EXTRA_FEATURES names %s, which is not in the tree" % k)
+        problems += 1
+    planned = set()
+    for rel in found:
+        for f in EXTRA_FEATURES.get(rel, []):
+            planned.add("%s --features %s" % (rel, f))
+    for k in [k for k in KNOWN_FEATURE_FAILURES if k not in planned]:
+        print("FAIL KNOWN_FEATURE_FAILURES names %s, which this pass does not check" % k)
         problems += 1
 
     runs = 0
+    allowed = 0
     for rel in found:
         for feats in [None] + [[f] for f in EXTRA_FEATURES.get(rel, [])]:
             label = "defaults" if feats is None else "--features " + ",".join(feats)
+            key = rel if feats is None else "%s --features %s" % (rel, ",".join(feats))
             print("\n== %s  at %s, %s" % (rel, want, label))
             cmd = ["cargo", "+" + want, "check", "--manifest-path", rel]
             if feats is not None:
                 cmd += ["--features", ",".join(feats)]
             r = subprocess.run(cmd, cwd=str(ROOT))
             runs += 1
-            if r.returncode != 0:
+            if key in KNOWN_FEATURE_FAILURES:
+                if r.returncode == 0:
+                    print("FAIL %s now compiles under %s and is listed as a known failure.\n"
+                          "     Remove it from KNOWN_FEATURE_FAILURES in tools/cargo_all.py."
+                          % (key, want))
+                    problems += 1
+                else:
+                    allowed += 1
+                    print("known failure, allowed: %s" % KNOWN_FEATURE_FAILURES[key])
+            elif r.returncode != 0:
                 print("FAIL %s (%s) does not compile under %s, which is what the image uses"
                       % (rel, label, want))
                 problems += 1
-    print("\ncargo_all --msrv %s: %d manifests, %d checks, %d problems"
-          % (want, len(found), runs, problems))
+    print("\ncargo_all --msrv %s: %d manifests, %d checks, %d known failures allowed, "
+          "%d problems" % (want, len(found), runs, allowed, problems))
     return 1 if problems else 0
 
 
