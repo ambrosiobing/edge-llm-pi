@@ -54,6 +54,49 @@ SHARED = "common/python/edgellm"
 
 SKIP_PARTS = (".venv", "build", "dist", "target", "__pycache__")
 
+# pytest.ini names its testpaths by hand, which is how a person running bare "pytest" at
+# the root reaches these suites. A hand-written list goes stale the way the one-level glob
+# did, so the walk below is compared against it. tools/tests belongs to that list and not
+# to the walk, because it is a directory of tests with no package of its own.
+INI = "pytest.ini"
+INI_EXTRA = {"tools/tests"}
+
+
+def ini_testpaths():
+    """The testpaths of pytest.ini, or None when the file does not have the key."""
+    text = (ROOT / INI).read_text(encoding="ascii") if (ROOT / INI).is_file() else ""
+    out, collecting = [], False
+    for line in text.splitlines():
+        if line.strip().startswith(("#", ";")):
+            continue
+        if line.strip().startswith("testpaths"):
+            collecting = True
+            after = line.split("=", 1)[1].strip() if "=" in line else ""
+            if after:
+                out.append(after)
+            continue
+        if collecting:
+            if line.startswith((" ", "\t")) and line.strip():
+                out.append(line.strip())
+            elif line.strip():
+                break
+    return out or None
+
+
+def ini_problems(found):
+    """Lines describing any disagreement between pytest.ini and the walk."""
+    listed = ini_testpaths()
+    if listed is None:
+        return ["pytest.ini has no testpaths, so bare pytest at the root runs nothing"]
+    walked = {rel + "/tests" for rel, has_tests in found if has_tests}
+    problems = []
+    for path in sorted(walked - set(listed)):
+        problems.append("pytest.ini does not list %s, so bare pytest at the root skips it"
+                        % path)
+    for path in sorted(set(listed) - walked - INI_EXTRA):
+        problems.append("pytest.ini lists %s, which this walk did not find" % path)
+    return problems
+
 
 def suites():
     """[(manifest dir, tests dir)] for every package in the tree that has tests."""
@@ -89,18 +132,23 @@ def main(argv):
               % SHARED)
         return 1
 
+    ini = ini_problems(found)
+    for line in ini:
+        print("INI: %s" % line)
+
     if args.list:
         for rel, has_tests in found:
             mark = "  (known failure)" if rel in KNOWN else ""
             if not has_tests:
                 mark += "  (no tests/ directory, nothing to run)"
             print("%s%s" % (rel, mark))
-        print("pytest_all: %d packages, %d with tests, %d known failures"
-              % (len(found), sum(1 for _, t in found if t), len(KNOWN)))
+        print("pytest_all: %d packages, %d with tests, %d known failures, %d pytest.ini "
+              "disagreements"
+              % (len(found), sum(1 for _, t in found if t), len(KNOWN), len(ini)))
         stale = [k for k in KNOWN if k not in [r for r, _ in found]]
         for k in stale:
             print("STALE: KNOWN names %s, which is not in the tree" % k)
-        return 1 if stale else 0
+        return 1 if (stale or ini) else 0
 
     problems = 0
     ran = 0
@@ -128,9 +176,10 @@ def main(argv):
             print("FAIL %s" % rel)
             problems += 1
 
-    print("\npytest_all: %d packages, %d suites run, %d known failures, %d problems"
-          % (len(found), ran, len(KNOWN), problems))
-    return 1 if problems else 0
+    print("\npytest_all: %d packages, %d suites run, %d known failures, %d problems, "
+          "%d pytest.ini disagreements"
+          % (len(found), ran, len(KNOWN), problems, len(ini)))
+    return 1 if (problems or ini) else 0
 
 
 if __name__ == "__main__":
