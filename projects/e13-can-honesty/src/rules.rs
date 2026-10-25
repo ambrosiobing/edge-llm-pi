@@ -45,15 +45,10 @@ pub const IDX_PRESENT: usize = 0;
 pub const IDX_MODELLED: usize = 1;
 pub const IDX_ABSENT: usize = 2;
 
-/// The names, in the grammar's order.
-///
-/// This table and the literal inside names() below are two copies of one thing, held equal
-/// by the test the_name_table_is_the_grammar_order. names() cannot simply return &NAMES yet,
-/// because chapter 13 prints that function with its literal and the chapter is generated
-/// from the catalogue's sections/e13.tex; changing the file without the source would make
-/// the printed code wrong. Until that source is edited and the chapter regenerated, the
-/// table is read only by the test, and the bin build is told so rather than warned.
-#[cfg_attr(not(test), allow(dead_code))]
+/// The names, in the grammar's order. names() below returns this table rather than a second
+/// literal, so there is one copy of the three words; the catalogue's lint compares the
+/// printed block in chapter 13 against this file, and the two were changed together on
+/// Sunday 25 October 2026.
 pub const NAMES: [&str; 3] = ["PRESENT", "MODELLED", "ABSENT"];
 
 /// The source class an event carries; a short event is read as a hardware node, which the
@@ -76,7 +71,7 @@ impl Rule for PresenceRule {
     }
 
     fn names(&self) -> &[&'static str] {
-        &["PRESENT", "MODELLED", "ABSENT"]
+        &NAMES
     }
 
     /// The whole control rule.
@@ -160,7 +155,8 @@ mod tests {
 
     #[test]
     fn the_name_table_is_the_grammar_order() {
-        assert_eq!(PresenceRule.names(), &NAMES[..]);
+        // names() returns &NAMES, so asserting the two equal could not fail; these three pin
+        // the index-to-literal mapping, which can.
         assert_eq!(NAMES[IDX_PRESENT], "PRESENT");
         assert_eq!(NAMES[IDX_MODELLED], "MODELLED");
         assert_eq!(NAMES[IDX_ABSENT], "ABSENT");

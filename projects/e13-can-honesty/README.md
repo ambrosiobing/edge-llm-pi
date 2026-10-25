@@ -96,7 +96,7 @@ impl Rule for PresenceRule {
     }
 
     fn names(&self) -> &[&'static str] {
-        &["PRESENT", "MODELLED", "ABSENT"]
+        &NAMES
     }
 
     /// The whole control rule.
