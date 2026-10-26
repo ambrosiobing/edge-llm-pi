@@ -94,37 +94,13 @@ EXTRA_FEATURES = {
 # reason and the date, and with the same rule KNOWN has: AN ENTRY THAT STARTS PASSING FAILS
 # THIS SCRIPT, so a list of excuses cannot quietly become permanent.
 #
-# Both entries are one finding, made on Tuesday 20 October 2026 by the first run of this
-# check. It is not in this repository's code. socketcan 4.0.0, which e13 and e14 both name,
-# publishes a manifest in edition 2024 and declares rust-version 1.89. Cargo 1.75 cannot
-# parse an edition-2024 manifest at all, so it stops before compiling anything:
-#
-#     feature `edition2024` is required
-#     The package requires the Cargo feature called `edition2024`, but that feature is not
-#     stabilized in this version of Cargo (1.75.0)
-#
-# The layer pins poky at scarthgap, whose rust is 1.75.0, so as things stand e13 and e14
-# cannot be cross-built into an image at all, and no image has been built yet to say so.
-# This is the dependency half of the floor problem, named as a risk in 6de23ff's message
-# before it was observed: our own code compiles at 1.75, and a dependency's does not.
-#
-# The options, with their costs, and the choice is Joseph's rather than this file's:
-#
-#   socketcan 3.6.2 is edition 2021 and declares rust-version 1.75, which is exactly what
-#     scarthgap supplies. Cheapest for the build, unknown for the code, because e13 and e14
-#     are written against the 4.0 API and a major bump usually moves something.
-#   a newer rust for Yocto, through a newer poky branch or meta-rust-bin, which changes the
-#     release the whole bench shares with embedded-linux-bench and is not e13's decision.
-#   do not image these two, and deploy them on Raspberry Pi OS only, which the volume
-#     already supports as the first of its two deployment routes; the chapters would say so.
-#   call the kernel's CAN socket interface through libc and drop the crate.
-KNOWN_FEATURE_FAILURES = {
-    "projects/e13-can-honesty/Cargo.toml --features live":
-        "socketcan 4.0.0 is an edition-2024 manifest declaring rust-version 1.89, which "
-        "cargo 1.75.0 cannot parse; see the note above KNOWN_FEATURE_FAILURES",
-    "projects/e14-joint-monitor/Cargo.toml --features live":
-        "the same socketcan 4.0.0 manifest, through this project's own dependency on it",
-}
+# Empty as of Monday 26 October 2026, and it held two entries for six days. e13 and e14 both
+# named socketcan 4.0.0, whose edition-2024 manifest cargo 1.75 cannot parse, so neither
+# live build could run on the toolchain the image supplies. Both are now pinned to socketcan
+# 3.6.2 with a committed lockfile, both compile under 1.75.0, and the entries came out: not
+# because anyone remembered to tidy them, but because this script fails an entry that starts
+# passing, which is the whole reason the mechanism is shaped this way.
+KNOWN_FEATURE_FAILURES = {}
 
 
 def as_version(text):
@@ -188,7 +164,11 @@ def msrv_check(found, want):
             label = "defaults" if feats is None else "--features " + ",".join(feats)
             key = rel if feats is None else "%s --features %s" % (rel, ",".join(feats))
             print("\n== %s  at %s, %s" % (rel, want, label))
-            cmd = ["cargo", "+" + want, "check", "--manifest-path", rel]
+            # --locked: the committed Cargo.lock is what holds every transitive dependency
+            # at a version 1.75 can build, so a stale or absent lockfile must fail here
+            # rather than be re-resolved into something newer. See the socketcan note in
+            # projects/e13-can-honesty/Cargo.toml.
+            cmd = ["cargo", "+" + want, "check", "--locked", "--manifest-path", rel]
             if feats is not None:
                 cmd += ["--features", ",".join(feats)]
             r = subprocess.run(cmd, cwd=str(ROOT))
@@ -240,7 +220,11 @@ def main(argv):
     problems = 0
     for rel in found:
         print("\n== %s" % rel)
-        r = subprocess.run(["cargo", "test", "--manifest-path", rel], cwd=str(ROOT))
+        # --locked here too: the lockfile is the repository's answer to a dependency whose
+        # own MSRV drifts upward, and a run that silently re-resolves proves nothing about
+        # what the image will build.
+        r = subprocess.run(["cargo", "test", "--locked", "--manifest-path", rel],
+                           cwd=str(ROOT))
         if rel in KNOWN:
             if r.returncode == 0:
                 print("FAIL %s passed and is listed as a known failure.\n"

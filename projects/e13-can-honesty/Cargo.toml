@@ -45,7 +45,24 @@ live = ["dep:socketcan"]
 
 [dependencies]
 edgellm = { path = "../../common/rust/edgellm", default-features = false }
-socketcan = { version = "4.0", optional = true }
+# socketcan 3.6.2 and not 4.0, decided Monday 26 October 2026, because the image's cargo
+# cannot read 4.0.0 at all. The layer pins poky at scarthgap, whose rust is 1.75.0; socketcan
+# 4.0.0 publishes an edition-2024 manifest declaring rust-version 1.89, and cargo 1.75 stops
+# at "feature `edition2024` is required" before compiling a line. 3.6.2 is edition 2021 and
+# declares rust-version 1.75, exactly what scarthgap supplies.
+#
+# It cost no code change: this project's whole socketcan surface is CanSocket, CanFrame with
+# its Data, Error and Remote variants, the Socket, SocketOptions, Frame and EmbeddedFrame
+# traits, open, read_frame, set_read_timeout, set_write_timeout, set_error_filter_accept_all,
+# raw_id and data, and all of it is identical in 3.6.2. Probed under 1.75.0 before the pin
+# was made and it compiled clean.
+#
+# The pin needs the committed Cargo.lock beside it. 3.6.2 requires thiserror ^2, cargo 1.75
+# has no rust-version-aware resolution (that arrived in cargo 1.84), so a fresh resolve takes
+# thiserror 2.0.21, which declares rustc 1.77 and fails. The lockfile holds 2.0.20, which
+# declares 1.71. tools/cargo_all.py passes --locked so a stale lockfile fails rather than
+# being silently re-resolved.
+socketcan = { version = "3.6.2", optional = true }
 
 [profile.release]
 opt-level = 2
