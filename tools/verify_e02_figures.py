@@ -232,7 +232,10 @@ def build(mutate=None):
         ("CONFIRMED", "accepted rows below the acceptance of 2.0", "0 of 100",
          "%d of %d" % (sum(1 for v in perok if v < 2.0), len(perok)),
          RES_OK + " and " + COLD_OK, EXACT),
-        ("CONFIRMED", "dirty-register samples in the accepted pair", "0 of 1328",
+        # 1328 until Monday 26 October 2026: the trace committed on the day was a prefix of
+        # the run, copied off the board while the sampler was still writing, and the board
+        # still held the missing 172 rows. The verdict is unchanged, all 1500 being 0x0.
+        ("CONFIRMED", "dirty-register samples in the accepted pair", "0 of 1500",
          "%d of %d" % (dirty_ok, len(trok)), TRACE_OK, EXACT),
         ("CONFIRMED", "low-clock samples inside either accepted pass", "0",
          "%d" % low_in_pass, TRACE_OK, EXACT),

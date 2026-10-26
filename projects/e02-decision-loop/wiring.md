@@ -215,7 +215,7 @@ started from 37.0 degrees C.
 
 **Clause two passes**, measured Monday 19 October 2026 at 14:30:57: restored mean `prompt_ms`
 1318.6 against 5867.3 cold, a ratio of **4.4495**, zero of 100 rows below 2.0, `get_throttled`
-`0x0` before and after with zero dirty samples in 1328, no sample below 1.7 GHz inside either
+`0x0` before and after with zero dirty samples in 1500, no sample below 1.7 GHz inside either
 pass, and a peak of 72.5 degrees C. It is recorded in
 `evidence/2026-10-19_1448_clause-two-accepted_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`.
 

@@ -13,7 +13,7 @@ recorded in `PITFALLS.md`.
 
 | sitting | host and wiring | projects | reachable today |
 |---|---|---|---|
-| A | Pi 3B, bare header: ADXL345, VL53L4CD, three LED modules | e03, e05, e06 | yes |
+| A | Pi 3B, bare header: ADXL345, VL53L4CD, three LED modules | e03, e05 | yes; **e06 needs the ULD first**, see below |
 | B | Pi 3B, the 3.5 inch panel on eleven jumpers, ADXL345 and LEDs re-pinned | e09 | yes |
 | C | Pi 4B, no HAT | e04 | needs a second card |
 | D | Pi 4B card B, WS-28164 | e13, e14, e18 | yes |
@@ -45,6 +45,36 @@ one evening unless the sensor and LEDs are moved in the middle of it.
 A seated panel is not an option in either sitting. Its 26-pin socket mates with header
 pins 1 to 26 and its carrier runs over pins 27 to 40 without contacts, so a seated panel
 leaves nothing reachable at all. That fact is in `PITFALLS.md`.
+
+## Sitting A: what must exist before the board is touched
+
+Wire all three parts, because the wiring is shared and the leads are the slow half. But
+only two of the three can run on the day unless a download has happened first.
+
+- **e06 needs the VL53L4CD ULD on the board**, unpacked at a folder holding its api source
+  and header and its `platform.h`, with `-DEDGELLM_VL53L4CD_ULD_DIR` pointing at it.
+  Without that flag `projects/e06-vl53l4cd-too-close/CMakeLists.txt` configures the project
+  replay-only and says so, so the live sampler simply is not in the binary. The ULD is not
+  in this repository on purpose: the ST download page was unreachable from this bench on
+  Wednesday 14 October 2026 and the two reachable copies carry two different licence texts,
+  BSD 3-Clause in the Arduino mirror and ST's SLA0103 in the X-CUBE tree. **Read the
+  STSW-IMG026 page before copying either.** Until then e06's sensor can be wired and
+  scanned with `i2cdetect` and `i2ctransfer`, which is worth doing in the same sitting, but
+  its 200 approaches wait.
+- **The llama.cpp submodule has to be checked out on the board**, since a fresh clone does
+  not carry it.
+- **The model file has to be on the card.** SmolLM2-360M-Instruct-Q4_K_M.gguf, 270590880
+  bytes, SHA256 `2fa3f013dcdd7b99f9b237717fa0b12d75bbb89984cc1274be1471a465bac9c2`, from
+  `bartowski/SmolLM2-360M-Instruct-GGUF`. e01 and e02 ran Qwen2.5-0.5B on the Pi 4B, so
+  this one may not be there.
+- **e05's binary is a first compile anywhere.** It is the only project in sitting A that
+  is Rust, it builds the engine through the `engine` feature, and that feature is compiled
+  by no job in continuous integration, for the reason `tools/cargo_all.py` states. Its
+  cross build in skyhorizon's WSL is written out in the chapter's steps 4 and 5 and has
+  never been run.
+
+The long pole is neither the wiring nor the runs: it is building llama.cpp on a 1 GB board
+at `-j2`. Start that before the leads go on, not after.
 
 ## Sitting A: the union pin table
 
