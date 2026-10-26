@@ -106,6 +106,7 @@ dependencies = [
 name = "edgellm"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "llama-cpp-2",
 ]
 

@@ -654,9 +654,13 @@ mod tests {
         let before = std::fs::read(&path).expect("the header reached the file");
         assert!(!before.is_empty(), "the header reached the file");
 
-        let refused = Log::create(&path);
-        assert!(refused.is_err(), "a second writer must be refused");
-        let message = refused.unwrap_err().to_string();
+        // Matched rather than unwrap_err()'d: that method panics by printing the Ok value,
+        // so it requires Log: Debug, which a struct holding an open file has no business
+        // deriving for the sake of one test.
+        let message = match Log::create(&path) {
+            Ok(_) => panic!("a second writer on one log must be refused"),
+            Err(e) => e.to_string(),
+        };
         assert!(
             message.contains("do not run two on one log"),
             "the refusal must name the live writer, got: {}",

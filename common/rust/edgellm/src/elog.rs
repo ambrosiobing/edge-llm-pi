@@ -270,11 +270,16 @@ mod tests {
         first.row(&Event::new(0.0, "t", &[1.0]), "A", None).unwrap();
         let before = std::fs::read(&path).unwrap();
 
-        let refused = Elog::open(&path, "stub");
-        assert!(refused.is_err(), "a second writer must be refused");
+        // Matched rather than unwrap_err()'d: that method panics by printing the Ok value,
+        // so it requires Elog: Debug, which an open file handle has no business deriving.
+        let message = match Elog::open(&path, "stub") {
+            Ok(_) => panic!("a second writer on one log must be refused"),
+            Err(e) => e.0,
+        };
         assert!(
-            refused.unwrap_err().0.contains("do not run two on one log"),
-            "the refusal must name the live writer"
+            message.contains("do not run two on one log"),
+            "the refusal must name the live writer, got: {}",
+            message
         );
         assert_eq!(
             std::fs::read(&path).unwrap(),
