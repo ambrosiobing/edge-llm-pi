@@ -4,7 +4,7 @@ Generated from the Pitfalls section of each project, so it is an index and
 never a second copy: the sentence that explains a pitfall stays in the project
 that owns it. Alphabetical, because by project is what the chapters already give.
 
-**168 pitfalls across 20 projects.**
+**169 pitfalls across 20 projects.**
 
 | Pitfall | Project |
 |---|---|
@@ -146,6 +146,7 @@ that owns it. Alphabetical, because by project is what the chapters already give
 | The published figure is an upper bound, not a battery life | [Project 16](chapters/16-nb-iot-sleep-interval-from-measured-microamps.md) |
 | The remote host that does not answer | [Project 20](chapters/20-what-should-i-measure-next.md) |
 | The RS232 channel takes the Pi's console UART | [Project 18](chapters/18-mini-industrial-serial-logger.md) |
+| The same parts in two chapters are not the same sitting | [Project 6](chapters/06-vl53l4cd-too-close-explainer.md) |
 | The sc16is752 overlay half applied | [Project 18](chapters/18-mini-industrial-serial-logger.md) |
 | The scale file's unit | [Project 5](chapters/05-adxl345-event-reporter.md) |
 | The SPI0 chip selects shared with the MCC 118 | [Project 13](chapters/13-can-honesty-agent.md) |

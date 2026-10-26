@@ -50,6 +50,12 @@ compiler by rule, which is why the stub and the oracle files exist.
 
 ## Wire the board
 
+`BENCH_SITTINGS.md` is the first file to read, because each `wiring.md` below describes
+its own project alone and several projects share one wiring. It groups the twenty into
+eleven sittings, gives the union pin table for the largest of them (e03, e05 and e06 on
+the bare header of the Pi 3B, three projects for one setup), and says which pairs look
+like one sitting and are not.
+
 Each project's `wiring.md` carries its pin table (header pin, BCM number, part pin,
 wire colour where known), the pre-flight commands (`i2cdetect -y 1`, the WHO_AM_I read,
 `ls /dev/spidev*`, `ip link`, `/dev/serial/by-id`), the `config.txt` lines and overlay,

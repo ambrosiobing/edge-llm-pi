@@ -32,9 +32,15 @@ Pins 1 and 17 (3V3) stay unconnected: the lines are driven by the SoC, not by a 
 
 The Pi 3B header is bare for e03. The ADXL345 (e05) and the VL53L4CD (e06) can share
 the header with the three modules, since they use pins 1, 3, 5, 6, 9, 16 and 17 and
-e03 uses 11, 13, 15 and 25; the 3.5 inch LCD of e09 covers pins 27 to 40 and leaves all
-four free as well. The SIM7020E of e16 covers the whole header: the modules come off
-before that HAT goes on.
+e03 uses 11, 13, 15 and 25, so all three projects can be wired in one sitting.
+
+Neither HAT for this board can join them. The SIM7020E of e16 covers the whole header:
+the modules come off before that HAT goes on. The 3.5 inch LCD of e09 is the same answer
+for a different reason, and an earlier version of this paragraph had it backwards: the
+panel's socket mates with pins 1 to 26 and its carrier buries 27 to 40 without contacts,
+so a seated panel leaves nothing reachable, and e09 hangs it on jumpers instead and moves
+the green LED off pin 11, which is the panel's touch interrupt. e09 is therefore a
+separate sitting with its own wiring, not these three with a panel added.
 
 ## Pre-flight, on the Pi 3B over SSH
 

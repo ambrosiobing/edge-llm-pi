@@ -31,9 +31,19 @@ the 3 mA an I2C driver must sink, so no resistor is removed and none is added.
 
 ## The one-HAT rule for this Pi
 
-The Pi 3B header is bare for e03, e05 and e06. The 3.5 inch LCD of e09 covers pins 27 to
-40 and leaves pins 1 to 26 reachable, so the video of the volume can film e06 with the LCD
-seated; e06 itself needs nothing above pin 17.
+The Pi 3B header is bare for e03, e05 and e06, and all three can be wired at once: e03
+uses pins 11, 13, 15 and 25, these two parts use 1, 3, 5, 6, 9, 16 and 17, and the two
+sets do not meet. e06 itself needs nothing above pin 17.
+
+The 3.5 inch LCD of e09 cannot be seated beside any of them, and an earlier version of
+this paragraph said the opposite. The panel's 26-pin socket mates with header pins 1 to
+26 and its carrier then runs the full length of the board over pins 27 to 40 without
+contacts, so a seated panel leaves no pin reachable at all: not the 26 it occupies and
+not the 14 it buries. Kit lab P19 settled that from the carrier's schematic on Thursday
+8 October 2026, and the 2x20 stacking header that would raise every pin above the carrier
+is not on the bench. e09's way through is the panel on eleven jumper wires, which re-pins
+the sensor's VCC to 17 and the green LED to GPIO4, so e09 is its own sitting and its own
+`config.txt` and not an addition to this one.
 
 ## config.txt
 

@@ -268,7 +268,7 @@ Hostnames are card identities, not board identities: the card `eplepi` (Raspberr
 
 ### HAT allocation, one HAT per header per project
 
-A 40-pin HAT owns the header it sits on. The 3.5 inch LCD's carrier covers pins 27 to 40 and the 2x20 stacking header that would free them is not on the bench. The WS-28164 is for the Pi 4B and Pi 5 only, and its overlays cannot share one `config.txt` with the MCC 118 because both claim SPI0 chip selects, which is why the Pi 4B has two cards.
+A 40-pin HAT owns the header it sits on. The 3.5 inch LCD owns it twice over, and the two halves of that are easy to read the wrong way round: its 26-pin socket mates with pins 1 to 26, and its carrier then runs the full length of the board over pins 27 to 40 without contacts. A seated panel therefore leaves no pin reachable at all, neither the 26 it occupies nor the 14 it buries, and the 2x20 stacking header that would raise every pin above the carrier is not on the bench (kit lab P19, from the carrier's schematic, Thursday 8 October 2026). That is why e09 hangs the panel on eleven jumper wires instead; it is the only arrangement in this volume in which other parts sit on pins 1 to 26 beside the panel, and no project films a sensor with this panel seated. The WS-28164 is for the Pi 4B and Pi 5 only, and its overlays cannot share one `config.txt` with the MCC 118 because both claim SPI0 chip selects, which is why the Pi 4B has two cards.
 
 | **Host** | **Header use** | **Projects** |
 | --- | --- | --- |
@@ -279,7 +279,7 @@ A 40-pin HAT owns the header it sits on. The 3.5 inch LCD's carrier covers pins 
 | Pi 3B+ | SIM7070G | e17, e19 |
 | Pi 3B+ | bare header, IKS4A1 on flying leads at pins 3 and 5, INT1 on pin 18 | e07 |
 | Pi 3B | bare header: ADXL345 at 0x53 and 100 kHz, VL53L4CD, LEDs on BCM 17, 27, 22 | e03, e05, e06 |
-| Pi 3B | 3.5 inch LCD, pins 1 to 26 still free | e09 |
+| Pi 3B | 3.5 inch LCD on eleven jumpers, never seated; the panel, the ADXL345 and the three LED modules share pins 1 to 26 | e09 |
 | Pi 3B | SIM7020E, with the PPK2 metering the module | e16 |
 | NanoPi NEO Air | 24-pin header, SmolLM2-135M only | e01 benchmark, e03 variant |
 
