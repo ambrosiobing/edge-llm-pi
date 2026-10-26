@@ -1,15 +1,38 @@
-//! elog: the per-event CSV, one row per event, flushed after every row so that a process
-//! stopped with kill -9 leaves every decision it took on disk. The nine columns are the
-//! ones common/c/src/elog.c writes and tools/agreement.py reads, byte for byte:
+//! elog: the per-event CSV, one row per event. The nine columns are the ones
+//! common/c/src/elog.c writes and tools/agreement.py reads, byte for byte:
 //!
 //!   t_s,tag,raw,rule,model,prompt_ms,generate_ms,n_generated,engine
 //!
 //! raw joins the values with ';' in C's %.6g; the tag, rule, model and engine columns are
 //! quoted CSV-style (doubled inner quotes, newlines replaced by spaces) because a sentence
 //! may carry commas.
+//!
+//! THE SAME SHAPE MEANS THE SAME DURABILITY AND THE SAME EXCLUSIVITY, which this file did
+//! not have until Monday 26 October 2026: it flushed after every row and nothing more. The
+//! C logger gained both on Tuesday 20 October 2026 and the Python one the same day; this
+//! was the last of the four left out, because the obvious tool for it, File::try_lock, is
+//! stable only since Rust 1.89 while the image's cargo is scarthgap's 1.75. libc::flock
+//! carries no such floor. The reasoning is written out at length in common/c/src/elog.c
+//! rather than repeated here, and in short it is:
+//!
+//! - sync_all and not only flush. A flush moves bytes out of this process into the kernel,
+//!   which is enough for kill -9 and not enough for a board that restarts. On Saturday 17
+//!   October 2026 that cost about five finished rows out of a log whose recorded size
+//!   counted them. The sync is 6.594 ms a row on the bench board's SD card, measured, and
+//!   under 0.3 percent of a decision everywhere in this volume.
+//!
+//! - one writer per log, and LOCK BEFORE TRUNCATE. The file is opened without truncating,
+//!   the lock is taken, and only then is it emptied with set_len(0). File::create, which
+//!   this module used, empties the first writer's file before this process learns it may
+//!   not have it, so the refusal would arrive after the damage rather than instead of it.
+//!   A launch line pasted twice once put two engines on one log and cost a whole run.
+//!
+//! A log left by a run that has FINISHED stays replaceable, so the 16 units in this volume
+//! that carry Restart= with a fixed --log path reopen their own log normally.
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
+use std::os::unix::io::AsRawFd;
 use std::path::Path;
 
 use crate::io::Event;
@@ -22,14 +45,43 @@ pub struct Elog {
     engine: String,
 }
 
+/// An exclusive, non-blocking advisory lock on an open log, or an error naming which of the
+/// two cases it is: another live process holding the path, or the lock call itself failing.
+fn lock_exclusive(file: &File, path: &Path) -> Result<(), Error> {
+    // SAFETY: flock is given a descriptor owned by `file`, which outlives this call, and a
+    // flag constant. It writes nothing through the descriptor and returns 0 or -1.
+    let rc = unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) };
+    if rc == 0 {
+        return Ok(());
+    }
+    let err = std::io::Error::last_os_error();
+    if err.kind() == std::io::ErrorKind::WouldBlock {
+        return Err(Error(format!(
+            "{} is being written by another process, so this one will not start: do not run \
+             two on one log",
+            path.display()
+        )));
+    }
+    Err(Error(format!("cannot lock {}: {}", path.display(), err)))
+}
+
 impl Elog {
     pub fn open(path: impl AsRef<Path>, engine_version: &str) -> Result<Elog, Error> {
         let path = path.as_ref();
-        let mut file = File::create(path)
+        // No truncate on the open: the lock comes first and the file is emptied after, which
+        // is the order the header explains.
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(path)
             .map_err(|e| Error(format!("cannot write {}: {}", path.display(), e)))?;
+        lock_exclusive(&file, path)?;
+        file.set_len(0)
+            .map_err(|e| Error(format!("cannot empty {}: {}", path.display(), e)))?;
         file.write_all(HEADER.as_bytes())
             .and_then(|_| file.write_all(b"\n"))
             .and_then(|_| file.flush())
+            .and_then(|_| file.sync_all())
             .map_err(|e| Error(format!("log write failed: {}", e)))?;
         Ok(Elog { file, engine: engine_version.to_string() })
     }
@@ -41,6 +93,7 @@ impl Elog {
         self.file
             .write_all(line.as_bytes())
             .and_then(|_| self.file.flush())
+            .and_then(|_| self.file.sync_all())
             .map_err(|e| Error(format!("log write failed: {}", e)))
     }
 }
@@ -201,6 +254,42 @@ mod tests {
     #[test]
     fn quoting_doubles_quotes_and_flattens_newlines() {
         assert_eq!(quoted("a\"b\nc"), "\"a\"\"b c\"");
+    }
+
+    #[test]
+    fn a_second_writer_on_one_log_is_refused_and_the_first_keeps_its_rows() {
+        // Made to refuse rather than assumed to work, which is this volume's rule and the
+        // reason the C and Python loggers carry the same three cases. The middle assertion
+        // is the regression: the refusal must cost the first writer nothing, which holds
+        // only because the lock comes before set_len(0). File::create, which this module
+        // used until Monday 26 October 2026, empties first and refuses afterwards.
+        let path =
+            std::env::temp_dir().join(format!("edgellm_elog_guard_{}.csv", std::process::id()));
+        let _ = std::fs::remove_file(&path);
+        let mut first = Elog::open(&path, "stub").unwrap();
+        first.row(&Event::new(0.0, "t", &[1.0]), "A", None).unwrap();
+        let before = std::fs::read(&path).unwrap();
+
+        let refused = Elog::open(&path, "stub");
+        assert!(refused.is_err(), "a second writer must be refused");
+        assert!(
+            refused.unwrap_err().0.contains("do not run two on one log"),
+            "the refusal must name the live writer"
+        );
+        assert_eq!(
+            std::fs::read(&path).unwrap(),
+            before,
+            "the refusal must not touch the first writer's rows"
+        );
+
+        // A finished log stays replaceable: 16 units in this volume carry Restart= with a
+        // fixed --log path and have to reopen their own log. Asserted so that narrowing the
+        // guard later fails here first.
+        drop(first);
+        let reopened = Elog::open(&path, "stub");
+        assert!(reopened.is_ok(), "a closed log must be reopenable");
+        drop(reopened);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

@@ -26,6 +26,7 @@ mod rules;
 use std::collections::BTreeMap;
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
+use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
@@ -335,8 +336,36 @@ struct Log {
 }
 
 impl Log {
+    /// One writer per log, and the order of the two calls below is the guard. The file is
+    /// opened WITHOUT truncate, the lock is taken, and only then is it emptied: written the
+    /// obvious way round, with truncate(true) on the open as this function had until Monday
+    /// 26 October 2026, the kernel empties the first writer's file before this process
+    /// learns it may not have it, so the refusal arrives after the damage rather than
+    /// instead of it. A launch line pasted twice put two engines on one log on Sunday 18
+    /// October 2026 and cost a whole run. common/c/src/elog.c carries the full reasoning,
+    /// and common/rust/edgellm/src/elog.rs the same code for the shared logger.
     fn create(path: &Path) -> io::Result<Self> {
-        let mut file = OpenOptions::new().write(true).create(true).truncate(true).open(path)?;
+        let mut file = OpenOptions::new().write(true).create(true).open(path)?;
+        // SAFETY: flock is given a descriptor owned by `file`, which outlives this call, and
+        // a flag constant. It writes nothing through the descriptor and returns 0 or -1.
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+            let err = io::Error::last_os_error();
+            return Err(if err.kind() == io::ErrorKind::WouldBlock {
+                io::Error::new(
+                    io::ErrorKind::WouldBlock,
+                    format!(
+                        "{} is being written by another process, so this one will not \
+                         start: do not run two on one log",
+                        path.display()
+                    ),
+                )
+            } else {
+                err
+            });
+        }
+        // The lock is held, so emptying the file now can only discard this caller's own
+        // earlier run and never a live one's rows.
+        file.set_len(0)?;
         // The nine columns of common/c/include/elog.h, then the four this project adds
         // because they are the whole subject of the chapter.
         writeln!(
@@ -345,6 +374,7 @@ impl Log {
              round_trip_ms,socket_ms,daemon_rss_kb,service_rss_kb"
         )?;
         file.flush()?;
+        file.sync_all()?;
         Ok(Log { file })
     }
 
@@ -377,7 +407,11 @@ impl Log {
                 rss_kb()
             )?,
         }
-        self.file.flush()
+        // Out of this process and onto the card. A flush is enough for kill -9 and not for a
+        // board that restarts; the sync is after the row, so it cannot move any timing the
+        // row carries. Measured at 6.594 ms on the bench board's SD card.
+        self.file.flush()?;
+        self.file.sync_all()
     }
 }
 
@@ -599,5 +633,44 @@ fn decide_and_log(
     };
     if let Err(e) = written {
         eprintln!("e14: the log refused a row: {}", e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Log;
+
+    /// The one-writer guard, made to refuse rather than assumed to work. This project keeps
+    /// its own Log rather than using the shared crate's Elog, because it writes four columns
+    /// the shared one does not, so the guard is duplicated and therefore has to be tested
+    /// twice. The middle assertion is the regression: the refusal must cost the first writer
+    /// nothing, which holds only because the lock is taken before set_len(0).
+    #[test]
+    fn a_second_writer_on_one_log_is_refused_and_the_first_keeps_its_rows() {
+        let path = std::env::temp_dir().join(format!("e14_log_guard_{}.csv", std::process::id()));
+        let _ = std::fs::remove_file(&path);
+
+        let first = Log::create(&path).expect("a fresh path opens");
+        let before = std::fs::read(&path).expect("the header reached the file");
+        assert!(!before.is_empty(), "the header reached the file");
+
+        let refused = Log::create(&path);
+        assert!(refused.is_err(), "a second writer must be refused");
+        let message = refused.unwrap_err().to_string();
+        assert!(
+            message.contains("do not run two on one log"),
+            "the refusal must name the live writer, got: {}",
+            message
+        );
+        assert_eq!(
+            std::fs::read(&path).expect("the first log is still readable"),
+            before,
+            "the refusal must not touch the first writer's rows"
+        );
+
+        // A finished log stays replaceable, which the units that carry Restart= depend on.
+        drop(first);
+        assert!(Log::create(&path).is_ok(), "a closed log must be reopenable");
+        let _ = std::fs::remove_file(&path);
     }
 }

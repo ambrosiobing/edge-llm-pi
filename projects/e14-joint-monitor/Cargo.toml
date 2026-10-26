@@ -75,6 +75,16 @@ socketcan = { version = "3.6.2", optional = true }
 # 2026. It bundles its own llama.cpp commit, which is not the tag cmake/llama_tag.cmake
 # pins for the C projects; models/MODELS.md records both and the chapter says so.
 llama-cpp-2 = { version = "0.1.159", optional = true }
+# Not optional, and this project needs it for one call. Log::create takes flock on the log
+# before emptying it, so that a launch line pasted twice cannot put two writers on one file,
+# which happened on Sunday 18 October 2026 and cost a run. e14 does not depend on the shared
+# crate, by the choice its header explains, so it carries libc itself rather than borrowing
+# the shared logger. std::fs::File::try_lock would need no dependency and is stable only
+# since Rust 1.89, while the image's cargo is scarthgap's 1.75.
+#
+# libc 0.2.191 was already in this project's graph through socketcan, so the committed
+# Cargo.lock gains only this package's own dependency line.
+libc = { version = "0.2" }
 
 [profile.release]
 # A long running service on a Pi 4: optimise, keep one codegen unit so the service's
