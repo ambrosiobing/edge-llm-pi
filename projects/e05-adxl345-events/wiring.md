@@ -35,10 +35,34 @@ The Pi 3 Model B header is bare for e03, e05 and e06. The 3.5 inch LCD (e09) and
     dtoverlay=adxl345-i2c
 
 The bus stays at 100 kHz on the current leads: at 400 kHz the part answered nothing on
-Friday 9 October 2026. The overlay is the Linux volume's project 5 overlay, which binds the
-mainline `adxl345` I2C driver at 0x53 and creates `/sys/bus/iio/devices/iio:deviceN`; confirm
-its file name with `ls /boot/firmware/overlays | grep -i adxl` before writing the line, and
-reboot after the edit.
+Friday 9 October 2026.
+
+**THE DRIVER SENTENCE THAT STOOD HERE WAS WRONG AND IS WITHDRAWN.** It read: "The overlay is
+the Linux volume's project 5 overlay, which binds the mainline `adxl345` I2C driver at 0x53
+and creates `/sys/bus/iio/devices/iio:deviceN`." That driver is built on **neither** card this
+bench has, checked on Tuesday 27 October 2026 and recorded in
+`evidence/2026-10-27_2110_iks5a1-substitution-survey_pi3bplus.md`:
+
+    Yocto 6.6.63-v8, raspberrypi3-64    no CONFIG_ADXL345 symbol anywhere in the config
+    Pi OS trixie 6.18.50                no adxl345_i2c module anywhere in /lib/modules
+
+The sentence named an image and was never tested against it. **A kernel driver is a fact to
+check on the image, not to infer from a part being mainline**, and "mainline" says a driver
+exists in the tree, never that this image built it.
+
+**AND PI OS CARRIES A DIFFERENT ADXL345 DRIVER THAT WOULD LOOK LIKE SUCCESS.**
+`CONFIG_INPUT_ADXL34X_I2C=m` is the **evdev input** driver, not the IIO one. An ADXL345 there
+binds, works, and appears under `/dev/input/` and never under `/sys/bus/iio/devices/`. This
+project polls IIO sysfs at 50 Hz, so it would read nothing while a driver had loaded and the
+part was functioning perfectly: a silent wrong-subsystem failure, which is harder to diagnose
+than a missing driver because every obvious check passes.
+
+Before this project is next built, the overlay file name and the bound driver are to be read
+off the running image with `ls /boot/firmware/overlays | grep -i adxl` and
+`ls /sys/bus/i2c/drivers/`, and the part replaced if nothing binds. The substitution directed
+on Tuesday 27 October 2026 is tracked in the same evidence file: the target image does carry
+`st_lsm6dsx_i2c`, whose table includes `lsm6dso16is`, which is the part the X-NUCLEO-IKS5A1
+answers with at 0x6b.
 
 ## Pre-flight, on the Pi 3 over SSH
 
