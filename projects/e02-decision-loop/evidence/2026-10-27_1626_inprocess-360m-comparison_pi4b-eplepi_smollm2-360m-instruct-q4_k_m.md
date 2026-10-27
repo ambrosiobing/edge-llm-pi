@@ -49,13 +49,34 @@ variables move at once. The comparison as specified cannot be made cleanly. That
 in the specification, found by carrying it out, and it is recorded here rather than hidden
 behind a side-by-side table that implies more than it knows.
 
-**Per token the generate figures do compare, and they overturn a claim made before the log
-was read.** 86.8 ms per token at four threads against 122.1 at two: **four threads are 1.41
-times faster per token**. An earlier reading of this run divided 1110.1 ms by the budget of
-12 and reported a 6.6 percent difference, concluding that generation on this board is bound
-by memory bandwidth rather than by cores. The `n_generated` column says the run averaged
-**9.09** tokens, not 12, and the correct figure is 40.7 percent. Cores buy real speed here.
-Divide by what was generated, never by what was permitted.
+**Per token these two rows do not compare either, and a claim that they did is withdrawn
+here.** This record first read 86.8 ms per token at four threads against 122.1 at two and
+concluded that four threads are 1.41 times faster per token. The controlled version of that
+comparison has since been run and the figure is **1.14**.
+
+    run   route                   threads  tokens  per token
+    e04   llama-server over HTTP        4   64.00     86.8 ms
+    e03   in process                    4   28.30    121.9 ms
+    e03   in process                    2   28.30    138.6 ms
+    e02   in process, this run          2    9.09    122.1 ms
+
+The two e03 rows change the thread count and nothing else: same binary, same replay of 200
+events, same board, same model, same engine tag, same day, and 28.30 tokens generated on
+both. They give **121.9 ms against 138.6, so four threads are 1.14 times faster per token.**
+The 1.41 came of comparing e04 at four threads against this run at two across a change of
+route and of generation length as well, and the middle rows show what that was measuring:
+e03 and e02 differ by a thread count and land two tenths of a millisecond apart, while e03
+and e04 share a thread count and sit 29 percent apart.
+
+Where the cores do show is the prompt. e03 measured 1320.7 ms at four threads against 2555.8
+at two, a ratio of **1.94**, because a prompt is a batched matmul over many tokens at once
+and a generation is one token at a time. Taking the two halves as one figure is what made a
+14 percent effect look like 41.
+
+The arithmetic was wrong before it was confounded, too: an earlier reading divided 1110.1 ms
+by the budget of 12 rather than the `n_generated` column, which averaged **9.09**, and
+reported 6.6 percent where the division gives 40.7. Divide by what was generated, never by
+what was permitted.
 
 **The budget behaves as the task dictates, for the third time.** e02 asks for a bare enum
 and closed every one of 100 objects inside a budget of 12, averaging 9.09 tokens with
@@ -65,16 +86,20 @@ board, same week. The difference is the question asked.
 
 ## The supply has a boundary now, and this run is the clean side of it
 
-    run   threads  events  duration        register after
-    e02         2     100  about 6.5 min   0x0
-    e03         4     200  about 16 min    0xd0000
-    e04         4     180  about 24 min    0xf0000
+    run   threads  events  duration         register after
+    e02         2     100  about 6.5 min    0x0
+    e03         2     200  about 21.6 min   0x0
+    e03         4     200  about 16 min     0xd0000
+    e04         4     180  about 24 min     0xf0000
 
-All three began on a clean boot at `0x0`. So the brownout on this board is a function of
-thread count and duration rather than something inherent to running a model on it. **Two
-threads for six minutes is inside what the supply delivers.** That makes the figures in this
-record clean, where e03's and e04's latencies are upper bounds taken through undervolt and
-throttling, and it gives the remaining projects a usable rule rather than a warning.
+All four began on a clean boot at `0x0`. **The variable is thread count, not duration**, and
+the second row is what settles it: e03 at two threads ran about twenty-two minutes clean,
+longer than the four-thread run of the same project that dirtied the register at about
+sixteen. An earlier version of this table carried only the first, third and fourth rows and
+read the rule as thread count and duration together; duration is not a necessary term, at
+least out to twenty-two minutes. That makes the figures in this record clean, where the
+four-thread latencies of e03 and e04 are upper bounds taken through undervolt and throttling,
+and it gives the remaining projects a rule they can plan against.
 
 Resident memory 327024 kB, which is 319.4 MiB, against e03's 344.6 MiB at a 64-token budget
 on the same board and model. Both are the figure to compare against when this is repeated on

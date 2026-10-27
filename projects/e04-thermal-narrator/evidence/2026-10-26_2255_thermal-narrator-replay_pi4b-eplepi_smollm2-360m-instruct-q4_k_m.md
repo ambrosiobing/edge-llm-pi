@@ -53,11 +53,21 @@ What survives the confound is the number this chapter exists for, because it is 
 subtraction within a single route: **the wire costs 3.5 ms** against a decision costing
 between 3.9 and 7.7 seconds by either path. Variant D is free at this interval.
 
-And per token the generate figures compare after normalising: **86.8 ms at four threads
-against 122.1 at two, so four threads are 1.41 times faster per token.** Cores buy real
-speed on this board. An earlier reading of that run divided by the budget of 12 instead of
-the `n_generated` column, which averaged 9.09, and reported 6.6 percent with the opposite
-conclusion. Divide by what was generated, never by what was permitted.
+**Per token they do not compare either, and this record withdraws a claim that they did.**
+It first read 86.8 ms at four threads against 122.1 at two and concluded four threads are
+1.41 times faster per token. e03 has since run the same in-process loop at **both** thread
+counts on the same board, model, engine and replay, which is the controlled form of that
+comparison, and measured 121.9 ms per token at four against 138.6 at two: **four threads are
+1.14 times faster per token.** Note that the four-thread 121.9 of e03 sits two tenths of a
+millisecond from the two-thread 122.1 of e02, while this run at the same four threads is 29
+percent away at 86.8, so the larger gap is the route and the generation length rather than
+the cores. Cores show in the prompt instead, 1320.7 ms against 2555.8, a ratio of 1.94.
+
+The arithmetic had already been corrected once here, from a 6.6 percent reading that divided
+by the budget of 12 instead of the 9.09 of the `n_generated` column; the conclusion drawn
+after that correction was wrong for a second and separate reason. Divide by what was
+generated, never by what was permitted, and do not read a thread effect off two runs that
+differ in route and length as well.
 
 ## The model never reaches its third class
 
@@ -148,15 +158,18 @@ thing on Tuesday 27 October 2026, going `0x0` to `0xd0000`.
 **The boundary was then found, the same afternoon.** e02's in-process arm ran two threads for
 about six and a half minutes and finished at `0x0`:
 
-    run   threads  events  duration        register after
-    e02         2     100  about 6.5 min   0x0
-    e03         4     200  about 16 min    0xd0000
-    e04         4     180  about 24 min    0xf0000
+    run   threads  events  duration         register after
+    e02         2     100  about 6.5 min    0x0
+    e03         2     200  about 21.6 min   0x0
+    e03         4     200  about 16 min     0xd0000
+    e04         4     180  about 24 min     0xf0000
 
-All three began on a clean boot. So the brownout is a function of thread count and duration,
-not something inherent to running a model on this board, and the remaining projects have a
-usable rule rather than a warning. It also means this run's latency figures are upper bounds
-while e02's arm is clean, which is the asymmetry the comparison above has to carry.
+All four began on a clean boot. **The variable is thread count, not duration.** e03 at two
+threads ran about twenty-two minutes and finished at `0x0`, longer than its own four-thread
+run that dirtied the register at about sixteen, so duration is not a necessary term at least
+out to twenty-two minutes. An earlier version of this table had three rows and read the rule
+as thread count and duration together. The latency figures of this run remain upper bounds
+while the two-thread runs are clean, which is the asymmetry the comparison above carries.
 
 ## Deviations from what the chapter prints
 
