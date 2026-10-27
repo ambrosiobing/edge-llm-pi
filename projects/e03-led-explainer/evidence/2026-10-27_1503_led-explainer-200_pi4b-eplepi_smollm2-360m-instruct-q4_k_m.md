@@ -101,6 +101,16 @@ A power supply is not on the volume's "what would have to be bought" list, which
 ranks a multimeter first. On the evidence of two runs it belongs above the multimeter: every
 timing figure the remaining projects produce on this board is suspect until it is replaced.
 
+**BOTH SENTENCES ABOVE WERE WRONG AND ARE CORRECTED HERE**, by the substitution of Tuesday
+27 October 2026 at 19:05 recorded in `2026-10-27_1905_supply-substitution_pi4b-eplepi.md`.
+Nothing needed buying: a different adapter already on the bench cleared the under-voltage
+entirely, `0xd0000` becoming `0x80000`. And the timing figures were not suspect. The trace
+taken alongside a repeat of this very run shows the board was actually limited for 49 seconds
+of 975, five percent, and removing the under-voltage altogether changed the total by 0.54
+percent, inside this bench's measured run-to-run noise of about three percent. The register
+recorded that a limit occurred; it never said much was lost, and this record read the one as
+the other.
+
 ## Deviations from what the chapter prints, all four stated
 
 1. **The board is the Pi 4 Model B Rev 1.4, not the Pi 3 Model B the chapter allocates.**

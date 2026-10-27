@@ -66,11 +66,19 @@ difference is `--threads`.
     generate    1.14 times faster at four threads
     end to end  1.36 times faster at four threads
 
-**The two halves of a decision do not scale alike, and that is the finding.** Prompt
-processing nearly halves with twice the threads, because it is a batched matmul over the
-whole prompt at once and the cores all have work. Generation gains 14 percent, because it
-produces one token at a time and is waiting on memory far more than on arithmetic. A single
-end-to-end figure averages those two behaviours together and describes neither.
+**The two halves of a decision do not scale alike.** Prompt processing nearly halves with
+twice the threads, because it is a batched matmul over the whole prompt at once and the cores
+all have work. Generation gains 14 percent, because it produces one token at a time and is
+waiting on memory far more than on arithmetic. A single end-to-end figure averages those two
+behaviours together and describes neither.
+
+**This is not a new finding and should not be read as one.** [Project 1](../../chapters/01-bring-up-and-the-honest-tokens-per-second.md)
+established it on Friday 16 October 2026 with `llama-bench`: prompt processing scaled 3.72
+times over four cores, nearly linearly, while generation rose to three threads and fell back
+at four. What this run adds is the same split measured by a **different instrument** on a
+**real project loop** rather than a synthetic benchmark, with the generated text held
+byte-identical between the two configurations. An independent instrument agreeing with e01 is
+worth more than a fresh claim would have been.
 
 Generated length is identical at **28.30** tokens mean on both runs, and nothing reached the
 64-token ceiling in either, so the per-token figures compare directly rather than by
@@ -125,6 +133,15 @@ This run went about twenty-two minutes at two threads and finished clean, which 
 than the four-thread run of this same project that dirtied the register at about sixteen.
 Three earlier records read the rule as thread count and duration together; duration is not a
 necessary term, at least out to twenty-two minutes, and those records have been corrected.
+
+**The under-voltage was later traced to the adapter and is no longer a property of this
+board.** On Tuesday 27 October 2026 at 19:05 the same four-thread load ran on a different
+adapter already on the bench and returned `0x80000`, bit 19 alone, with zero under-voltage
+samples in its trace; see `2026-10-27_1905_supply-substitution_pi4b-eplepi.md`. So the table
+above is a table about **one adapter**, not about thread count in general, and the clean
+result at two threads was partly the lighter load avoiding a supply fault that a better
+adapter removes outright. What survives it is the thermal column: four threads still set
+bit 19, and that is why this project's clause still fails at four.
 
 The thermal side agrees. This run exited at **69.6 C with bit 19 clear**, where the
 four-thread run set bit 19 along with under-voltage and throttling. Two threads on this
