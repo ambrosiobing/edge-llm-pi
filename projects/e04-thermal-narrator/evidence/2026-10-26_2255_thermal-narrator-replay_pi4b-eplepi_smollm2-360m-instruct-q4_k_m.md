@@ -35,9 +35,29 @@ server's reported timings, as a subtraction: 7683.4 minus 2124.8 minus 5555.1. C
 variant D, a libcurl client talking to `llama-server` over the loopback, is free at this
 interval. That row read "not measured" in the chapter's comparison table until this run.
 
-The like-for-like half of that comparison is still open. The table wants e02's in-process
-loop on the same model on the same board, and e02's published figures are on
-Qwen2.5-0.5B, so that row stays "not measured" until e02 is re-run on the 360M file.
+**The like-for-like half was measured on Tuesday 27 October 2026 at 16:26**, recorded in
+`projects/e02-decision-loop/evidence/2026-10-27_1626_inprocess-360m-comparison_pi4b-eplepi_smollm2-360m-instruct-q4_k_m.md`.
+That row had read "not measured" since this chapter was written.
+
+    route                     threads  budget  prompt   generate  tokens  per token  total
+    D, llama-server, HTTP           4      64  2124.8    5555.1   64.0      86.8    7683.4
+    C, in process, e02's loop       2      12  2771.2    1110.1    9.09    122.1    3881.3
+
+**And carrying it out showed the comparison cannot be made cleanly as specified.** This
+chapter fixes four threads and a 64-token budget; e02 fixes two and 12. The table asks for
+"e02's loop on SmolLM2-360M with no other change", and honouring that moves two variables at
+once, so the two totals are not comparable. That is a defect in the comparison's own
+specification rather than in either run, and it is recorded rather than papered over.
+
+What survives the confound is the number this chapter exists for, because it is a
+subtraction within a single route: **the wire costs 3.5 ms** against a decision costing
+between 3.9 and 7.7 seconds by either path. Variant D is free at this interval.
+
+And per token the generate figures compare after normalising: **86.8 ms at four threads
+against 122.1 at two, so four threads are 1.41 times faster per token.** Cores buy real
+speed on this board. An earlier reading of that run divided by the budget of 12 instead of
+the `n_generated` column, which averaged 9.09, and reported 6.6 percent with the opposite
+conclusion. Divide by what was generated, never by what was permitted.
 
 ## The model never reaches its third class
 
@@ -98,7 +118,9 @@ acceptance clauses and it holds.
 
 ## The clauses
 
-    HTTP round trip cost measured               PASSES   3.5 ms of 7683.4 ms
+    HTTP round trip cost measured               PASSES   3.5 ms of 7683.4 ms, and the
+                                                in-process arm measured Tuesday 27 October
+                                                2026, though not comparable as specified
     agreement at least 95 percent               FAILS    42.2 percent, 46.3 percent
                                                          excluding rule-change rows
     zero rows with no parseable object          FAILS    136 of 180 never closed
@@ -121,8 +143,20 @@ server log shows it, with eval time drifting from 83 ms per token early to 92 ms
 
 The HTTP cost of 3.5 ms survives that, being a difference between two clocks on the same
 rows. The absolute latency figures do not and are labelled accordingly. e03 then did the same
-thing on Tuesday 27 October 2026, going `0x0` to `0xd0000`, which makes it two runs out of
-two and the power supply the binding constraint on this bench.
+thing on Tuesday 27 October 2026, going `0x0` to `0xd0000`.
+
+**The boundary was then found, the same afternoon.** e02's in-process arm ran two threads for
+about six and a half minutes and finished at `0x0`:
+
+    run   threads  events  duration        register after
+    e02         2     100  about 6.5 min   0x0
+    e03         4     200  about 16 min    0xd0000
+    e04         4     180  about 24 min    0xf0000
+
+All three began on a clean boot. So the brownout is a function of thread count and duration,
+not something inherent to running a model on this board, and the remaining projects have a
+usable rule rather than a warning. It also means this run's latency figures are upper bounds
+while e02's arm is clean, which is the asymmetry the comparison above has to carry.
 
 ## Deviations from what the chapter prints
 
