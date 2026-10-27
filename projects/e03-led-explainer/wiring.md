@@ -18,15 +18,31 @@ in the box.
 
 | Header pin | BCM | Part pin | Wire colour |
 |---|---|---|---|
-| 11 | GPIO17 | green module, S | not recorded |
-| 13 | GPIO27 | yellow module, S | not recorded |
-| 15 | GPIO22 | red module, S | not recorded |
-| 25 | GND | the ground rail, G of all three modules | not recorded |
+| 11 | GPIO17 | green module, S | **yellow** |
+| 13 | GPIO27 | yellow module, S | **yellow** |
+| 15 | GPIO22 | red module, S | **white** |
+| 14 | GND | green module, G | **black** |
+| 20 | GND | yellow module, G | **green** |
+| 25 | GND | red module, G | **orange** |
 | none | | the V pin of each module: left unconnected; the measurement record names the signal pin and 3.3 V across the module, nothing on V (to confirm on the module's silkscreen) | |
 
-The ground pin was not recorded on Saturday 3 October 2026; pin 25 is chosen here
-because no other project on this board claims it (the ADXL345 of e05 takes pin 9).
-Pins 1 and 17 (3V3) stay unconnected: the lines are driven by the SoC, not by a rail.
+Colours recorded from the bench on Tuesday 27 October 2026, with the photograph
+`evidence/2026-10-27_1503_wiring_pi4b-eplepi.jpg` taken during that run. They had read
+"not recorded" since Saturday 3 October 2026.
+
+**TWO SIGNAL LEADS ARE THE SAME COLOUR, and that is not a detail.** GPIO17 and GPIO27
+both carry a yellow wire, one to the green module and one to the yellow module. On
+Tuesday 27 October 2026 the three modules were wired one position out, and driving each
+line by hand before the run gave yellow on GPIO17, red on GPIO27 and nothing on GPIO22.
+Two identical yellow leads is the mechanism. If a third jumper colour is to hand, use it
+for one of them; otherwise the per-line check below is the only thing standing between a
+swapped lead and a published agreement figure, because a swapped lead does not fail
+loudly, it returns a wrong colour agreement, and a wrong agreement looks exactly like a
+wrong model.
+
+Each module takes its own ground rather than three leads sharing pin 25, which is how
+\ref{sec:e09} already wires them and avoids a three-way splice on one header pin. Pins 1
+and 17 (3V3) stay unconnected: the lines are driven by the SoC, not by a rail.
 
 ## The one-HAT rule for this Pi
 
