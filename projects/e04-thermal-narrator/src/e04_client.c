@@ -226,6 +226,44 @@ static int json_number(const char *body, const char *key, double *out)
     return end == p ? -1 : 0;
 }
 
+/* Whether the answer is a terminated JSON object, which is a different question
+ * from whether a named field can be read out of it and the reason this exists.
+ * This project emits "decision" first, so json_string finds it on a row whose
+ * object the token budget cut off mid-summary; the run of Monday 26 October 2026
+ * printed "no literal 0" while 136 of its 180 objects never closed, and that was
+ * read as satisfying the clause "zero rows with no parseable object". It does not.
+ *
+ * Braces inside string literals do not count and backslash escapes are honoured,
+ * so a summary containing { or " cannot close the object by accident. Returns 1
+ * when the outermost object closes, 0 otherwise, including an empty answer. */
+static int json_object_closed(const char *s)
+{
+    int depth = 0, in_string = 0, escaped = 0, seen_open = 0;
+    if (s == NULL)
+        return 0;
+    for (; *s != '\0'; s++) {
+        if (in_string) {
+            if (escaped)
+                escaped = 0;
+            else if (*s == '\\')
+                escaped = 1;
+            else if (*s == '"')
+                in_string = 0;
+            continue;
+        }
+        if (*s == '"')
+            in_string = 1;
+        else if (*s == '{') {
+            depth++;
+            seen_open = 1;
+        } else if (*s == '}') {
+            if (--depth == 0 && seen_open)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 /* ---------------------------------------------------------------- vcgencmd, live only */
 
 /* Runs one vcgencmd line and parses the number after '='. get_throttled prints
@@ -422,6 +460,7 @@ int main(int argc, char **argv)
     struct sigaction sa;
     long n_events = 0, n_model = 0, n_model_errors = 0, n_vc_errors = 0;
     long n_agree = 0, n_disagree = 0, n_disagree_at_change = 0, n_no_literal = 0;
+    long n_unclosed = 0;
     int prev_idx = -1;
     double sum_rtt = 0.0, sum_prompt_ms = 0.0, sum_generate_ms = 0.0;
 
@@ -589,6 +628,11 @@ int main(int argc, char **argv)
                      * so that a disagreement on a row whose rule decision differs
                      * from the previous row's is counted apart: that is the "within
                      * one interval" allowance of the acceptance test. */
+                    /* Counted separately from the literal, because the clause
+                     * "zero rows with no parseable object" is about the object
+                     * and not about the first field in it. */
+                    if (!json_object_closed(res.text))
+                        n_unclosed++;
                     if (json_string(res.text, "decision", decision, sizeof decision) != 0)
                         n_no_literal++;
                     else if (strcmp(decision, rule->names[idx]) == 0)
@@ -623,14 +667,15 @@ int main(int argc, char **argv)
             "%s: %ld events, %ld model answers, %ld model errors, %ld vcgencmd errors, "
             "mean round trip %.1f ms, mean server prompt %.1f ms, mean server generate "
             "%.1f ms, mean HTTP cost %.1f ms, agree %ld, disagree %ld (of which %ld on a "
-            "row where the rule changed), no literal %ld, engine %s, source %s\n",
+            "row where the rule changed), no literal %ld, engine %s, source %s, "
+            "objects unclosed %ld\n",
             project, n_events, n_model, n_model_errors, n_vc_errors,
             n_model > 0 ? sum_rtt / (double)n_model : 0.0,
             n_model > 0 ? sum_prompt_ms / (double)n_model : 0.0,
             n_model > 0 ? sum_generate_ms / (double)n_model : 0.0,
             n_model > 0 ? (sum_rtt - sum_prompt_ms - sum_generate_ms) / (double)n_model : 0.0,
             n_agree, n_disagree, n_disagree_at_change, n_no_literal, engine,
-            io_backend_name(src));
+            io_backend_name(src), n_unclosed);
 out:
     if (rtt_fp != NULL)
         fclose(rtt_fp);
