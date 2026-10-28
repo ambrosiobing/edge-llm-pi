@@ -136,10 +136,13 @@ io_source *io_i2c_open(const char *spec, char *err, size_t err_len)
         return io_seterr(err, err_len, "i2c: cannot open %s", dev), NULL;
     }
     if (ioctl(p->fd, I2C_SLAVE, p->addr) < 0) {
+        /* The message is built before the frees: it reads p->addr, and reading it
+           afterwards is a use after free. */
+        io_seterr(err, err_len, "i2c: cannot select address 0x%02x", p->addr);
         close(p->fd);
         free(p);
         free(s);
-        return io_seterr(err, err_len, "i2c: cannot select address 0x%02x", p->addr), NULL;
+        return NULL;
     }
     s->name = "i2c";
     s->next = i2c_next;

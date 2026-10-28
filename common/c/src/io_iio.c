@@ -135,9 +135,12 @@ io_source *io_iio_open(const char *spec, char *err, size_t err_len)
     }
     free(list);
     if (p->n == 0) {
+        /* The message is built before the frees: it reads p->dir, and reading it
+           afterwards is a use after free. */
+        io_seterr(err, err_len, "iio: no in_*_raw attribute under %s", p->dir);
         free(p);
         free(s);
-        return io_seterr(err, err_len, "iio: no in_*_raw attribute under %s", p->dir), NULL;
+        return NULL;
     }
 
     snprintf(path, sizeof(path), "%s/name", p->dir);
