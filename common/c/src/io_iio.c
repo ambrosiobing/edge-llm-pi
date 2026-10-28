@@ -33,7 +33,11 @@ static int read_number(const char *dir, const char *attr, double *out)
 {
     char path[256], buf[64], *end;
     FILE *fp;
-    snprintf(path, sizeof(path), "%s/%s", dir, attr);
+    /* A truncated path names a different file, and opening the wrong file quietly
+       is worse than not opening one. dir is 192 and attr is 72, which can exceed
+       this buffer, so the return is checked rather than assumed. */
+    if (snprintf(path, sizeof(path), "%s/%s", dir, attr) >= (int)sizeof(path))
+        return -1;
     fp = fopen(path, "r");
     if (fp == NULL)
         return -1;
@@ -126,8 +130,11 @@ io_source *io_iio_open(const char *spec, char *err, size_t err_len)
         return io_seterr(err, err_len, "iio: cannot scan %s", spec), NULL;
     }
     for (i = 0; i < count; i++) {
-        if (p->n < IO_MAX_VALUES) {
-            snprintf(p->raw[p->n], IIO_NAME, "%s", list[i]->d_name);
+        /* A truncated attribute name is a file that can never be opened, so the
+           entry is skipped rather than kept under a name that is not its own: a
+           reader would then fail on every sample with no hint as to why. */
+        if (p->n < IO_MAX_VALUES
+            && snprintf(p->raw[p->n], IIO_NAME, "%s", list[i]->d_name) < IIO_NAME) {
             p->scale[p->n] = find_scale(p->dir, list[i]->d_name);
             p->n++;
         }
@@ -145,12 +152,17 @@ io_source *io_iio_open(const char *spec, char *err, size_t err_len)
 
     snprintf(path, sizeof(path), "%s/name", p->dir);
     fp = fopen(path, "r");
+    /* The tag is a label in the log, not a path, and IO_TAG_LEN is a shared
+       contract every backend writes into, so a long device name is cut here on
+       purpose. The precision says so explicitly: without it the compiler warns,
+       and a reader cannot tell a deliberate cut from an overlooked one. */
     if (fp != NULL && fgets(buf, sizeof(buf), fp) != NULL) {
         buf[strcspn(buf, "\r\n")] = '\0';
-        snprintf(p->tag, sizeof(p->tag), "%s", buf);
+        snprintf(p->tag, sizeof(p->tag), "%.*s", (int)sizeof(p->tag) - 1, buf);
     } else {
         const char *base = strrchr(p->dir, '/');
-        snprintf(p->tag, sizeof(p->tag), "%s", base != NULL ? base + 1 : p->dir);
+        snprintf(p->tag, sizeof(p->tag), "%.*s", (int)sizeof(p->tag) - 1,
+                 base != NULL ? base + 1 : p->dir);
     }
     if (fp != NULL)
         fclose(fp);
