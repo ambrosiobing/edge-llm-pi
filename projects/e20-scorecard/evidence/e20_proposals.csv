@@ -1,0 +1,151 @@
+t_s,seed,rank,project,reason
+0.000000,2026,1,e04,180 evidence 17.2 percent quieter 9 louder 4 no literal 136
+0.000000,2026,2,e05,"0 evidence 0 agreement not measured (a CI stub run of 2000 rows at 0.0 percent, which is not evidence)"
+0.000000,2026,3,e11,"0 evidence 0 agreement not measured (a CI stub run of 6236 rows at 5.7 percent, which is not evidence)"
+1.000000,2027,1,e01,"No evidence, not measured"
+1.000000,2027,2,e03,"200 evidence, 100 percent agreement, quieter 0 louder 0 no literal 0"
+1.000000,2027,3,e04,"180 evidence, 17.2 percent quieter, 9 louder, 4 no literal 136"
+2.000000,2028,1,e03,"200 evidence, 100 agreement, 0 disagreement"
+2.000000,2028,2,e01,"0 evidence, not measured (no record at all)"
+2.000000,2028,3,e06,"2825 evidence, 46.7 percent agreement, 0 no literal"
+3.000000,2029,1,e02,"100 agreement, 2.0 percent quieter, 0 louder"
+3.000000,2029,2,e01,not measured (no record at all)
+3.000000,2029,3,e12,"not measured (a CI stub run of 100 rows at 62.0 percent, which is not evidence)"
+4.000000,2030,1,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+4.000000,2030,2,e05,"0 agreement not measured (a CI stub run of 2000 rows at 0.0 percent, which is not evidence)"
+4.000000,2030,3,e01,no record at all (e01)
+5.000000,2031,1,e02,"100 agreement, 2.0 percent quieter, 0 louder"
+5.000000,2031,2,e07,"0 agreement, 70.8 percent"
+5.000000,2031,3,e01,"0 agreement, not measured"
+6.000000,2032,1,e01,"no record at all, not measured"
+6.000000,2032,2,e03,200 agreement 100.0 percent quieter 0 louder 0 no literal 0
+6.000000,2032,3,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+7.000000,2033,1,e01,"e01 has no evidence and is not measured, ranking first."
+7.000000,2033,2,e04,"e04 has 180 rows with 17.2 percent quieter and 4 no literal, ranking second."
+7.000000,2033,3,e05,"e05 has 2000 rows with 0.0 percent agreement, ranking third."
+8.000000,2034,1,e01,e01 has no evidence and is not measured.
+8.000000,2034,2,e12,e12 has 100 rows at 62.0 percent and is not measured.
+8.000000,2034,3,e02,e02 has 100 rows at 2.0 percent and is not measured.
+9.000000,2035,1,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+9.000000,2035,2,e03,200 agreement 100.0 percent quieter 0 louder 0 no literal 0
+9.000000,2035,3,e05,"2000 rows at 0.0 percent, which is not evidence"
+10.000000,2036,1,e01,"No evidence at all, ranked first."
+10.000000,2036,2,e14,"92.0 percent agreement, ranked second."
+10.000000,2036,3,e19,"50 rows at no rate, ranked third."
+11.000000,2037,1,e02,"100 agreement with 2.0 percent quieter, 0 louder, 98 no literal"
+11.000000,2037,2,e05,"0 agreement with 0 percent quieter, 0 louder, 0 no literal"
+11.000000,2037,3,e15,"0 agreement with 35.5 percent quieter, 33.3 percent louder, 0 no literal"
+12.000000,2038,1,e02,2.0 percent quieter 0 louder 98 no literal 0
+12.000000,2038,2,e05,0.0 percent (no record at all)
+12.000000,2038,3,e03,100.0 percent quieter 0 louder 0 no literal 0
+13.000000,2039,1,e14,100 rows at 92.0 percent
+13.000000,2039,2,e02,100 percent quieter 0 louder 98 no literal 0
+13.000000,2039,3,e05,2000 rows at 0.0 percent
+14.000000,2040,1,e04,"180 evidence, 17.2 agreement, 9 louder, 4 no literal"
+14.000000,2040,2,e02,"100 evidence, 2.0 agreement, 0 louder, 98 no literal"
+14.000000,2040,3,e01,"0 evidence, 0 agreement, no record at all"
+15.000000,2041,1,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+15.000000,2041,2,e10,"0 agreement not measured (a CI stub run of 300 rows at 33.3 percent, which is not evidence)"
+15.000000,2041,3,e05,"0 agreement not measured (a CI stub run of 2000 rows at 0.0 percent, which is not evidence)"
+16.000000,2042,1,e01,no record at all (0)
+16.000000,2042,2,e11,"a CI stub run of 6236 rows at 5.7 percent (0.0 percent, 5.7 percent)"
+16.000000,2042,3,e02,"a CI stub run of 100 rows at 62.0 percent (2.0 percent, 0 percent, 98 percent)"
+17.000000,2043,1,e01,"e01 has no record at all, making it the lowest evidence and not measured"
+17.000000,2043,2,e10,"e10 has a CI stub run of 300 rows at 33.3 percent, which is not evidence"
+17.000000,2043,3,e02,"e02 has a CI stub run of 100 rows at 2.0 percent quieter, 0 louder, 98 no literal, which is not measured"
+18.000000,2044,1,e02,100.0 percent agreement and 2.0 percent quieter
+18.000000,2044,2,e01,0.0 percent agreement and no record
+18.000000,2044,3,e04,180.0 percent agreement and 17.2 percent quieter
+19.000000,2045,1,e04,"180 evidence, 17.2 agreement, 9 louder, 4 no literal, 136 quieter"
+19.000000,2045,2,e07,"1440 evidence, 70.8 agreement, 68.8 louder, 1440 quieter"
+19.000000,2045,3,e08,"120 evidence, 0 agreement, 120 louder, 0 quieter, 120 no literal"
+20.000000,2046,1,e01,e01 has no evidence and is ranked first.
+20.000000,2046,2,e09,e09 has no evidence and is ranked second.
+20.000000,2046,3,e06,e06 has no evidence and is ranked third.
+21.000000,2047,1,e03,200 agreement 100.0 percent
+21.000000,2047,2,e10,300 rows at 33.3 percent
+21.000000,2047,3,e04,180 agreement 17.2 percent
+22.000000,2048,1,e08,"e08 has 0 evidence and 0 agreement, not measured at all."
+22.000000,2048,2,e14,"e14 has 0 evidence and 0 agreement, not measured at all."
+22.000000,2048,3,e07,"e07 has 0 evidence and 0 agreement, not measured at all."
+23.000000,2049,1,e01,"no record at all, not measured"
+23.000000,2049,2,e02,"2.0 percent quieter, 98 no literal"
+23.000000,2049,3,e04,"17.2 percent quieter, 9 louder, 4 no literal"
+24.000000,2050,1,e14,"a CI stub run of 100 rows at 92.0 percent, which is not evidence"
+24.000000,2050,2,e15,"a CI stub run of 200 rows at 35.5 percent, which is not evidence"
+24.000000,2050,3,e18,"a CI stub run of 600 rows at 90.3 percent, which is not evidence"
+25.000000,2051,1,e04,17.2 percent quieter 9 louder 4 no literal 136
+25.000000,2051,2,e16,48.0 percent quieter 10 louder 4 no literal 136
+25.000000,2051,3,e02,2.0 percent quieter 0 louder 98 no literal 0
+26.000000,2052,1,e01,"no record at all, not evidence"
+26.000000,2052,2,e02,"2.0 percent quieter, 98 no literal, not measured"
+26.000000,2052,3,e04,"17.2 percent quieter, 9 louder, 4 no literal, not measured"
+27.000000,2053,1,e02,100 agreement 2.0 percent quieter
+27.000000,2053,2,e04,180 agreement 17.2 percent quieter
+27.000000,2053,3,e05,"2000 rows at 0.0 percent, which is not evidence"
+28.000000,2054,1,e02,e02 has 100 evidence and 100 agreement.
+28.000000,2054,2,e11,e11 has 6236 evidence and 5.7 percent agreement.
+28.000000,2054,3,e03,e03 has 200 evidence and 100 percent agreement.
+29.000000,2055,1,e01,"no record at all, not measured"
+29.000000,2055,2,e02,"100 percent quieter, 0 louder"
+29.000000,2055,3,e04,"180 agreement, 17.2 percent quieter"
+30.000000,2056,1,e01,"no record at all, evidence 0"
+30.000000,2056,2,e12,"a CI stub run of 100 rows at 62.0 percent, agreement 0"
+30.000000,2056,3,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+31.000000,2057,1,e04,180 agreement 17.2 percent quieter 9 louder 4 no literal 136
+31.000000,2057,2,e11,4000 rows at 48.7 percent
+31.000000,2057,3,e13,4000 rows at 48.7 percent
+32.000000,2058,1,e11,"a CI stub run of 6236 rows at 5.7 percent, which is not evidence"
+32.000000,2058,2,e03,"a CI stub run of 200 rows at 92.0 percent, which is not evidence"
+32.000000,2058,3,e02,"a CI stub run of 100 rows at 2.0 percent, which is not evidence"
+33.000000,2059,1,e01,"no record at all, not measured"
+33.000000,2059,2,e11,"a CI stub run of 6236 rows at 5.7 percent, which is not evidence"
+33.000000,2059,3,e15,"a CI stub run of 200 rows at 35.5 percent, which is not evidence"
+34.000000,2060,1,e03,"200 evidence, 100 agreement, 0 disagreement"
+34.000000,2060,2,e10,"300 evidence, 0 agreement, 300 disagreement"
+34.000000,2060,3,e12,"100 evidence, 0 agreement, 100 disagreement"
+35.000000,2061,1,e02,"100 agreement, 2.0 percent quieter, 0 louder"
+35.000000,2061,2,e04,"180 agreement, 17.2 percent quieter, 9 louder"
+35.000000,2061,3,e05,"0 agreement, not measured"
+36.000000,2062,1,e04,"180 agreement, 17.2 percent quieter, 9 louder, 4 no literal"
+36.000000,2062,2,e13,"not measured (a CI stub run of 4000 rows at 48.7 percent, which is not evidence)"
+36.000000,2062,3,e02,"100 agreement, 2.0 percent quieter, 0 louder, 98 no literal"
+37.000000,2063,1,e03,200 agreement 100.0 percent quieter 0 louder 0 no literal 0
+37.000000,2063,2,e19,"0 agreement not measured (a CI stub run of 50 rows at no rate, which is not evidence)"
+37.000000,2063,3,e08,"0 agreement not measured (a CI stub run of 120 rows at no rate, which is not evidence)"
+38.000000,2064,1,e04,"180 evidence, 17.2 agreement, 136 no literal"
+38.000000,2064,2,e05,"2000 evidence, 0 agreement, 0 no literal"
+38.000000,2064,3,e08,"120 evidence, 0 agreement, 0 no literal"
+39.000000,2065,1,e01,"No evidence, not measured (0 percent)"
+39.000000,2065,2,e02,"100 percent agreement, 2.0 percent quieter, 0 louder, 98 no literal"
+39.000000,2065,3,e03,"200 percent agreement, 100.0 percent quieter, 0 louder, 0 no literal"
+40.000000,2066,1,e04,"180 evidence, 17.2 agreement, 136 no literal"
+40.000000,2066,2,e07,"1440 evidence, 70.8 agreement, 4 no literal"
+40.000000,2066,3,e10,"300 evidence, 33.3 agreement, 9 louder"
+41.000000,2067,1,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+41.000000,2067,2,e03,200 agreement 100.0 percent quieter 0 louder 0 no literal 0
+41.000000,2067,3,e04,180 agreement 17.2 percent quieter 9 louder 4 no literal 136
+42.000000,2068,1,e02,100 agreement 2.0 percent quieter 0 louder 98 no literal 0
+42.000000,2068,2,e12,100 rows at 62.0 percent
+42.000000,2068,3,e01,"no record at all, not measured"
+43.000000,2069,1,e14,"e14 has 100 rows with 92.0 percent agreement, which is the highest agreement among the given rows."
+43.000000,2069,2,e17,"e17 has 1440 rows with 68.8 percent agreement, which is the second highest agreement among the given rows."
+43.000000,2069,3,e19,"e19 has 50 rows with no rate, which is the lowest number of rows among the given rows."
+44.000000,2070,1,e02,"100 agreement, 2.0 percent quieter, 0 louder, 98 no literal, 0"
+44.000000,2070,2,e16,"0 agreement, 48.0 percent, 0"
+44.000000,2070,3,e03,"200 agreement, 100.0 percent quieter, 0 louder, 0 no literal, 0"
+45.000000,2071,1,e19,"e19 has 0 evidence and 0 agreement, not measured rank first."
+45.000000,2071,2,e12,"e12 has 0 evidence and 0 agreement, not measured rank first."
+45.000000,2071,3,e20,"e20 has 0 evidence and 0 agreement, not measured rank first."
+46.000000,2072,1,e02,100 percent quieter 0 louder 98 no literal 0
+46.000000,2072,2,e01,0 agreement not measured (no record at all)
+46.000000,2072,3,e04,180 agreement 17.2 percent quieter 9 louder 4 no literal 136
+47.000000,2073,1,e01,"no record at all, not measured"
+47.000000,2073,2,e02,"2.0 percent quieter, 98 no literal, agreement not measured"
+47.000000,2073,3,e04,"180 agreement, 17.2 percent quieter, 9 louder, no literal 136"
+48.000000,2074,1,e04,180 agreement 17.2 percent quieter 9 louder 4 no literal 136
+48.000000,2074,2,e03,200 agreement 100.0 percent quieter 0 louder 0 no literal 0
+48.000000,2074,3,e08,"0 agreement not measured (a CI stub run of 120 rows at no rate, which is not evidence)"
+49.000000,2075,1,e05,0.0 percent evidence
+49.000000,2075,2,e03,"0 percent evidence, 0.0 percent agreement"
+49.000000,2075,3,e01,"no record at all, 0.0 percent agreement"
