@@ -1,29 +1,54 @@
-# e06 wiring: the VL53L4CD beside the ADXL345 on the Pi 3 Model B
+# e06 wiring: the VL53L4CD alone on a bare Pi 3 header
 
-Project e06 reads the Adafruit VL53L4CD single-zone time-of-flight sensor over i2c-dev on
-the Raspberry Pi 3 Model B Rev 1.2 (1 GB). The sensor sits on the same bus as the DFRobot
-SEN0032 ADXL345 of e05, which stays wired; nothing else is on the header and no HAT is
-seated. The bus stays at 100 kHz because the ADXL345 on its current leads answers nothing
-at 400 kHz (the measurement of Friday 9 October 2026). The card in the board is named in
-the first line of the evidence file on the day of the run.
+Project e06 reads the Adafruit VL53L4CD single-zone time-of-flight sensor over i2c-dev. The
+chapter allocates the Raspberry Pi 3 Model B Rev 1.2 (1 GB); the wiring below was made and
+verified on the **Raspberry Pi 3 Model B Plus Rev 1.3** on Thursday 29 October 2026, which is
+the same memory class and the same bus. No HAT is seated.
+
+**THE SENSOR IS ALONE ON THE BUS, AND THIS PARAGRAPH USED TO SAY OTHERWISE.** It read that
+the VL53L4CD "sits on the same bus as the DFRobot SEN0032 ADXL345 of e05, which stays wired",
+and that the bus stays at 100 kHz "because the ADXL345 on its current leads answers nothing at
+400 kHz". The ADXL345 was retired from the plan on Saturday 24 October 2026 and e05's
+substitution away from it was directed on Tuesday 27 October 2026, so the first claim is gone
+and the second has lost its reason. The bus still runs at the default **100 kHz**: no
+`dtparam=i2c_arm_baudrate` line is set, which was confirmed on the card rather than assumed.
+
+Leaving it alone was deliberate rather than incidental. An X-NUCLEO-IKS5A1 had been on this
+bus earlier the same day and would not have collided, answering at 0x19, 0x1e, 0x5c, 0x6a and
+0x6b against this part's 0x29. It came off anyway, because **on a bare bus a single address
+is proof of the four leads, where among six other devices a mis-wired sensor is
+indistinguishable from a correctly wired silent one.**
 
 ## Pin table
 
 | Header pin | BCM | Part pin | Wire colour |
 |---|---|---|---|
-| 1 | 3V3 | VL53L4CD VIN (and the ADXL345 VCC) | not recorded; read it off the lead |
-| 9 | GND | VL53L4CD GND (and the ADXL345 GND) | not recorded |
-| 3 | GPIO2, SDA1 | VL53L4CD SDA (and the ADXL345 SDA) | not recorded |
-| 5 | GPIO3, SCL1 | VL53L4CD SCL (and the ADXL345 SCL) | not recorded |
-| 17 | 3V3 | ADXL345 CS, strapped high (e05) | not recorded |
-| 6 | GND | ADXL345 SDO, strapped low (e05) | not recorded |
-| 16 | GPIO23 | ADXL345 INT1 (e05) | not recorded |
+| 1 | 3V3 | VL53L4CD VIN | **blue** |
+| 3 | GPIO2, SDA1 | VL53L4CD SDA | **violet** |
+| 5 | GPIO3, SCL1 | VL53L4CD SCL | **red** |
+| 9 | GND | VL53L4CD GND | **green** |
 | none | | VL53L4CD XSHUT and GPIO1 | unconnected: no shutdown, no interrupt |
 
-Two breakouts cannot share one header pin with jumper leads: the 3V3, GND, SDA and SCL
-leads of the VL53L4CD join the ADXL345's on a breadboard rail or a split jumper, and the
-join is recorded in the evidence file with the date. The breakout's VIN accepts 3 to 5 V and
-its logic is level shifted; GPIO1 is a 2.8 V output and stays unconnected here.
+Colours recorded from the bench on Thursday 29 October 2026, with the photograph
+`evidence/2026-10-29_1626_wiring_vl53l4cd_rpi3bplus.jpg`. They had read "not recorded" since
+the chapter was written.
+
+**TWO OF THEM RUN AGAINST CONVENTION AND THAT IS WORTH READING TWICE: red is SCL, not the
+supply, and blue is VIN.** Anyone wiring this from habit rather than from the table will put
+red on VIN and get nothing, which looks exactly like a dead part.
+
+**The four leads were originally four colours with two the same**, and were changed before
+this table was written precisely so the column could disambiguate them. That is the remedy
+e03's own wiring file recommends after two identical yellow leads there put the wrong colour
+on GPIO17 and GPIO27. Changing them also invalidated the bus check taken before the change,
+so `i2cdetect` and a live ranging run were both repeated on the leads recorded here.
+
+**A fifth, black lead appears in the photograph and does not exist.** It is a shadow. Four
+jumper housings sit in the breadboard, four leads are listed above, and one device answers on
+the bus.
+
+The breakout's VIN accepts 3 to 5 V and its logic is level shifted; GPIO1 is a 2.8 V output
+and stays unconnected here.
 
 The breakout carries its own 10 kOhm pull-ups on SDA and SCL; the Pi's pins 3 and 5 carry
 fitted 1.8 kOhm pull-ups. In parallel that is about 1.5 kOhm, 2.2 mA sink at 3.3 V, inside
