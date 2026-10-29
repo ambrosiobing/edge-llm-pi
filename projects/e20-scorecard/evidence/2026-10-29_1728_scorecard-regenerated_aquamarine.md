@@ -137,6 +137,68 @@ trips its thermal limit after 367 seconds of load. e20's acceptance happens to c
 Remote inference on skyhorizon remains the better sitting and remains what the chapter
 describes. What needs correcting is the sentence, which gives a reason that is no longer true.
 
+## THE PUBLISHED FIGURE IS PASSED BY A CONSTANT, AND THE STUB IS THAT CONSTANT
+
+This was found by arming the acceptance condition against the stub before anyone spends a
+sitting on the real model, and it is the most useful thing in this record.
+
+    projects/e20-scorecard $ py -m edgellm_e20.main --stub --require 0.80
+    e20: 50 events, top pick matched the rule in 50 (100.0 percent), 0 answered no identifier
+    exit=0
+
+The stub answers `[{"project":"e01"},{"project":"e01"},{"project":"e01"}]` on every one of the
+fifty presentations, because that is the first expansion of the grammar. It applies no sort,
+reads no row and cannot see the table. **It scores 100.0 percent and passes the armed
+acceptance at `--require 0.80`.**
+
+Computed from the two files a run already writes, the log's `raw` column carrying the rule's
+three as one-based indices and the proposals file carrying all three ranks:
+
+    reading                                        the stub
+    first identifier matches      50 of 50   100.0 percent   <- the chapter's one number
+    ordered triple matches         0 of 50     0.0 percent
+    set of three matches           0 of 50     0.0 percent
+
+    the rule says   e01, e05, e06
+    the stub says   e01, e01, e01
+
+**A hundred percent and nought percent describe the same answers.** The published figure is
+the one that reads 100.
+
+### Why this is a gap between the figure and the prose, not a broken test
+
+The figure is a sound measure of first-pick agreement. What it will not carry is the weight
+the prose puts on it. `make_replay.py`'s docstring makes the step explicit:
+
+    "the acceptance test is the share of the fifty on which the model's first identifier is
+     the rule's, which is the share of the fifty on which the model's answer did not depend
+     on the presentation either."
+
+**Those two shares are not the same share.** A constant function is maximally independent of
+the presentation and matches the first identifier, while applying no sort at all, so it
+saturates both without doing the work. And the chapter's pitch asks a third question again,
+"whether it can apply a sort it has been given to a table it has been shown", which the first
+identifier alone cannot answer.
+
+**The reason it bites here rather than in theory is that `e01` is pinned to the front.** e01
+has no record at all and no oracle file, so its rank key is `(0, -1.0)`, the weakest possible,
+and the identifier is the last key, so e01 is first among the seventeen tied rows and will
+stay first until e01 itself gains a bench run log. `e01` is also the first alternative of the
+grammar's `project` rule. So the correct first answer and the laziest possible first answer
+are the same string, and any model with a bias toward the first alternative scores well
+without reading anything.
+
+### The remedy needs no code change
+
+Both stronger figures above were computed from `e20_run.csv` and `e20_proposals.csv` alone,
+and step 6 of the chapter already writes both. So the sitting does not need to change and the
+loop does not need editing: what changes is which number is published. The ordered triple is
+the figure that can fail, and an experiment that cannot fail is not one.
+
+This is recorded rather than fixed, because the acceptance wording lives in the chapter source
+in the catalogue and changing a published acceptance is not a thing to do inside an evidence
+record.
+
 ## What is established and what is not
 
     established   clause two: twenty rows, no empty cell, 20 of 20 carrying a note,
@@ -145,6 +207,9 @@ describes. What needs correcting is the sentence, which gives a reason that is n
     established   the oracle is byte identical, so CI is undisturbed
     established   the stub figures were wrong by -80.3, +32.5 and -17.8 points
     established   e04's 17.2 percent is 31 of 180, and 70.5 percent over carried rows
+    established   the stub scores 100.0 percent on the published figure and 0.0 on the
+                  ordered triple, and passes the armed acceptance at --require 0.80
+    established   both stronger figures come from the files a run already writes
     NOT shown     clause one, the model's first pick against the rule's over 50 presentations
     NOT shown     anything about the real model, since only the stub ran
     NOT shown     any timing figure, since no engine answered
