@@ -36,7 +36,7 @@ confirmed by measurement rather than argument: the published figure cannot separ
 from not ranking, because the trivial answer is also the correct first answer. The ordered
 triple separates them immediately, 0.0 against the stub's 0.0, and both are honest.
 
-## THE FAILURE IS NOT FORMAT, AND IT IS NOT HALLUCINATION
+## UNDER THE GRAMMAR THE FAILURE IS NOT FORMAT AND NOT HALLUCINATION
 
     0 answered no identifier, over 50 events
     150 reasons, every one between 20 and 106 characters, the grammar allowing 20 to 200
@@ -151,16 +151,25 @@ Run through `llama-server`'s own web UI, which applies the model's chat template
 and **sends no grammar**, with the UI's default temperature of 0.8 rather than the run's 0.3,
 on the same table and the same presentation, seed 2026:
 
-    source                                   pick 1   pick 2
-    the scored run, grammar, temp 0.3        e04      e05
-    chat box sample 1, no grammar, temp 0.8  e04      truncated
-    chat box sample 2, no grammar, temp 0.8  e04      e05
-    the rule                                 e01      e05
+    source                                      pick 1  pick 2  pick 3
+    the scored run, grammar, temp 0.3           e04     e05     e11
+    chat box 1, no grammar, temp 0.8            e04     truncated
+    chat box 2, no grammar, temp 0.8            e04     e05     truncated
+    chat box 3, NO GRAMMAR, TEMP 0.3, -c 4096   e04     e11     e17
+    the rule                                    e01     e05     e06
 
-**Remove the grammar, raise the temperature, change the framing, and it still answers `e04`
-first and `e05` second.** If the grammar's alternation order were steering the answer,
-removing it should have moved the answer. It did not. So the bias is the model's and the
-grammar is not manufacturing it, and this record's account stands.
+**The third sample is a single-variable control.** Temperature was set to 0.3 in the UI, and
+`top_k` 40 and `top_p` 0.95 are the UI defaults, which are also the server defaults the client
+inherited because its payload names only `temperature`. So the only thing differing from the
+scored run is the grammar.
+
+**Remove the grammar and it still answers `e04` first.** Three samples, two temperatures, and
+the first pick never moves. If the grammar's alternation order were steering the answer,
+removing it should have moved it. So the bias is the model's, the grammar is not manufacturing
+it, and this record's account of the first pick stands.
+
+What the grammar *does* move is picks two and three: `e05, e11` under it against `e11, e17`
+without it. One sample each, so that is a direction and not a measurement.
 
 **And the grammar was doing real work on the shape.** Unconstrained, the first sample emitted
 `"name": "e04"` and the second dropped the identifier key altogether, carrying only `"reason"`
@@ -168,8 +177,53 @@ with the project named inside the prose. The system prompt asks for three object
 reason and never names the key; `"project"` came from the grammar every time. The ranking went
 wrong under the grammar, but the parseability that let it be scored at all came from there.
 
-**The limits of this control, which are real.** Two samples, one presentation, a temperature
-the run did not use, and both answers truncated by the context. It settles the narrow question
+### The complete triple, taken at `-c 4096` so nothing truncated
+
+    the rule                      e01, e05, e06
+    unconstrained, complete       e04, e11, e17
+
+Zero of three, and no set overlap either. **`e04` first in all three unconstrained samples.**
+
+**AND THE REASONS NOW MISREPORT THE ROWS, WHICH THE CONSTRAINED RUN'S DID NOT.**
+
+    row as shown   e11 evidence 0 agreement not measured (a CI stub run of 6236 rows at
+                   5.7 percent, which is not evidence)
+    model wrote    "6236 evidence, 5.7% agreement, 5.7% louder, 48.7% no literal"
+
+    row as shown   e17 evidence 0 agreement not measured (a CI stub run of 1440 rows at
+                   68.8 percent, which is not evidence)
+    model wrote    "1440 evidence, 68.8% agreement, 68.8% no literal"
+
+    row as shown   e04 evidence 180 agreement 17.2 percent quieter 9 louder 4 no literal 136
+    model wrote    "180 evidence, 17.2% agreement, 9 louder, 4 no literal"
+
+Three failures, and the first governs the whole ranking. **It reads a stub run's row count as
+the evidence count.** The row says `evidence 0`, the row's own parenthesis says `which is not
+evidence`, and the system prompt says "A CI stub run is not evidence". Told three times in the
+same prompt, it wrote "6236 evidence". Second, it **mislabels columns**: e04's row reads
+`quieter 9 louder 4 no literal 136` and it wrote "9 louder, 4 no literal", shifted by one and
+dropping 136. Third, it **invented 48.7 percent**, a figure that appears nowhere in e11's row.
+
+**That is a change from the constrained run and it cuts against this record's own earlier
+paragraph.** Under the grammar the reasons were faithful, including `"0 evidence"` for a stub
+row and e04's figures complete and correctly labelled. Unconstrained, on the same table, they
+are not. So the grammar was suppressing invention as well as supplying the `project` key. Why
+is not established: the `reason` character class is `[A-Za-z0-9 ,.()]`, which admits no `%`
+and no `:`, so near verbatim copying of the row text may simply be the cheapest path under the
+constraint, while unconstrained paraphrase is where fields get dropped and numbers invented.
+**One unconstrained sample against fifty constrained ones does not settle that**, and it is
+recorded as an observation to test rather than a finding.
+
+**One more caveat against this record's aggregate claim.** The unconstrained answer picked
+`e11` and `e17`, which are high-ordinal, where the low-ordinal bias measured over the fifty
+constrained events would not expect them. The aggregate claim rests on 150 picks and one
+sample does not overturn it, but the constrained and unconstrained regimes may differ in more
+than the key name, and the honest position is that only the grammar-exoneration is settled.
+
+**The limits of this control, which are real.** Three samples on one presentation, the first
+two truncated by the context, and the framing not identical: the web UI applies the chat
+template server side and prepends its own system message, where the client sends raw ChatML
+carrying e20 own system prompt, and the paste folded that prompt into the user turn. It settles the narrow question
 it was built for, whether removing the grammar moves the first pick, and it settles nothing
 about the aggregate distribution over fifty presentations.
 
