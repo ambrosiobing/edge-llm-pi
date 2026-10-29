@@ -138,6 +138,48 @@ worth noting: for e06 it was a short-log accident that a longer run would cure. 
 can never be cured**, because the rule's invariance is the chapter's design. Two tools
 disagree and the one to believe is the loop's own counter.
 
+## A CONTROL THAT REMOVES THE GRAMMAR, WHICH EXONERATES IT
+
+**The confound this control exists to test.** Under the grammar every identifier is spelled
+`"e` then two digits, and at the first digit the automaton admits only `0`, `1` or `2`. A
+plain token-level preference for `0` would therefore produce the low-ordinal skew measured
+above **without the model holding any opinion about ranking at all**. The measurement cannot
+separate a ranking failure from a decoding artifact of the grammar's own shape, so the grammar
+had to be taken away.
+
+Run through `llama-server`'s own web UI, which applies the model's chat template server side
+and **sends no grammar**, with the UI's default temperature of 0.8 rather than the run's 0.3,
+on the same table and the same presentation, seed 2026:
+
+    source                                   pick 1   pick 2
+    the scored run, grammar, temp 0.3        e04      e05
+    chat box sample 1, no grammar, temp 0.8  e04      truncated
+    chat box sample 2, no grammar, temp 0.8  e04      e05
+    the rule                                 e01      e05
+
+**Remove the grammar, raise the temperature, change the framing, and it still answers `e04`
+first and `e05` second.** If the grammar's alternation order were steering the answer,
+removing it should have moved the answer. It did not. So the bias is the model's and the
+grammar is not manufacturing it, and this record's account stands.
+
+**And the grammar was doing real work on the shape.** Unconstrained, the first sample emitted
+`"name": "e04"` and the second dropped the identifier key altogether, carrying only `"reason"`
+with the project named inside the prose. The system prompt asks for three objects each with a
+reason and never names the key; `"project"` came from the grammar every time. The ranking went
+wrong under the grammar, but the parseability that let it be scored at all came from there.
+
+**The limits of this control, which are real.** Two samples, one presentation, a temperature
+the run did not use, and both answers truncated by the context. It settles the narrow question
+it was built for, whether removing the grammar moves the first pick, and it settles nothing
+about the aggregate distribution over fifty presentations.
+
+**Both samples ran out of context at exactly 1024 tokens**, 981 and 961 prompt tokens against
+generation of 43 and 63, because the web UI carries conversation history and its own system
+message where the client sends a stateless completion each time. That is not a defect in
+either: the client's worst case is 754 prompt plus a 192 budget, 946 against 1024, so the
+chapter's `-c 1024` is sound for the scored path with about 78 tokens to spare. It is simply
+too tight for an interactive chat on the same server.
+
 ## THE PROMPT FORMAT IS NOT THE CAUSE EITHER, CHECKED AGAINST THE MODEL'S OWN TEMPLATE
 
 `/completion` is a raw route: it applies no chat template, so the client has to emit the
@@ -229,8 +271,14 @@ At that rate the remaining tokens could not have arrived inside the budget. The 
     established   generation ran 65 to 126 tokens against a budget of 192
     established   the server slowed about threefold across the run, 23 to 12 tokens per
                   second, so the two-event probe's 5.2 s was not a rate
+    established   removing the grammar does not move the first pick: two unconstrained
+                  samples at temperature 0.8 answered e04 first, as the run did
+    established   the grammar supplied the "project" key; unconstrained the model used
+                  "name" once and dropped the key entirely once
     NOT shown     whether a larger model ranks correctly, no other model was run
     NOT shown     whether the failure survives a restated prompt, the prompt was not varied
+    NOT shown     the unconstrained distribution over fifty presentations; the control is
+                  two samples on one presentation and both were truncated by the context
     NOT shown     anything about e13, whose grammar carries the same defect unfixed
 
 ## Gates
