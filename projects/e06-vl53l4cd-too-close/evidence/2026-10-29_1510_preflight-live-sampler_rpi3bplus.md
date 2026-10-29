@@ -11,9 +11,35 @@
 
 **This closes no clause of e06 and is not a measurement of the project.** Every one of e06's
 three acceptance quantities comes from the sensor during 200 hand approaches, and no approach
-has been made. What this records is that everything *except* the hand-work is now in place,
-and four things found while putting it there, three of which change how the afternoon should
+has been made. What this records is that the ULD, the sensor and the loop are now in place,
+and four things found while putting them there, three of which change how the afternoon should
 be run.
+
+**AND ONE THING IS STILL MISSING BESIDES THE HAND-WORK, FOUND AFTER THIS RECORD WAS FIRST
+WRITTEN.** An earlier version of this paragraph said everything except the hand-work was in
+place. It is not: **e06 cannot pass its own gate on this bench without cooling.**
+
+e06's acceptance ends "All three are taken with `vcgencmd get_throttled` reading `0x0` before
+and after, and a run with any bit set is discarded." Its loop is **near-continuous inference**
+rather than an idle board sampling occasionally: run 5 above produced 8 answers of 12.24 s
+inside 112 seconds of wall clock, an **87 percent duty cycle**, so it heats the way
+`llama-bench` does.
+
+    board A    thermal limit after 367 s of load, 6.1 minutes
+    board B    thermal limit after 282 s of load, 4.7 minutes
+
+    200 approaches at 200 mm/s, the fastest plausible    about 10 minutes
+    200 approaches at 100 mm/s                           about 17 minutes
+    200 approaches at  50 mm/s                           about 30 minutes
+
+Splitting into one session per speed does not rescue it. Only the fastest speed would fit
+inside board A's 6.1 minutes, and barely, while the slow speed that actually brackets the
+latency threshold runs to fifteen minutes on its own. **There is no fan on this bench**,
+stated Thursday 29 October 2026, so this is a purchase and not a test.
+
+So e06 joins e01's two cells and e03's four-thread clause behind the same part. That is four
+clauses, and it was worth finding before two hundred hand approaches were made into a run that
+e06's own acceptance discards.
 
 ## The ULD, which was the blocker, and its licence
 
