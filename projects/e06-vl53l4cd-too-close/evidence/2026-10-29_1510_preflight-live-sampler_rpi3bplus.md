@@ -91,21 +91,31 @@ Measured here rather than assumed:
     1000 events  ->  8 model answers        125 samples per answer
     992 of 1000 rows have an empty model column
 
-That is the arithmetic the afternoon has to live with. **For the acceptance's two hundred
-model-answered rows, at ten samples a second:**
+**CORRECTION, made while planning the afternoon.** An earlier version of this section read
+"the acceptance's two hundred model-answered rows" and sized the session from that. The
+acceptance asks for **two hundred APPROACHES**, about seventy at each of three speeds; the
+model-answered rows are whatever falls out of how long those approaches take. The two are not
+the same number and the mistake inflated the session estimate.
 
-    board        L               threshold v        samples needed    sampling time
-    3B+, 4 thr   12.24 s         47 mm/s            25,000            about 42 minutes
-    4B,  4 thr   about 5.5 s     about 101 mm/s     11,000            about 18 minutes
+**The session length is set by the approaches.** One approach is the hand crossing 600 mm at
+the chosen speed, plus a reset, so its duration is `600 / v` and the speeds chosen decide the
+afternoon:
 
-The 4B figures are projected from this run using the A72-against-A53 ratios measured on
-Tuesday 27 October 2026, 2.58 on prompt and 2.02 on generation, and are an estimate rather
-than a measurement.
+    speed v     one crossing    200 approaches, crossings alone
+    47 mm/s     12.8 s          about 43 minutes
+    100 mm/s     6.0 s          about 20 minutes
+    200 mm/s     3.0 s          about 10 minutes
 
-So the two hundred approaches are not done at leisure: they have to happen **inside a
-continuous sampling window**, one approach every six to eight seconds for twenty to forty
-minutes. That is a different afternoon from the one the chapter's phrase "200 approaches"
-suggests, and it is the single most useful thing this pre-flight found.
+**The model-answered rows then follow from the sampling**, at one per 125 samples, which is
+one per 12.5 s on this board. Over a session of total length T the model answers about
+`T / 12.5 s` times regardless of how the approaches are paced inside it.
+
+That gives a useful coincidence at the slow end: at 47 mm/s an approach takes 12.8 s and an
+answer arrives every 12.5 s, so **roughly one answer per approach**. At 200 mm/s an approach
+takes 3 s and the model still answers only every 12.5 s, so about one approach in four carries
+one. The fast speeds therefore contribute fewer scored rows than the slow ones even at equal
+approach counts, and the agreement table should say so rather than let the reader assume
+seventy scored rows per speed.
 
 **The third acceptance quantity is now predictable too.** It asks the chapter to state the
 speed above which `600 / v < 0.4 + L`. With L measured, that speed is **47 mm/s on this
