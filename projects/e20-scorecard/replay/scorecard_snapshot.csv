@@ -1,8 +1,8 @@
 project,n,agreement,quieter,louder,no_literal,origin
 e01,0,not measured,not measured,not measured,not measured,none
-e02,1000,82.3 percent,177,0,0,CI stub
-e03,200,67.5 percent,65,0,0,CI stub
-e04,180,35.0 percent,117,0,0,CI stub
+e02,100,2.0 percent,0,98,0,bench
+e03,200,100.0 percent,0,0,0,bench
+e04,180,17.2 percent,9,4,136,bench
 e05,2000,0.0 percent,60,0,0,CI stub
 e06,2825,46.7 percent,1506,0,0,CI stub
 e07,1440,70.8 percent,7,0,0,CI stub
