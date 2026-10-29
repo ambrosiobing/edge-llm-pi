@@ -12,8 +12,7 @@
 # spaces and tabs only, never a newline, which is why 192 generated tokens are enough
 # for the longest answer this grammar allows.
 root    ::= "[" ws item ws "," ws item ws "," ws item ws "]"
-item    ::= "{" ws "\"project\"" ws ":" ws project ws "," ws "\"reason\"" ws ":" ws
-            reason ws "}"
+item    ::= "{" ws "\"project\"" ws ":" ws project ws "," ws "\"reason\"" ws ":" ws reason ws "}"
 project ::= "\"e01\"" | "\"e02\"" | "\"e03\"" | "\"e04\"" | "\"e05\"" | "\"e06\"" |
             "\"e07\"" | "\"e08\"" | "\"e09\"" | "\"e10\"" | "\"e11\"" | "\"e12\"" |
             "\"e13\"" | "\"e14\"" | "\"e15\"" | "\"e16\"" | "\"e17\"" | "\"e18\"" |
