@@ -18,6 +18,26 @@ approaches by hand at three speeds ...; **repeatability at a fixed 200 mm over 1
 mean and spread published**; the decision latency ...; throttle bits `0x0` before and after".
 The 200 approaches and the latency are untouched and still wait on cooling.
 
+**TWO LATENCY FIGURES BELOW ARE SUPERSEDED, AND THE SPEED WINDOW WITH THEM.** Both boards
+were measured at four threads later the same afternoon, and the figures this record uses turn
+out to be means over a transient. The prompt time ramps as the context fills and then
+plateaus, so a mean over a short run is not a latency at all. Board B's `L = 12.24 s` came
+from a run of eight answers that stopped four events before its plateau began, and no
+`get_throttled` reading for that run exists in any record. The corrected figures are the
+plateau means:
+
+    board A, 4 threads, MEASURED PLATEAU    L  5.809 s   ceiling 96.6 mm/s
+    board B, 4 threads, MEASURED PLATEAU    L 13.217 s   ceiling 44.1 mm/s
+
+**Every conclusion in this record survives the correction and two of them tighten.** Board B's
+window narrows, board B still has nothing at two standard deviations, all three run sheet
+speeds are still outside the window, and e06 still belongs on board A. What changes is that
+the board A column is no longer a projection. The numbers below are left as they were written
+at 13:07 rather than edited in place, except where marked, so that the correction is visible
+rather than silent. See
+`2026-10-30_1352_decision-latency-steady-state_pi4b-eplepi.md`, which also finds that every
+model answer in its run is the prompt's own instruction read back.
+
 ## The measurement
 
     n 100   mean 200.56 mm   sd 3.18874 mm
@@ -87,13 +107,22 @@ The floor is a property of the sensor and does not move between boards. Only the
 because it is set by the decision latency.
 
     configuration                              L        ceiling    2 sd window
-    board B, 4 threads, live, MEASURED        12.24 s   47.5 mm/s  EMPTY
+    board B, 4 threads, live, SUPERSEDED      12.24 s   47.5 mm/s  EMPTY
     board A, 2 threads, replay, MEASURED       8.51 s   67.3 mm/s  63.8 to 67.3, ratio 1.06
     board A, 4 threads, PROJECTED              5.88 s   95.6 mm/s  63.8 to 95.6, ratio 1.50
 
+    CORRECTED the same afternoon, plateau means rather than run means:
+    board B, 4 threads, MEASURED PLATEAU     13.217 s   44.1 mm/s  EMPTY
+    board A, 4 threads, MEASURED PLATEAU      5.809 s   96.6 mm/s  63.8 to 96.6, ratio 1.51
+
 **So e06 should run on board A, at four threads, and the thread count is not a detail.** The
 measured two-thread figure leaves a two-sd window of ratio **1.06**, which is one speed and
-not three. Only the four-thread projection opens it to 1.50.
+not three. Only four threads opens it, to a measured 1.51.
+
+**The projection landed 1.2 percent from the measurement that replaced it**, 5.88 s against
+5.809 s, while a twenty-event mean of the real thing landed 1.9 percent the other way. The
+label on the projection was honest and its precision was better than the first two
+measurements, because those averaged a ramp with a steady state.
 
 Both board A figures deserve their labels. The 8.51 s is **measured**, the sum of 4388.0 ms
 prompt and 4123.9 ms generate from the replay run of Thursday 29 October 2026 at two threads
@@ -202,6 +231,11 @@ will mislead a later reader. Not chased here; recorded.
     established   the spread grows with distance across four fixed targets
     NOT shown     e06's first clause, the 200 approaches, still blocked on cooling
     NOT shown     e06's third clause, the latency, which needs the model to run
-    NOT measured  board A's L for e06 at four threads, which is the figure the board
-                  recommendation rests on; 8.51 s is measured at TWO threads and leaves
-                  a two-sd window of ratio 1.06, which is one speed and not three
+    MEASURED      board A's L for e06 at four threads, 5.809 s, taken later the same
+                  afternoon; the recommendation no longer rests on a projection, and the
+                  two-sd window on board A is 63.8 to 96.6 mm/s, a ratio of 1.51
+    superseded    board B's L = 12.24 s, a mean over eight ramp events with no register
+                  reading; its plateau is 13.217 s and its ceiling 44.1 rather than 47.5
+    found later   40 of 40 model answers echoed the prompt's instruction into the beam
+                  field, and 0 of 40 decisions agreed with the rule, so e06's first clause
+                  is blocked by something cooling will not fix
