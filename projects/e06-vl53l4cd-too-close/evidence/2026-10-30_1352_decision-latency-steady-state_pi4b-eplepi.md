@@ -18,16 +18,24 @@ answer in this run is the prompt's own instruction read back.
 The per-event table is the whole finding. The prompt time climbs for nine events, holds flat
 for twenty-three, then steps upward for the last eight.
 
-    events  1 to  9    prompt   818.1 to 2288.4    ramp, the context filling
+    events  1 to  9    prompt   818.1 to 2288.4    ramp, the ten-range window filling
     events 10 to 32    prompt  2395.5 to 2400.5    FLAT to 0.2 percent over 23 events
     events 33 to 40    prompt  2405.9 to 2461.6    rising 2.7 percent, the throttle
 
     STEADY STATE, events 10 to 32    prompt 2396.9 ms    generate 3412.4 ms    L 5.809 s
 
-The loader reports `inp_tokens [i32, ne = { 512, ... }]`. The prompt grows as history
-accumulates until it fills that context and then every prompt is the same size and costs the
-same. **A hand approach run is in the saturated state within the first minute and stays
-there, so the plateau is the only figure the speed window may use.**
+**The cause is in e06's own source, and an earlier version of this record got it wrong.** That
+version pointed at the loader's `inp_tokens [i32, ne = { 512, ... }]` and said the prompt grew
+until it filled that context. It does not. The whole prompt is about 510 characters, nowhere
+near 512 tokens, and the 512 is the engine's batch reservation. The real bound is in
+`project_format_prompt` in `src/e06_main.c`:
+
+    for (i = (ctx->n > 9 ? ctx->n - 9 : 0); i < ctx->n && k < (int)sizeof hist - 8; i++)
+
+**Nine past ranges plus the current one, so the prompt reaches its final size at event 10 and
+never grows again.** That is exactly where the measured plateau begins. **A hand approach run
+is in the saturated state within the first second and stays there, so the plateau is the only
+figure the speed window may use.**
 
 Three averages of the same board, all arithmetically correct, none of them the latency:
 
@@ -159,18 +167,50 @@ wrong answer. The window arithmetic is unaffected, because it asks how fast a de
 rather than whether it is right. **e06's first clause, the agreement table, is in trouble for a
 reason that has nothing to do with cooling and that a fan will not fix.**
 
-## A QUESTION THIS RAISES ABOUT THE CODE, NOT YET ANSWERED
+## THE CORRECTNESS QUESTION THIS RAISED, NOW READ AND CLOSED FAVOURABLY
 
-If the prompt grows until it fills 512 tokens and then stops growing, something is dropping
-history to keep it inside the window. For a project whose decision depends on the five newest
-ranges being lower than the one before, **what gets dropped is a correctness question rather
-than a performance one.** e06's prompt assembly has not been read and nothing is claimed about
-it here. It is a better reason to read that code than the latency was.
+An earlier version of this record asked what gets dropped when the prompt stops growing, and
+called it a correctness question rather than a performance one. The source answers it:
 
-A second question of the same kind: board B's prompt saturated at event 12 and board A's at
-event 10, from the same replay file. Two runs of the same input should fill the same context
-at the same rate. The difference is small and may be an artefact of where each run's first
-answer landed, and it is not explained.
+    prompt.txt   "You see the last ten ranges in mm, oldest first; 0 means no valid range."
+    the code     nine past ranges from ctx->hist plus the current event, so ten
+
+**Nothing is dropped silently and the prose matches the code.** The bound is deliberate and
+documented in the prompt the model is given. The rule needs the five newest ranges each lower
+than the one before, and ten ranges is twice that, so the window is sufficient for the rule it
+serves. This is one of the few places in the volume where a chapter's prose and its
+implementation were checked against each other and agreed.
+
+Two smaller observations from the same reading, neither of them a live defect:
+
+- **`k += snprintf(...)` accumulates the length snprintf would have written**, not what it
+  wrote, so a truncating call would push `k` past the buffer. It cannot happen at the current
+  bound: nine ranges of at most six characters is 54 against a 160-byte buffer guarded at 152.
+  It becomes reachable if the window is ever widened, which is worth knowing before widening
+  it.
+- **`range_of` maps any non-zero status to 0.0**, which is what the prompt means by "0 means
+  no valid range". Consistent, and it means a bad status reaches the model as a zero rather
+  than as a gap.
+
+**And board B's plateau beginning near event 12 rather than 10 is not a difference in the
+prompt.** The bound is the same in both runs. Its events 10 and 11 read 6234.2 and 6285.4
+against a plateau of 6301, which is 1.1 percent, and that is cache warming or noise rather
+than a later saturation. The earlier version of this record offered no explanation and should
+not have implied the two runs filled anything at different rates.
+
+## THE ECHO HAS A TESTABLE CAUSE, AND THE TEST NEEDS NO BOARD
+
+Reading the two prompts together suggests why the instruction comes back as the answer.
+`prompt.txt` ends with the beam instruction, and the per-event text that follows is short:
+
+    ranges mm, oldest first: 902, 902, 896, 900, 901, 901, 898, 898, 901, 898. Decide.
+
+So the last instruction the model sees before generating is the sentence it then reproduces.
+**That is a recency hypothesis and it is falsifiable cheaply**: reorder `prompt.txt` so the
+beam instruction is not the final sentence, put the two orderings to the engine on skyhorizon
+with the same grammar and the same ranges, and compare. The method is the one e13 established
+on Friday 30 October 2026, which needs no board, no bus and no project binary. Nothing is
+claimed here beyond that the test is worth running before clause one is attempted.
 
 ## Four mistakes of mine this afternoon, each with its correction
 
@@ -202,4 +242,8 @@ answer landed, and it is not explained.
     superseded    L = 12.24 s for board B, a mean over 8 ramp events with no register reading
     NOT shown     e06's first clause, the 200 approaches, still blocked on cooling
     NOT shown     e06's third clause, which needs a run that passes the register check
-    NOT read      e06's prompt assembly, and what it drops when the context fills
+    established   the prompt holds the last ten ranges by a bound in e06_main.c, which
+                  is what the plateau at event 10 is, and it matches what prompt.txt
+                  promises the model, so nothing is dropped silently
+    NOT shown     whether the echo is a recency effect of the beam instruction being
+                  the last sentence before generation; falsifiable on skyhorizon
