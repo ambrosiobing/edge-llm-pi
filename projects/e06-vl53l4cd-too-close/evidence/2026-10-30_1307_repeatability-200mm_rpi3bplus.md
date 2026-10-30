@@ -86,13 +86,25 @@ and the cause would have been argued about afterwards.
 The floor is a property of the sensor and does not move between boards. Only the ceiling does,
 because it is set by the decision latency.
 
-    board B, Pi 3B+   L = 12.24 s measured     ceiling  47.5 mm/s   2 sd window EMPTY
-    board A, Pi 4B    L = 5.5 s ESTIMATED      ceiling 101.7 mm/s   2 sd window 63.8 to 101.7
+    configuration                              L        ceiling    2 sd window
+    board B, 4 threads, live, MEASURED        12.24 s   47.5 mm/s  EMPTY
+    board A, 2 threads, replay, MEASURED       8.51 s   67.3 mm/s  63.8 to 67.3, ratio 1.06
+    board A, 4 threads, PROJECTED              5.88 s   95.6 mm/s  63.8 to 95.6, ratio 1.50
 
-**So e06 should run on board A.** That is a conclusion from measurement rather than a
-preference, and it carries one honest caveat: board A's L of 5.5 s is **estimated**, projected
-from the A72 over A53 ratios measured on e03 on Tuesday 27 October 2026, and has never been
-measured for e06. It should be measured before three speeds are chosen from it.
+**So e06 should run on board A, at four threads, and the thread count is not a detail.** The
+measured two-thread figure leaves a two-sd window of ratio **1.06**, which is one speed and
+not three. Only the four-thread projection opens it to 1.50.
+
+Both board A figures deserve their labels. The 8.51 s is **measured**, the sum of 4388.0 ms
+prompt and 4123.9 ms generate from the replay run of Thursday 29 October 2026 at two threads
+with the same 64-token budget. The 5.88 s is **projected** from it using the thread ratios
+measured on e03 on Tuesday 27 October 2026, 1.94 on prompt and 1.14 on generation, and has
+never been measured for e06 at all.
+
+**That projection is now load bearing and should not be**, because it decides whether e06 has
+a usable window. Measuring board A's L for e06 at four threads costs one replay run with the
+real model and no sensor, since latency is a property of the board and the model rather than
+of the target. It should be done before any speed is chosen.
 
 ## A SECOND FINDING, FROM A RUN THAT WAS A MISTAKE
 
@@ -190,4 +202,6 @@ will mislead a later reader. Not chased here; recorded.
     established   the spread grows with distance across four fixed targets
     NOT shown     e06's first clause, the 200 approaches, still blocked on cooling
     NOT shown     e06's third clause, the latency, which needs the model to run
-    NOT measured  board A's L for e06; the 5.5 s used above is projected from e03
+    NOT measured  board A's L for e06 at four threads, which is the figure the board
+                  recommendation rests on; 8.51 s is measured at TWO threads and leaves
+                  a two-sd window of ratio 1.06, which is one speed and not three
