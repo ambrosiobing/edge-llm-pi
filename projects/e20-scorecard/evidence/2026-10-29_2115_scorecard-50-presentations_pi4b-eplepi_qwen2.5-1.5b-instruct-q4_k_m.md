@@ -109,6 +109,13 @@ the refusal fell into the unreachable branch, and the response body, which carri
 server's reason, was discarded unread. The diagnosis came from reading the server's own
 console instead. That defect is not fixed yet.
 
+**Fixed on Friday 30 October 2026 in `a37bf79`**, after this reading was taken and so
+recorded as a pointer rather than by editing the sentence above. `HTTPError` is now caught
+before the `URLError` branch, its body is read into the message, and it raises
+`RemoteRefused`, a subclass of `RemoteUnreachable` so the chapter's fallback is unchanged.
+Five cases cover it, and putting the clauses back in the old order fails three of them with
+the exact message quoted above.
+
 ## THE BOARD DID NOT WARM, WHICH IS WHY THIS PROJECT WAS RUNNABLE AT ALL
 
     before   throttled=0x0   temp=43.3'C
