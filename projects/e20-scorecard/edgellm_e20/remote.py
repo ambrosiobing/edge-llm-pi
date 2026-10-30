@@ -64,6 +64,17 @@ class RemoteUnreachable(Exception):
     """The server did not answer. The message names the host, the port and the route."""
 
 
+class RemoteRefused(RemoteUnreachable):
+    """The server answered and refused the request, which is not the same condition.
+
+    A subclass of RemoteUnreachable on purpose, so that open_model's fallback still
+    triggers and no caller has to change. What changes is the message. HTTPError is a
+    subclass of URLError, so a refusal caught in the unreachable branch printed advice
+    about binding and cabling that cannot clear a 400, and threw away the body that
+    carried the server's own reason. Measured on Thursday 29 October 2026: a grammar
+    llama-server could not parse was reported as "could not reach llama-server"."""
+
+
 class LocalEngineMissing(Exception):
     """The local fallback was asked for and the shared engine module is not there."""
 
@@ -250,6 +261,24 @@ class RemoteModel:
         self.engine = "remote %s at %s" % (model_name, self.url)
         self.requests = 0
 
+    def _refused(self, route, exc):
+        """The server answered with a status it refuses on, and said why in the body.
+
+        urllib hands an HTTPError over as a readable file, so the reason is there to be
+        read. Reading it is the whole point: the first time this fired, the answer was
+        a GBNF parse error and the client printed a network remedy instead."""
+        try:
+            detail = exc.read().decode("utf-8", "replace").strip()
+        except (OSError, ValueError, AttributeError):
+            detail = ""
+        if len(detail) > 400:
+            detail = detail[:400] + " ..."
+        return RemoteRefused(
+            "llama-server at %s answered HTTP %s and refused the request. The server "
+            "was reached and replied, so this is not a network problem and restarting "
+            "it, rebinding it or checking the route will not clear it. The server "
+            "said: %s" % (route, exc.code, detail or "nothing in the response body"))
+
     def _unreachable(self, route, exc):
         return RemoteUnreachable(
             "e20 could not reach llama-server at %s after %.0f s (%s: %s). Start the "
@@ -265,6 +294,8 @@ class RemoteModel:
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                 return 200 <= response.status < 300
+        except urllib.error.HTTPError as exc:
+            raise self._refused(route, exc) from None
         except (urllib.error.URLError, socket.timeout, OSError) as exc:
             raise self._unreachable(route, exc) from None
 
@@ -286,6 +317,8 @@ class RemoteModel:
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                 body = json.loads(response.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as exc:
+            raise self._refused(route, exc) from None
         except (urllib.error.URLError, socket.timeout, OSError) as exc:
             raise self._unreachable(route, exc) from None
         except ValueError as exc:
