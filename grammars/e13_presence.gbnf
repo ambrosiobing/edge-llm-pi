@@ -7,8 +7,15 @@
 # ws admits spaces and tabs only, never a newline. The hyphen sits last in the "why" class
 # so that it is a literal hyphen and not a range: the sentence has to be able to write a
 # node name.
-root     ::= "{" ws "\"node\"" ws ":" ws node ws "," ws "\"decision\"" ws ":" ws
-             decision ws "," ws "\"why\"" ws ":" ws why ws "}"
+# The object is split into three pair rules because llama.cpp's GBNF parser ends a rule
+# at a newline unless that line ends with a pipe, and this object on one line is 130
+# characters against the repository's limit of ninety-nine. Folding the pairs back into
+# root reintroduces a grammar the engine refuses and the stub accepts. The accepted
+# language is unchanged and the stub still expands to the oracle's answer.
+root     ::= "{" ws pnode ws "," ws pdec ws "," ws pwhy ws "}"
+pnode    ::= "\"node\"" ws ":" ws node
+pdec     ::= "\"decision\"" ws ":" ws decision
+pwhy     ::= "\"why\"" ws ":" ws why
 node     ::= "\"joint-a\"" | "\"joint-b\"" | "\"joint-c\"" | "\"joint-d\""
 decision ::= "\"PRESENT\"" | "\"MODELLED\"" | "\"ABSENT\""
 why      ::= "\"" [A-Za-z0-9 ,.()-]{8,96} "\""
