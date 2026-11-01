@@ -1,0 +1,8 @@
+t_s,rule,armed,peak_g,stamp,verdict,sent,mr,queued,message
+5.000000,"TAP",1,2.33,"00:00:05","sent",0,,1,"ALERT TAP peak 2.33 g at t+00:00:05. Check the device settings for the maximum acceleration limit."
+7.000000,"TAP",0,2.50,"00:00:07","not armed: inside the minimum interval",0,,1,""
+12.000000,"TAP",0,3.05,"00:00:12","not armed: inside the minimum interval",0,,1,""
+20.000000,"FREEFALL",1,0.15,"00:00:20","sent",0,,2,"ALERT FREEFALL peak 0.15 g at t+00:00:20. Check the message type, peak value, and time."
+21.000000,"FREEFALL",0,0.14,"00:00:21","not armed: inside the minimum interval",0,,2,""
+31.000000,"TAP",1,3.30,"00:00:31","sent",0,,3,"ALERT TAP peak 3.30 g at t+00:00:31. Check the device settings for the maximum acceleration limit."
+44.000000,"TAP",1,3.36,"00:00:44","sent",0,,4,"ALERT TAP peak 3.36 g at t+00:00:44. Check the device settings for the maximum acceleration limit."
