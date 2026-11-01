@@ -238,7 +238,12 @@ claimed here beyond that the test is worth running before clause one is attempte
     established   --n-predict is decorative for e06; the grammar terminates first
     established   board A completes about 32 of the 200 approaches before the soft limit
     established   40 of 40 answers echo the prompt instruction into the beam field
-    established   0 of 40 decisions agreed with the rule on this input
+    established   0 of 40 decisions agreed with the rule on this input, AND THAT FIGURE
+                  MEASURES THE SLICE: the first 40 rows of approaches.csv are all CLEAR,
+                  so a constant CLEAR scores 40 of 40 and the model's constant APPROACHING
+                  scores 0. On a 50-event slice spanning the descent the same constant
+                  output scores 54.0 percent. See
+                  evidence/2026-11-01_1900_agreement-is-the-slice-not-the-model
     superseded    L = 12.24 s for board B, a mean over 8 ramp events with no register reading
     NOT shown     e06's first clause, the 200 approaches, still blocked on cooling
     NOT shown     e06's third clause, which needs a run that passes the register check
