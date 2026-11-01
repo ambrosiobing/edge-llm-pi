@@ -90,7 +90,9 @@ either copy**, so no check in this repository has ever looked at what a grammar 
     established   e12 is the only refusal, and its cause is a case restriction
     established   two of the fourteen are measured and both show the echo happening
     NOT shown     anything about the other thirteen beyond availability
-    NOT shown     whether a reordered prompt removes the echo; the instruction is the last
-                  sentence before generation in both measured projects, which is a
-                  falsifiable hypothesis and needs only skyhorizon to test
+    REFUTED       that a reordered prompt removes the echo. Tested on e06 the same
+                  evening with one variable, the sentence order, and the model echoed
+                  whatever became last instead: the decision literals and the input
+                  ranges. See evidence/2026-11-01_1810_prompt-order-is-not-the-fix in
+                  project 6. The remedy proposed below is withdrawn.
     NOT a gate    --check fails 14 of 15 and is deliberately outside CI

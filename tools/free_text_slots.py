@@ -42,10 +42,21 @@ project's downstream checker would do with an echo, and it only understands the 
 shape above, a class with an explicit {min,max}; a grammar that writes its free text some
 other way is not examined and is not thereby cleared.
 
+**Reordering the prompt is not the remedy, and that was measured rather than assumed.** On
+Sunday 1 November 2026 project 6 was run twice on board A with one variable, the sentence
+order of its prompt, both files 448 bytes and the same sentences. With the instruction last,
+20 of 20 answers echoed it. With the instruction moved to third of seven, the model echoed
+**whatever had become last instead**: two rows listed the decision literals from the rules
+section and about twelve read back the event's own input ranges. Zero of twenty answers in
+either arm described what was in front of the sensor, and generation doubled, which would
+empty that project's speed window on its own. So the model is not following the instruction
+and choosing where to put it; it is continuing the text, and a grammar that pins only a
+shape cannot refuse a continuation. See project 6's evidence of that date.
+
 **--check currently fails on 14 of 15 slots**, which is the finding rather than a broken
 gate. It is not wired into CI for that reason: a gate that fires on almost everything
 teaches a reader to ignore it. Wire it in when the slots have been narrowed or when each
-project carries a check that rejects its own instruction.
+project carries a check that rejects its own instruction. Prompt layout is not that check.
 """
 import argparse
 import pathlib
