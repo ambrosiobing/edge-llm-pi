@@ -154,7 +154,7 @@ int edgellm_main(int argc, char **argv)
     char err[256], *system_prompt = NULL, *prompt_buf = NULL, *wrapped_buf = NULL;
     long n_events = 0, n_model = 0, n_model_errors = 0, n_act_errors = 0;
     /* Answers that stopped because the token budget ran out rather than because the
-     * grammar finished. Added Thursday 6 November 2026 after an e06 run reported
+     * grammar finished. Added Friday 6 November 2026 after an e06 run reported
      * "20 model answers, 0 model errors" with FOURTEEN replies cut off mid-sentence at
      * exactly --n-predict 64: every one of them was counted as an answer and scored.
      *

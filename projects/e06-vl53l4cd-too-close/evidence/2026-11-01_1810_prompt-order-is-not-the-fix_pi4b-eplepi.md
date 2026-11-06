@@ -76,7 +76,7 @@ counts this and publishes it: its record carries "objects that never closed, pub
 counted 949" out of a thousand. **e06's summary line has no such column**, so a run can be
 three quarters truncated and report cleanly.
 
-### FIXED AND VERIFIED ON THURSDAY 6 NOVEMBER 2026
+### FIXED AND VERIFIED ON FRIDAY 6 NOVEMBER 2026
 
 The shared main now counts answers whose `n_generated` reached `n_predict` and prints the
 total in the summary line. Not a JSON closure test: that main serves every project and e19's

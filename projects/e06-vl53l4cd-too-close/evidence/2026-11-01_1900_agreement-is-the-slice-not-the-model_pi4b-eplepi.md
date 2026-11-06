@@ -124,7 +124,7 @@ slice the figure is 3 and means what it says.
                   and, since a non-degenerate slice is about 50 events against this board's
                   32 before the soft limit, cooling as well
 
-## REPEATED ON THURSDAY 6 NOVEMBER 2026 FROM A CLEAN REGISTER, AND IT STILL TRIPPED
+## REPEATED ON FRIDAY 6 NOVEMBER 2026 FROM A CLEAN REGISTER, AND IT STILL TRIPPED
 
 The same fifty events, the same model, binary, grammar and prompt, on a board freshly
 booted and idle for five days.
@@ -146,7 +146,7 @@ carried by e06's pre-flight record of Thursday 29 October 2026 and requoted in e
 of Thursday 29 October 2026. It did not fit. That 367 s line names no load, no thread count
 and no model, and whatever produced it was not this one.
 
-    measured Thursday 6 November 2026   trips inside about 300 s from 35.5 C
+    measured Friday 6 November 2026   trips inside about 300 s from 35.5 C
     measured Sunday 1 November 2026     onset at event 33 of 40, about 190 s, from 41.8 C
     the standing claim                  367 s, source unstated
 

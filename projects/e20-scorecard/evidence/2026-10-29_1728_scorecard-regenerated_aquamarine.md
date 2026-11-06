@@ -133,7 +133,7 @@ on the board is a weaker fallback than the board can now carry.
 **This does not change the recommendation, and the reason is heat rather than memory.** Fifty
 presentations at `n_predict` 192 is a long stretch of near-continuous generation, and board A
 trips its thermal limit after 367 seconds of load. **That 367 s is WITHDRAWN: measured at
-234 s on Thursday 6 November 2026**, which strengthens this paragraph rather than
+234 s on Friday 6 November 2026**, which strengthens this paragraph rather than
 weakening it. e20's acceptance happens to carry no
 `get_throttled` clause, unlike e06's, so a throttled run would not be discarded, only slowed.
 Remote inference on skyhorizon remains the better sitting and remains what the chapter

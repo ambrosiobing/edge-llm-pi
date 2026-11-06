@@ -1,4 +1,4 @@
-# Board A's thermal budget is 234 seconds, and the supply held, Thursday 6 November 2026, 15:10
+# Board A's thermal budget is 234 seconds, and the supply held, Friday 6 November 2026, 15:10
 
     board      Raspberry Pi 4 Model B Rev 1.4, 8 GB, hostname eplepi, revision d03114
     supply     black 65W-UC01WAEB USB-C, the unit that measured clean on Tuesday 27
@@ -51,7 +51,7 @@ rather than past it, bit 3 going on and off twelve times while the temperature c
     367 s     carried by e06's pre-flight record of Thursday 29 October 2026 and requoted
               in e20's of the same day. It names no load, no thread count and no model.
               WITHDRAWN.
-    ~300 s    my own estimate of Thursday 6 November 2026, from the earlier run that
+    ~300 s    my own estimate of Friday 6 November 2026, from the earlier run that
               tripped. Too generous.
     234 s     MEASURED, from 39.9 C, with the trip at 79.3 C and a trace to read it in.
 
