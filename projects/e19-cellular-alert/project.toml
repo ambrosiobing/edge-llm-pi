@@ -15,7 +15,14 @@ binary   = "edgellm-e19"
 [build]
 # From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON].
 command = "cmake --build build --target edgellm-e19 e19_compose_check_test rules_test oracle_check"
-# Three tests: the six classification cases inside the shared harness, this project's
+# TWO tests in a real-engine build and three in a stub build. The oracle registers only
+# under -DEDGELLM_STUB_MODEL=ON, which this project's CMakeLists states in its header and
+# cmake/edgellm_project.cmake announces at configure time. ctest does not warn when a -R
+# alternation matches fewer tests than it names, so against build/ this line returns
+# "100% tests passed, 0 tests failed out of 2" and nothing says the third was asked for.
+# Found Sunday 1 November 2026; e17's manifest already carried the condition and this
+# one did not.
+# The tests: the six classification cases inside the shared harness, this project's
 # own nineteen checks on the field checker and the send gate, and the replay oracle.
 test    = "ctest --test-dir build -R 'rules_test|e19_compose_check|edgellm-e19-oracle' --output-on-failure"
 
