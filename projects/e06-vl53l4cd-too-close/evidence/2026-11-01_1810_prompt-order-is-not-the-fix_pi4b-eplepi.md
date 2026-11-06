@@ -74,7 +74,30 @@ closed. Arm B's own summary line reads:
 **Twenty answers and zero errors, with fourteen truncated objects among them.** e02 already
 counts this and publishes it: its record carries "objects that never closed, published 949,
 counted 949" out of a thousand. **e06's summary line has no such column**, so a run can be
-three quarters truncated and report cleanly. The three arm B rows that did echo are the three
+three quarters truncated and report cleanly.
+
+### FIXED AND VERIFIED ON THURSDAY 6 NOVEMBER 2026
+
+The shared main now counts answers whose `n_generated` reached `n_predict` and prints the
+total in the summary line. Not a JSON closure test: that main serves every project and e19's
+answer is an SMS body with no braces, so a closure test would have to know each grammar's
+shape, while reaching the budget is shape-agnostic and is exactly what separates a finished
+answer from a truncated one.
+
+**The prediction was written down before the run and the run matched it.** These arm B
+conditions were repeated on board A at 4fd0527, from 49.6 C with the register `0x0` at both
+ends:
+
+    e06: 20 events, 20 model answers, 0 model errors, 14 stopped at the budget, ...
+    n_generated histogram:  3x29, 1x48, 1x53, 1x60, 14x64
+
+**Fourteen from the new counter and fourteen from an awk over a column it does not touch.**
+The change compiled with no `-Wformat` warning in a full stub tree on skyhorizon where all
+twenty tests passed, which is the breadth it needed because every project compiles that file.
+
+So a run of this project can no longer report cleanly while three quarters of its answers
+were cut off. Ten records in this volume quote the old summary line and stay as written,
+being dated records of what it said then. The three arm B rows that did echo are the three
 at 29 tokens, which are the ones that finished.
 
 This is a defect in the reporting rather than in the loop, and it is the reason arm B looked
