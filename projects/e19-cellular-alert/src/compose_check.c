@@ -183,7 +183,15 @@ e19_verdict e19_compose_check(const char *message, const e19_record *rec)
 const char *e19_verdict_name(e19_verdict v)
 {
     switch (v) {
-    case E19_PASS:                     return "sent";
+    /* NOT "sent". This is the field checker's verdict and the checker cannot send
+     * anything: whether a message left the board is the ledger's own `sent` column, and
+     * with no modem fitted it is 0 on every row. Until Sunday 1 November 2026 this
+     * returned "sent", so the ledger of that date carries four rows reading verdict
+     * "sent" beside sent 0, an empty message reference, and a summary line saying "modem
+     * not fitted". That ledger is kept as it was written; see the project's evidence of
+     * 16:50 that day. A chapter whose subject is the gap between claimed and measured
+     * cannot have its own record claim a send that did not happen. */
+    case E19_PASS:                     return "passed the checker";
     case E19_REFUSED_EMPTY:            return "refused: empty";
     case E19_REFUSED_TOO_LONG:         return "refused: too long";
     case E19_REFUSED_BAD_CHAR:         return "refused: character outside the SMS set";
