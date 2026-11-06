@@ -123,3 +123,34 @@ slice the figure is 3 and means what it says.
     NOT a claim   against clause one, which needs a clean register and therefore a reboot
                   and, since a non-degenerate slice is about 50 events against this board's
                   32 before the soft limit, cooling as well
+
+## REPEATED ON THURSDAY 6 NOVEMBER 2026 FROM A CLEAN REGISTER, AND IT STILL TRIPPED
+
+The same fifty events, the same model, binary, grammar and prompt, on a board freshly
+booted and idle for five days.
+
+    start 35.5 C, register 0x0        the coldest start any run this week has had
+    mean prompt 2263.3 ms, mean generate 3792.0 ms
+    rule counts 27 APPROACHING, 12 CLEAR, 11 TOO_CLOSE
+    agreement 27 of 50, 54.0 percent  IDENTICAL to the run above
+    always APPROACHING 54.0 percent   printed by agreement.py itself
+    register 0x80000 AFTER, 78.4 C
+
+**The agreement figure is confirmed by repetition**, five days apart, from registers in
+opposite states. Determinism holds, so the constant equality is a property of the model and
+not of one sitting.
+
+**And the attempt to get a clean register failed, which corrects a standing bench figure.**
+This run was predicted to fit: about 303 s of load against "a thermal limit after 367 s"
+carried by e06's pre-flight record of Thursday 29 October 2026 and requoted in e20's record
+of Thursday 29 October 2026. It did not fit. That 367 s line names no load, no thread count
+and no model, and whatever produced it was not this one.
+
+    measured Thursday 6 November 2026   trips inside about 300 s from 35.5 C
+    measured Sunday 1 November 2026     onset at event 33 of 40, about 190 s, from 41.8 C
+    the standing claim                  367 s, source unstated
+
+**So clause one cannot be satisfied on this board even for a fifty-event replay, from any
+starting temperature.** Cooling is required by measurement rather than by extrapolation, and
+that is a firmer statement than the one above it. The 367 s figure should not be requoted
+until something re-measures it and says what was running.
