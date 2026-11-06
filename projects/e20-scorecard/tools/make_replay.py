@@ -46,12 +46,55 @@ from edgellm_e20.scorecard import (IDS, ScorecardError, as_snapshot_csv,  # noqa
                                    blank_cells, build, notes_of)
 
 SNAPSHOT = PROJECT / "replay" / "scorecard_snapshot.csv"
+PROVENANCE = PROJECT / "replay" / "PROVENANCE.txt"
 REPLAY = PROJECT / "replay" / "scorecards_50.csv"
 ORACLE = REPO / "tests" / "oracle" / "e20.expected.csv"
 GRAMMAR = PROJECT / "grammar.gbnf"
 N = 50
 TAG = "scorecard"
 FIRST_SEED = 2026
+
+
+def house_date(when):
+    """Friday 6 November 2026, 15:40. The volume's date form, with no leading zero on
+    the day, which strftime cannot give portably across Linux and Windows."""
+    return "%s %d %s %d, %02d:%02d" % (when.strftime("%A"), when.day,
+                                       when.strftime("%B"), when.year,
+                                       when.hour, when.minute)
+
+
+def provenance_text(when, head, measured, total):
+    """The one fact the three generated files do not carry: WHEN they were generated.
+
+    The snapshot is a frozen picture of a changing thing, which is the whole reason it
+    exists, and its neighbours in replay/ are fixtures whose content never moves. So a
+    stale fixture is impossible and a stale snapshot is invisible, and on Friday 6
+    November 2026 it had been stale for eight days across four projects without anything
+    saying so. Comparing the line below against the newest file in any evidence/ directory
+    is what makes that visible, and it is why this file is written beside the other three
+    rather than left to the record that happens to mention a regeneration.
+    """
+    template = """generated   %s
+tree        %s
+rows        %d of %d carry numbers, %d read not measured
+covers      replay/scorecard_snapshot.csv, replay/scorecards_50.csv,
+            tests/oracle/e20.expected.csv
+stale when  any projects/*/evidence/ holds a record newer than the date above;
+            the generator's own instruction is to regenerate all three
+            together whenever a project gains evidence
+"""
+    return template % (house_date(when), head, measured, total, total - measured)
+
+
+def git_head():
+    """The tree the snapshot was taken from, or a stated absence rather than a guess."""
+    try:
+        import subprocess
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(REPO),
+                             capture_output=True, text=True, timeout=10)
+        return out.stdout.strip() or "unknown: git gave no answer"
+    except Exception:
+        return "unknown: git not available here"
 
 
 def main():
@@ -90,8 +133,12 @@ def main():
             matched += 1 if stub_pick == three[0] else 0
 
     measured = sum(1 for row in rows if row.measured)
+    import datetime
+    PROVENANCE.write_text(provenance_text(datetime.datetime.now(), git_head(),
+                                          measured, len(rows)), encoding="ascii")
     print("wrote %s" % SNAPSHOT.relative_to(REPO).as_posix())
     print("wrote %s" % REPLAY.relative_to(REPO).as_posix())
+    print("wrote %s" % PROVENANCE.relative_to(REPO).as_posix())
     print("wrote %s" % ORACLE.relative_to(REPO).as_posix())
     print("the scorecard: %d of %d rows carry numbers, %d read not measured"
           % (measured, len(rows), len(rows) - measured))

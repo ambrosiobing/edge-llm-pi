@@ -1,0 +1,43 @@
+generated   Thursday 29 October 2026, after 21:15. RECONSTRUCTED, NOT EMITTED.
+tree        unknown: the generator did not record one until Friday 6 November 2026
+rows        17 of 20 carry numbers, 3 read not measured
+covers      replay/scorecard_snapshot.csv, replay/scorecards_50.csv,
+            tests/oracle/e20.expected.csv
+stale when  any projects/*/evidence/ holds a record newer than the date above;
+            the generator's own instruction is to regenerate all three
+            together whenever a project gains evidence
+
+STALE AS OF FRIDAY 6 NOVEMBER 2026, AND DELIBERATELY NOT REGENERATED.
+
+This file was written by hand, not by tools/make_replay.py, because the generator did not
+write one until Friday 6 November 2026 and the three files it covers were generated before
+that. The date above is reconstructed and is not exact: the record
+evidence/2026-10-29_1728_scorecard-regenerated_aquamarine.md puts a regeneration at 17:28 on
+Thursday 29 October 2026, but the snapshot's e20 row carries 30.0 percent, which was not
+measured until the 21:15 run of the same day, so the files were touched after that and
+nothing records when. THAT UNCERTAINTY IS WHY THIS FILE EXISTS.
+
+Nine evidence records have landed across four projects since, and two rows are now wrong:
+
+    e06   2825, 46.7 percent, CI stub      measured on hardware: 27 of 50, bench, and
+                                           0 of 40 on the all-CLEAR slice
+    e19   50, not measured, CI stub        measured on hardware: the send gate verified
+                                           event by event, 4 armed and 3 blocked
+
+e13 and e17 also gained records but neither closed a clause, so their stub figures stand.
+
+**So project 20 would rank e06 and e19 as the next things to measure**, and they are the two
+most measured projects in the volume. That is the cost of the staleness and it is accepted
+for now.
+
+WHY IT WAS NOT REGENERATED. Regenerating moves all three files together, which means the
+published figure of 30.0 percent no longer corresponds to its input and has to be re-measured
+against llama-server on skyhorizon. That is a session's work with a dependency outside this
+repository, and a half-done version, new input beside an old figure, is worse than either end
+state. The decision taken on Friday 6 November 2026 was to make the staleness visible and
+defer the regeneration, rather than to start it and leave it.
+
+WHAT TO DO WHEN IT IS REGENERATED. Run tools/make_replay.py, which will overwrite this file
+with an emitted one carrying an exact date and the tree it was taken from, then re-run the
+fifty presentations and publish the new agreement figure beside the constant baseline that
+tools/agreement.py now prints. The chapter's scorecard table moves with them.
