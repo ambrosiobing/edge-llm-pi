@@ -28,6 +28,11 @@ inside 112 seconds of wall clock, an **87 percent duty cycle**, so it heats the 
     board A    thermal limit after 367 s of load, 6.1 minutes
     board B    thermal limit after 282 s of load, 4.7 minutes
 
+**THE BOARD A LINE IS WITHDRAWN.** Measured Thursday 6 November 2026 with a
+one-per-second trace: the soft limit trips at 79.3 C after **234 s** of e06 load at
+four threads from 39.9 C. The 367 s above names no load, no thread count and no
+model. See e06's evidence/2026-11-06_1510_thermal-budget-is-234-seconds.
+
     200 approaches at 200 mm/s, the fastest plausible    about 10 minutes
     200 approaches at 100 mm/s                           about 17 minutes
     200 approaches at  50 mm/s                           about 30 minutes

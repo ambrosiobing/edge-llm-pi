@@ -65,7 +65,11 @@ even though the run fails the rule, and those are different statements.
     events 1 to 32, inclusive    about 190 s of inference from a 41.8 C start
 
 The standing figure for this board is a thermal limit after 367 s of load, taken from a colder
-start. **The opening temperature is a first-order variable**, not a detail: 41.8 C bought
+start. THAT FIGURE IS WITHDRAWN: measured Thursday 6 November 2026, the soft limit trips
+at 79.3 C after 234 s of this load from 39.9 C. The paragraph below is left as written
+because its point about the opening temperature survives the correction.
+
+**The opening temperature is a first-order variable**, not a detail: 41.8 C bought
 roughly half of 367 s. An earlier run the same afternoon opened at 59.4 C and tripped inside
 114 s, and one opening at 32.1 C ran 113 s and stayed at `0x0`.
 
