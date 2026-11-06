@@ -153,6 +153,17 @@ int edgellm_main(int argc, char **argv)
     io_event ev;
     char err[256], *system_prompt = NULL, *prompt_buf = NULL, *wrapped_buf = NULL;
     long n_events = 0, n_model = 0, n_model_errors = 0, n_act_errors = 0;
+    /* Answers that stopped because the token budget ran out rather than because the
+     * grammar finished. Added Thursday 6 November 2026 after an e06 run reported
+     * "20 model answers, 0 model errors" with FOURTEEN replies cut off mid-sentence at
+     * exactly --n-predict 64: every one of them was counted as an answer and scored.
+     *
+     * Why this counter and not chapter 2's "objects that never closed": this main serves
+     * every project, and not every project's answer is a JSON object. Project 19's is an
+     * SMS body with no braces at all, so a closure test would have to know each grammar's
+     * shape. n_generated reaching n_predict is shape-agnostic and is exactly the signal
+     * that separates a finished answer from a truncated one. */
+    long n_budget_stopped = 0;
     double sum_prompt_ms = 0.0, sum_generate_ms = 0.0;
     struct sigaction sa;
 
@@ -282,6 +293,8 @@ int edgellm_main(int argc, char **argv)
                 n_model++;
                 sum_prompt_ms += res.prompt_ms;
                 sum_generate_ms += res.generate_ms;
+                if (cfg.n_predict > 0 && res.n_generated >= cfg.n_predict)
+                    n_budget_stopped++;
             } else {
                 n_model_errors++;
                 memset(&res, 0, sizeof(res));
@@ -303,10 +316,10 @@ int edgellm_main(int argc, char **argv)
     if (rc == 0 && !stop_requested && r < 0 && (max_events == 0 || n_events < max_events))
         rc = 1;
 
-    fprintf(stderr, "%s: %ld events, %ld model answers, %ld model errors, %ld actuation "
-                    "errors, mean prompt %.1f ms, mean generate %.1f ms, rss %ld kB, engine "
-                    "%s, source %s\n",
-            project, n_events, n_model, n_model_errors, n_act_errors,
+    fprintf(stderr, "%s: %ld events, %ld model answers, %ld model errors, %ld stopped at "
+                    "the budget, %ld actuation errors, mean prompt %.1f ms, mean generate "
+                    "%.1f ms, rss %ld kB, engine %s, source %s\n",
+            project, n_events, n_model, n_model_errors, n_budget_stopped, n_act_errors,
             n_model > 0 ? sum_prompt_ms / (double)n_model : 0.0,
             n_model > 0 ? sum_generate_ms / (double)n_model : 0.0, edgellm_rss_kb(),
             edgellm_engine_version(), io_backend_name(src));
