@@ -42,7 +42,7 @@ One thing has to be said plainly, with its date. On Wednesday 14 October 2026 pr
 | Card B | the spare Verbatim 32 GB; the CAN overlays live here because the MCC 118 of [Project 10](../../chapters/10-mcc-118-voltage-event-labeller.md) on card A claims the same chip selects | the card is the hostname |  |
 | WS-28164 MCP2515 | the near node, with its own SN65HVD230 | SPI0 chip select 0 | interrupt GPIO23, 16 MHz crystal |
 | WS-28164 MCP2518FD | the far node, classic frames only | SPI0 chip select 1 | interrupt GPIO24, 40 MHz crystal |
-| Two jumper wires | CAN H to CAN H and CAN L to CAN L between the two screw terminals; the whole bus, proven on Tuesday 7 October 2026 | the HAT's terminal block | both 120 ohm terminations fitted |
+| Two jumper wires | CAN H to CAN H and CAN L to CAN L between the two screw terminals; the whole bus, proven on Wednesday 7 October 2026 | the HAT's terminal block | both 120 ohm terminations fitted |
 | DFRobot SEN0032 | the ADXL345, read for the peak of each minute | I2C bus 1 at 100 kHz | 0x53; CS to pin 17, SDO to pin 6 |
 | `src/main.rs` | the service: the bus reader task, the minute aggregator, the rule and the log | SocketCAN and IIO, or a replayed CSV |  |
 | `src/bin/engine_daemon.rs` | the second process: the model, one request at a time | `/run/edgellm/e14-engine.sock` |  |

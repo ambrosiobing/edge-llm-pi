@@ -26,7 +26,7 @@
 
 Every figure in this volume draws hardware present as a solid outline, a software stand-in as a dashed one and an absent part as a dotted grey block. That convention is borrowed from the joint node volume, where it is stated in chapter 1 as a rule about measurements: if a block is dashed, no measurement taken through it is a measurement of anything physical. In nineteen chapters the convention is how the figures are drawn. In this one it is the thing being measured.
 
-The bus is the HAT talking to itself. Two CAN controllers sit on the WS-28164, the MCP2518FD on SPI0 chip select 1 and the MCP2515 with its own SN65HVD230 on chip select 0, and two jumper wires between the two screw terminals make them a genuine two-node bus, proven on Tuesday 7 October 2026 with frames in both directions, zero errors and the isolated side alive. Each controller sends a heartbeat once a second. A third node is a `cangen` on `vcan0`: it sends the same shape of heartbeat on time, every time, and it has no transceiver and no wire, so it is a stand-in by declaration and the rule says so whatever its counters do. A fourth node is the robot joint of the joint node volume, which is on the shelf, sends nothing, and is in the table so that its absence is counted rather than forgotten.
+The bus is the HAT talking to itself. Two CAN controllers sit on the WS-28164, the MCP2518FD on SPI0 chip select 1 and the MCP2515 with its own SN65HVD230 on chip select 0, and two jumper wires between the two screw terminals make them a genuine two-node bus, proven on Wednesday 7 October 2026 with frames in both directions, zero errors and the isolated side alive. Each controller sends a heartbeat once a second. A third node is a `cangen` on `vcan0`: it sends the same shape of heartbeat on time, every time, and it has no transceiver and no wire, so it is a stand-in by declaration and the rule says so whatever its counters do. A fourth node is the robot joint of the joint node volume, which is on the shelf, sends nothing, and is in the table so that its absence is counted rather than forgotten.
 
 The rule is three lines and it is what the report shows. The model is given the same counters, one node per period, under a grammar that can produce the node name, one of the three literals and one bounded sentence, and nothing else. Two quantities come out. The first is the agreement table over 1000 periods with dropouts injected at seeded times, which is the volume's through-line question asked about its own convention. The second is the bus itself: pulling a jumper wire out of the screw terminal does not produce a clean dropout, it produces a transmitter talking into a broken pair, an error counter that climbs, a controller that takes itself off the bus, and a recovery whose interval was chosen rather than inherited. That sequence is read from `ip -details -statistics link show` and named by controller, and it is the second half of what this chapter is for.
 
@@ -63,13 +63,17 @@ Qwen2.5-0.5B-Instruct at Q4\_K\_M, the file `qwen2.5-0.5b-instruct-q4_k_m.gguf`,
 The grammar is GBNF with root symbol `root`, in the house shape of the repository ([grammars/README.md](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md) (to verify), in the engine's tree) with two keys added. The key the shared agreement tool reads is still `decision`; `node` says which node the verdict is about, and `why` is the one sentence. The quiet state PRESENT is first, which is the convention `grammars/README.md` fixes, because the first alternative on every path is what the stub answers and the quiet state is the safe thing for a stub to say.
 
 ```gbnf
-root     ::= "{" ws "\"node\"" ws ":" ws node ws "," ws "\"decision\"" ws ":" ws
-             decision ws "," ws "\"why\"" ws ":" ws why ws "}"
+root     ::= "{" ws pnode ws "," ws pdec ws "," ws pwhy ws "}"
+pnode    ::= "\"node\"" ws ":" ws node
+pdec     ::= "\"decision\"" ws ":" ws decision
+pwhy     ::= "\"why\"" ws ":" ws why
 node     ::= "\"joint-a\"" | "\"joint-b\"" | "\"joint-c\"" | "\"joint-d\""
 decision ::= "\"PRESENT\"" | "\"MODELLED\"" | "\"ABSENT\""
 why      ::= "\"" [A-Za-z0-9 ,.()-]{8,96} "\""
 ws       ::= [ \t]*
 ```
+
+The object is split into three pair rules rather than written on one line because the engine's GBNF parser ends a rule at a newline unless that line ends with a pipe, and the one-line form is a hundred and thirty characters against the repository's limit of ninety-nine. The accepted language is unchanged.
 
 The hyphen sits last in the `why` class so that it is a literal hyphen and not a range: the sentence has to be able to write a node name, and every node name on this bus carries one. Whitespace admits spaces and tabs and never a newline.
 
@@ -440,7 +444,7 @@ On the bench the model column is not measured: the Pi 4B run has not been taken.
 - Qwen2.5-0.5B-Instruct-GGUF, Apache 2.0, 491 MB at Q4\_K\_M, [huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF) (verified Wednesday 14 October 2026).
 - The `llama-cpp-2` binding at `0.1.159`, MIT or Apache-2.0, pinned by the shared crate in `common/rust/edgellm/Cargo.toml` with the bundled llama.cpp commit recorded in `common/rust/README.md`; [crates.io/crates/llama-cpp-2](https://crates.io/crates/llama-cpp-2) (to verify from this chapter: the version and its date are read from the shared crate's own note of Wednesday 14 October 2026, not fetched here).
 - GBNF grammar syntax, in the engine's tree, [grammars/README.md](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md) (to verify).
-- The WS-28164's two controllers, their chip selects, interrupts, crystals and termination caps, and the vendor's tested overlay block, from the Waveshare wiki and schematic, [waveshare.com/wiki/RS232-RS485-CAN-Board](https://www.waveshare.com/wiki/RS232-RS485-CAN-Board) (to verify; read for the bench hardware record on Tuesday 6 October 2026, and that record notes the schematic does not name the termination jumper's reference designator). The two-node bus, the two jumper wires, the swapping interface names and the card A and card B split are bench facts, recorded Tuesday 7 October 2026 and restated in the front matter; those records have no public URL.
+- The WS-28164's two controllers, their chip selects, interrupts, crystals and termination caps, and the vendor's tested overlay block, from the Waveshare wiki and schematic, [waveshare.com/wiki/RS232-RS485-CAN-Board](https://www.waveshare.com/wiki/RS232-RS485-CAN-Board) (to verify; read for the bench hardware record on Tuesday 6 October 2026, and that record notes the schematic does not name the termination jumper's reference designator). The two-node bus, the two jumper wires, the swapping interface names and the card A and card B split are bench facts, recorded Wednesday 7 October 2026 and restated in the front matter; those records have no public URL.
 - The honesty rule, solid, dashed and dotted, from the joint node volume's chapter 1, and the heartbeat, the consumer timeout of three periods, the controller's error states and the bus-off recovery policy from its chapter 12; that volume has no public URL.
 
 ---

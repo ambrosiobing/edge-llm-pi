@@ -49,8 +49,7 @@ The grammar is GBNF with root symbol `root`, and it is not the house enum shape 
 
 ```gbnf
 root    ::= "[" ws item ws "," ws item ws "," ws item ws "]"
-item    ::= "{" ws "\"project\"" ws ":" ws project ws "," ws "\"reason\"" ws ":" ws
-            reason ws "}"
+item    ::= "{" ws "\"project\"" ws ":" ws project ws "," ws "\"reason\"" ws ":" ws reason ws "}"
 project ::= "\"e01\"" | "\"e02\"" | "\"e03\"" | "\"e04\"" | "\"e05\"" | "\"e06\"" |
             "\"e07\"" | "\"e08\"" | "\"e09\"" | "\"e10\"" | "\"e11\"" | "\"e12\"" |
             "\"e13\"" | "\"e14\"" | "\"e15\"" | "\"e16\"" | "\"e17\"" | "\"e18\"" |
@@ -158,9 +157,9 @@ The record the chapter's own run is scored against is the dated snapshot, seven 
 ```text
 project,n,agreement,quieter,louder,no_literal,origin
 e01,0,not measured,not measured,not measured,not measured,none
-e02,1000,82.3 percent,177,0,0,CI stub
-e03,200,67.5 percent,65,0,0,CI stub
-e04,180,35.0 percent,117,0,0,CI stub
+e02,100,2.0 percent,0,98,0,bench
+e03,200,100.0 percent,0,0,0,bench
+e04,180,17.2 percent,9,4,136,bench
 ```
 
 The snapshot carries cells and no prose, because a note runs to two hundred characters and the repository's own rule is ninety-nine columns in every text file; the language, the variant and the board are read back from the spine, and the full twelve-column form is what `--csv` writes. The second record is the per-event log, `projects/e20-scorecard/evidence/e20_run.csv`, in the shape `elog.h` fixes for every project: `t_s, tag, raw, rule, model, prompt_ms, generate_ms, n_generated, engine`, with the seed and the three expected identifier numbers in the raw column. The third is the proposals file, `t_s, seed, rank, project, reason`, three rows per event, from which no number in this chapter is taken.
