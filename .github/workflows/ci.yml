@@ -81,6 +81,10 @@ jobs:
         run: python3 tools/grammar_pairs.py
       - name: ASCII and 99 columns
         run: python3 tools/line_check.py
+      - name: No chapter reachable from no page, and the front page's paths exist
+        # A dead link still reads as a link; an orphan reads as nothing, which
+        # is how 00-about-this-volume.md stayed unnamed by any page.
+        run: python3 tools/check_readmes.py
       - name: python tools compile
         run: python3 -m py_compile tools/*.py
       - name: e02's published figures still match their logs
