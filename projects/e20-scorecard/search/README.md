@@ -40,10 +40,15 @@ triumph.
 0 of 50 for the stub, which is the right thing to publish and a useless thing to optimise,
 because a metric that is zero everywhere has no gradient for a search to climb.
 
-The floor printed beside every score is `random_floor`, 0.15, which is what three
-identifiers drawn from twenty expect to score. The rule's own triple is fixed for a pinned
-snapshot, so the best *constant* scores 1.0 and tells you nothing; the guesser is the
-comparison that bites.
+Two floors are printed beside every score, and the second is the one that bites.
+`random_floor` is 0.15, what three identifiers drawn from twenty expect to score.
+`stub_floor` is 0.333, measured on Monday 9 November 2026 by running e20 with `--stub`:
+the stub answers `e01` three times, the rule's triple begins with `e01`, so it takes
+position one on every presentation.
+
+**The stub beats the real model here too**, 0.333 against 0.147, by more than two to one.
+It wins less absurdly than on the published figure, where it scores 100 percent, but it
+still wins. So the bar a searched prompt has to clear is 0.333 and not 0.15.
 
 ## What the evaluator reproduces, which is how it was checked
 
@@ -57,16 +62,19 @@ Run against the fifty presentations already in `evidence/e20_proposals.csv`:
 It agrees exactly with a record written a week earlier by a different route, which is the
 only reason to believe it. A self-test would not have shown this.
 
-## The starting point, which is below chance
+## The starting point, which is below both floors
 
     positional agreement of the published run   0.147
-    random floor                                0.150
+    random floor, three drawn from twenty       0.150
+    stub floor, e01 three times                 0.333
 
-**The prompt in the repository today does not beat guessing on the ordered triple.** That is
-not a new run and not a claim about a new experiment: it is the arithmetic of the numbers
-already in the evidence file, under the metric the register already said to publish. It
-gives the search real headroom and an honest baseline, and anything at or below 0.15 at the
-end of a run is a null to be reported as one.
+**The prompt in the repository today does not beat guessing on the ordered triple, and it
+loses to the stub by more than two to one.** That is not a new run and not a claim about a
+new experiment: it is the arithmetic of numbers already in the evidence file, under the
+metric the register already said to publish.
+
+It gives the search real headroom and an honest bar. A candidate at or below 0.333 at the
+end of a run is a null, and is to be reported as one.
 
 ## Running it
 
@@ -77,8 +85,15 @@ as `E:` and not `D:`.
     OLLAMA_MODELS=E:\OllamaModels        so no weights are copied or downloaded
     llama-server                         serving e20's own model, as e20 already expects
 
-Then the evaluator alone, which is worth doing before any search, because it says whether
-the engine and the project are talking at all:
+**But the first thing to run needs no engine at all.** e20 has a `--stub` mode, so the
+whole chain from the project's command line through the proposals file to the scorer can be
+exercised with nothing serving:
+
+    python -m edgellm_e20.main --stub --limit 6 --proposals stub.csv --log stub_run.csv
+
+That is what produced the 0.333 above, and it is the cheapest check that the plumbing works.
+Then the evaluator against a real engine, which says whether the engine and the project are
+talking:
 
     python search/evaluator.py prompt.txt --server http://localhost:8080 --limit 5
 

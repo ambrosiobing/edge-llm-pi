@@ -61,6 +61,12 @@ REPLAY = PROJECT / "replay" / "scorecards_50.csv"
 # Twenty identifiers, three positions: a guesser drawing three of twenty without
 # replacement expects 3/20 of its positions right.
 RANDOM_FLOOR = 3.0 / 20.0
+# The bar that actually matters, measured on Monday 9 November 2026 by running e20 with
+# --stub: the stub answers e01 three times, the rule's triple begins with e01, so it takes
+# position one on every presentation and scores exactly one third. The published run of
+# Thursday 29 October 2026 scores 0.147, so the stub beats the model here too, by more than
+# two to one. A candidate that does not clear STUB_FLOOR has not earned its engine.
+STUB_FLOOR = 1.0 / 3.0
 
 
 def expected_triple(replay=REPLAY):
@@ -131,7 +137,8 @@ def evaluate(program_path, server=None, limit=12, timeout_s=1800):
         "combined_score": score,
         "triple_agreement": score,
         "random_floor": RANDOM_FLOOR,
-        "beats_floor": 1.0 if score > RANDOM_FLOOR else 0.0,
+        "stub_floor": STUB_FLOOR,
+        "beats_stub": 1.0 if score > STUB_FLOOR else 0.0,
         "presentations": float(len(triples)),
         "answered": float(answered),
         "exit_code": float(code),
@@ -152,9 +159,10 @@ def main():
     result = evaluate(args.prompt, args.server, args.limit, args.timeout_s)
     print(json.dumps(result, indent=2, sort_keys=True))
     # A score is never printed without its floor, so a reader cannot quote one alone.
-    print("\n  triple agreement %.3f against a random floor of %.3f, on %d of %d answered"
-          % (result["triple_agreement"], result["random_floor"],
-             int(result["answered"]), int(result["presentations"])), file=sys.stderr)
+    print("\n  triple agreement %.3f, random floor %.3f, stub floor %.3f, on %d of %d "
+          "answered" % (result["triple_agreement"], result["random_floor"],
+                        result["stub_floor"], int(result["answered"]),
+                        int(result["presentations"])), file=sys.stderr)
     return 0 if result["answered"] else 1
 
 
