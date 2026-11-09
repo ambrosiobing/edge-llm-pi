@@ -3,8 +3,11 @@
 A search over `prompt.txt`, the one file that tells this project's model what to do, driven
 by OpenEvolve with a local code model as the mutation operator.
 
-**Nothing here has been run.** The evaluator has been checked against a record, which is a
-different and smaller thing, and that check is below.
+**No search has been run and no candidate has been evolved.** The evaluator itself has now
+been run twice: once arithmetically against an existing record, and once on Monday 9
+November 2026 against a live llama-server on skyhorizon, where twelve presentations scored
+0.139 against the published fifty-presentation figure of 0.147. Both checks are below, and
+a working evaluator is a much smaller thing than a result.
 
 ## Why this project and not another
 
@@ -94,10 +97,17 @@ cost three wrong fixes before the log settled it, so the server is run in the fo
 server is on the wrong store and 65 when it is on the right one, and that line is worth
 more than any amount of reasoning about environment variables.
 
-**The model under test is still not available here.** e20 posts to llama-server's
-`/completion` with a GBNF grammar, Ollama does not serve that shape, and this laptop has no
-llama-server built because it is the machine that never compiles. That half runs on
-skyhorizon, which is what `--server`'s own help says.
+**The model under test is not available on the authoring laptop.** e20 posts to
+llama-server's `/completion` with a GBNF grammar, Ollama does not serve that shape, and
+that laptop has no llama-server built because it is the machine that never compiles.
+
+**Both halves now run on skyhorizon**, as of Monday 9 November 2026. `llama-server` is built
+there from the repository's own submodule, target `llama-server`, and serves e20's model at
+`127.0.0.1:8080` with `-c 1024`. The drive moved with it and mounts as `D:` on that machine.
+What a run costs is measured in
+`evidence/2026-11-09_1710_both-halves-on-one-machine_skyhorizon_qwen2.5-coder-7b.md`:
+7.2 seconds a presentation and about 6.2 tokens a second for the mutation model, which puts
+forty candidates at `--limit 12` somewhere between three and four hours.
 
 **But the first thing to run needs no engine at all.** e20 has a `--stub` mode, so the
 whole chain from the project's command line through the proposals file to the scorer can be
