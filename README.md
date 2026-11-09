@@ -17,8 +17,8 @@ here; the per-project `README.md` under `projects/` and the code are the record
 of what has actually run.
 
 Start with [about this edition](chapters/00-about-this-volume.md), which says
-what the volume measures and what it refuses to claim. Then
-[bring-up and the honest tokens per second](chapters/01-bring-up-and-the-honest-tokens-per-second.md),
+what the volume measures and what it refuses to claim. Then [bring-up and the
+honest tokens per second](chapters/01-bring-up-and-the-honest-tokens-per-second.md),
 and [the decision loop](chapters/02-the-decision-loop.md), which carries the
 grammar, the state reuse and the control harness every later chapter links.
 After those, any project whose parts you have.

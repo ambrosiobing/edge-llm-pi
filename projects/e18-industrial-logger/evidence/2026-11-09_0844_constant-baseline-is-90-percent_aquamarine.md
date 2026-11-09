@@ -9,6 +9,15 @@
                running anything
     tree       33f3189
 
+**PARTLY WITHDRAWN AT 09:16 THE SAME DAY**, by
+`2026-11-09_0916_the-guard-watches-the-wrong-column_aquamarine.md`. The two counts below,
+542 NOMINAL and 58 DRIFT, were already in the tree and already asserted by e18's own oracle
+test on every push, since Friday 16 October 2026; this record computed them by hand without
+reading the test suite first. What stands is the reading of 542 as a constant baseline, the
+four transitions, the two 29-frame excursions and the register span. What is withdrawn is any
+implication that the counts were established here. The later record also corrects the last
+line of this one: clause two needs no HAT.
+
 **THIS CLOSES NO CLAUSE AND e18 HAS STILL NEVER RUN ON HARDWARE.** No board was powered, no
 HAT was seated, no model was loaded. What this establishes is the number the chapter's second
 clause has to be read against, computed before a session is spent producing a figure that

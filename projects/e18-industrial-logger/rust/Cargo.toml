@@ -1,15 +1,26 @@
 # The device service of project e18, the Rust half. The C half is configured on its
 # own from ../c; nothing in this manifest builds it, which is the point.
 #
-# ONE OPEN DEPENDENCY, stated plainly rather than worked around. The shared crate
-# common/rust/edgellm is the e05 author's and is not in the tree yet
-# (common/rust/README.md says so). This service needs four of its modules, io, rules,
-# elog and template, and NOT its engine module, because the engine of e18 lives in the
-# C daemon. The interface it expects from each of the four is written out at the top of
-# src/main.rs, so that the crate can be written against a stated contract rather than
-# guessed at. Until it exists, cargo cannot resolve this manifest and the chapter says
-# so in its pitfalls; registers.rs and rules.rs carry their own tests and depend on
-# nothing but the standard library.
+# NO OPEN DEPENDENCY. This paragraph claimed one until Monday 9 November 2026, and each
+# of its three claims was false. It said the shared crate common/rust/edgellm "is not in
+# the tree yet": the crate landed in 949fd16 on Friday 16 October 2026, the same commit
+# that introduced this manifest, so the sentence was never true, not even on the day it
+# was written. It cited common/rust/README.md as saying so: that file describes the crate
+# as written, for e05, in the shape of common/c. And it said the chapter says so in its
+# pitfalls: chapter 18 carries no such pitfall and neither does PITFALLS.md. project.toml
+# has carried the real history since Saturday 17 October 2026, naming the actual blocker
+# at the time, which was this manifest listing the four modules as cargo features the
+# crate does not declare. That was fixed below. This header was simply left behind, which
+# is why a correction is not finished until every page stating the old thing is swept.
+#
+# What the service uses is four of the crate's modules, io, rules, elog and template, and
+# NOT its engine module, because the engine of e18 lives in the C daemon. The interface it
+# expects of each is written out at the top of src/main.rs, now annotated with what was MET
+# and on what date; registers.rs and rules.rs carry their own tests and depend on nothing
+# but the standard library. Both halves build and both suites pass as of Sunday 18 October
+# 2026, 1 ctest for the C half and 22 unit tests plus 2 oracle tests for this one, the
+# oracle including the 600-frame replay across the ABI. What remains is hardware and not
+# software, and project.toml states it.
 [package]
 name = "edgellm-e18"
 version = "0.1.0"

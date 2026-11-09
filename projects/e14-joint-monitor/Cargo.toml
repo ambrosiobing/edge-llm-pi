@@ -15,10 +15,14 @@
 # suite takes minutes is a project whose test suite is skipped. The process boundary is
 # what the oracle test exercises, and it needs neither crate.
 #
-# The shared crate common/rust/edgellm is not a dependency because it is not in the tree
-# on Wednesday 14 October 2026: common/rust/README.md assigns it to the author of
-# project e05 and common/ is not this project's to write. src/main.rs reads the ADXL345
-# through its own iio module, in the shape that crate's IIO source will expose.
+# The shared crate common/rust/edgellm is not a dependency here. That was forced when this
+# was written, because the crate was not in the tree on Wednesday 14 October 2026 and
+# common/rust/README.md assigned it to the author of project e05. It landed two days later,
+# in 949fd16 on Friday 16 October 2026, so the reason is now a choice and not a constraint:
+# src/main.rs reads the ADXL345 through its own iio module, in the shape that crate's IIO
+# source exposes, and whether to move onto the crate's io module is open and unexamined.
+# Noted Monday 9 November 2026 while correcting the same claim in e18's manifest, where it
+# had gone from dated to simply wrong.
 
 [package]
 name = "edgellm-e14"

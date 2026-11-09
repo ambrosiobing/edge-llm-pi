@@ -113,6 +113,17 @@ fn the_oracle_file_carries_both_verdicts_so_the_comparison_can_fail() {
     // rule that always answered that literal. The two counts below are the record
     // tools/make_replay.py printed on Wednesday 14 October 2026, and the agreement the
     // stub reaches, 542 of 600, is quoted from them in the chapter.
+    //
+    // READ THE SCOPE OF THIS GUARD, noted Monday 9 November 2026. Every assertion here
+    // is about the RULE column, which holds two literals and is the column in no danger.
+    // The MODEL column holds exactly one distinct string on all 600 rows,
+    // {"decision":"NOMINAL","summary":"."}, and no test in this project asserts anything
+    // about it. That is correct for the stub, whose deterministic expansion of this
+    // grammar is its documented behaviour, so demanding variety of it would be wrong.
+    // What it means is that the stub's 542 is the class balance and not a measurement,
+    // and that acceptance clause two run against a stub ledger can only ever report
+    // 90.3 percent. The clause needs the real engine, and the rate needs its baseline
+    // printed beside it, which tools/agreement.py has done since Friday 6 November 2026.
     let expected = repo_root().join("tests").join("oracle").join("e18.expected.csv");
     let (header, rows) = read_csv(&expected);
     let rule = column(&header, "rule");
