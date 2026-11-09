@@ -1,0 +1,42 @@
+# OpenEvolve configuration for the e20 prompt search.
+#
+# TO VERIFY, and marked as this volume marks anything unread: the field names below are
+# taken from OpenEvolve's README and not from the installed package. Before the first run,
+# reconcile this file against the example the package ships, which is the authority:
+#
+#     python -c "import openevolve, pathlib; print(pathlib.Path(openevolve.__file__).parent)"
+#     # then read examples/function_minimization/config.yaml under the installed tree
+#
+# Nothing here is a measurement and nothing here has been run.
+
+# The model that WRITES candidate prompts. It is not the model under test.
+# Ollama serves a /v1/chat/completions route and reads its weights from the Extreme
+# Pro when OLLAMA_MODELS points there, so no weights are copied and none are downloaded.
+llm:
+  api_base: "http://localhost:11434/v1"
+  api_key: "ollama"                      # Ollama ignores it; the client requires one
+  models:
+    - name: "qwen2.5-coder:7b"
+      weight: 1.0
+  temperature: 0.8
+  max_tokens: 1024
+
+# The model UNDER TEST is not configured here at all. It is e20's own, served by
+# llama-server under e20's grammar, and the evaluator reaches it through --server. Keeping
+# it out of this file is deliberate: if the two models were set in one place, one edit
+# could change the subject of the experiment without anybody noticing.
+
+evaluator:
+  path: "evaluator.py"
+  timeout: 1800
+
+database:
+  population_size: 20
+  num_islands: 2
+
+max_iterations: 40
+
+# Every component seeded, because the next experiment after this one is whether choosing
+# the parent beats choosing at random, and that comparison is meaningless if the two arms
+# do not share their randomness.
+random_seed: 2026

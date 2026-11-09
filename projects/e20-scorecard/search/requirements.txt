@@ -1,0 +1,11 @@
+# Kept out of the repository's own requirements.txt on purpose: continuous integration
+# installs that file, and nothing in the test suite imports this. Install it only on a
+# machine that is going to run a search.
+#
+#     python -m pip install -r projects/e20-scorecard/search/requirements.txt
+#
+# Checked on PyPI on Monday 9 November 2026: 0.4.1 is the newest of fifty-six releases,
+# the licence is Apache 2.0, which composes with this repository's MIT, and it needs
+# Python 3.10 or later. Not vendored, because the package is on PyPI and pinning it here
+# keeps one version named in one place.
+openevolve==0.4.1
