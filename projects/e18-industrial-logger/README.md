@@ -285,6 +285,8 @@ cd ~; printf 'e18 echo probe\r\n' > /dev/ttySC0
 
 **Step 4.** Write the replay file and the oracle on the authoring laptop and read the summary: it prints the window, the threshold and the count of each decision, and the NOMINAL count is the agreement the stub reaches in CI.
 
+**That count is also the figure the model has to beat, and it was computed on Monday 9 November 2026 before any run of this project.** Applying the rule to all 600 frames gives 542 NOMINAL and 58 DRIFT, so **a constant NOMINAL predictor scores 90.3 percent**. The stream is not one class, which is what makes the clause measurable: the rule crosses between the two verdicts four times, at frames 180, 209, 400 and 429, and each of the two excursions produces 29 consecutive DRIFT frames as the 30-frame window slides across an injected step. So the agreement table has 58 frames and four transitions to find, and a model that never says DRIFT still reads 90.3 percent. Two chapters in this volume have already published a rate a constant equalled or beat, [Project 20](../../chapters/20-what-should-i-measure-next.md) at 30.0 against a constant's 100 and [Project 6](../../chapters/06-vl53l4cd-too-close-explainer.md) at exactly its own best constant, and both were found after the measurement. This one is stated first, and `tools/agreement.py` prints the baseline beside the rate since Friday 6 November 2026, so the published table carries both or neither.
+
 ```bash
 # win11 skyhorizon, WSL side
 cd ~/src/edge-llm-pi/projects/e18-industrial-logger; python3 tools/make_replay.py
