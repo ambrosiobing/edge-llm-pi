@@ -117,9 +117,15 @@ fn the_oracle_file_carries_both_verdicts_so_the_comparison_can_fail() {
     // READ THE SCOPE OF THIS GUARD, noted Monday 9 November 2026. Every assertion here
     // is about the RULE column, which holds two literals and is the column in no danger.
     // The MODEL column holds exactly one distinct string on all 600 rows,
-    // {"decision":"NOMINAL","summary":"."}, and no test in this project asserts anything
-    // about it. That is correct for the stub, whose deterministic expansion of this
-    // grammar is its documented behaviour, so demanding variety of it would be wrong.
+    // {"decision":"NOMINAL","summary":"."}. Corrected the same day: the project does
+    // assert over that column elsewhere, and the first version of this comment said it
+    // did not. the_replayed_register_stream_matches_the_oracle above compares the model
+    // column row by row against this file, and src/abi.rs pins the exact literal in
+    // the_stub_answers_the_first_literal_on_every_path. So the constant is documented and
+    // tested, not hidden. What no test does is check this column for more than one
+    // distinct value, which is the check this test's own comment describes and applies
+    // only to the rule column. For the stub such a check would be wrong anyway, its
+    // deterministic expansion of this grammar being its documented behaviour.
     // What it means is that the stub's 542 is the class balance and not a measurement,
     // and that acceptance clause two run against a stub ledger can only ever report
     // 90.3 percent. The clause needs the real engine, and the rate needs its baseline

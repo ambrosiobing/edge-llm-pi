@@ -39,9 +39,19 @@ comment states the hazard in as many words:
 
 It then asserts `nominal == 542`, `drift == 58`, and that the two sum to the row count. Every
 one of those assertions is about the **rule** column, which has two literals and is the column
-in no danger. **No test in this project asserts anything whatever about the model column**,
-which is the column holding one literal. The guard was written against this exact defect, is
-named after it, and watches the wrong column.
+in no danger. **What no test does is check the model column for more than one distinct
+value**, which is the check this comment describes, and the guard's name promises a comparison
+that can fail while every assertion inside it is on the column that was never at risk.
+
+**CORRECTED AT 10:40 THE SAME DAY, and the first version of this record overstated it.** It
+said no test asserts anything whatever about the model column. Two do.
+`the_replayed_register_stream_matches_the_oracle`, in this same file, compares the model column
+row by row against the oracle; and `src/abi.rs` pins the exact literal in
+`the_stub_answers_the_first_literal_on_every_path`, asserting the stub returns
+`{"decision":"NOMINAL","summary":"."}` for any input. **So the project documents and tests the
+constant rather than being blind to it**, and the implication that it was blind is withdrawn.
+What survives is narrower: a degeneracy check applied to one of the two columns, and a test
+name that reads as covering both. The remedy is unchanged, since the cost is a misreading.
 
 This is the third instance of the same class in this volume and the first found in a gate
 rather than in a published figure:
@@ -88,7 +98,11 @@ serial port on that path. Corrected in project.toml in the same change as this r
 
     established   the model column of the oracle file holds exactly one distinct string
     established   the stub's agreement is 542 of 600 and is the class balance by identity
-    established   no test in e18 asserts anything about the model column
+    established   no test checks the model column for more than one distinct value, which
+                  is the degeneracy check the oracle test's comment describes
+    established   two tests DO assert over that column: the row by row oracle comparison,
+                  and abi.rs pinning the literal the stub returns on every path
+    withdrawn     the first version's claim that no test asserts anything about it
     established   clause two needs no HAT and no board; it needs a run with the engine
     NOT shown     anything about a real model's answers on this stream
     NOT DONE      a guard over the model column. The stub answering one literal is its
