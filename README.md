@@ -10,13 +10,18 @@ explains. A project where the model adds nothing is a valid result.
 
 ## Read a chapter
 
-The book is in `chapters/`, one Markdown file per project, with the figures in
-`figures/*.svg`. `chapters/` and `CONTENTS.md` are produced by the catalogue's publish
-step from the volume's sources and are not in this tree yet; until that step runs,
-the per-project `README.md` under `projects/` and the code are the record. Start with
-`chapters/01-bringup.md` (the honest tokens-per-second table) and
-`chapters/02-decision-loop.md` (the grammar, the state reuse and the control harness
-every later chapter links), then any project whose parts you have.
+The book is in [`chapters/`](chapters/), one Markdown file per project, with the
+figures in `figures/*.svg`. Both it and [`CONTENTS.md`](CONTENTS.md) are produced
+by the catalogue's publish step from the volume's sources, so neither is edited
+here; the per-project `README.md` under `projects/` and the code are the record
+of what has actually run.
+
+Start with [about this edition](chapters/00-about-this-volume.md), which says
+what the volume measures and what it refuses to claim. Then
+[bring-up and the honest tokens per second](chapters/01-bring-up-and-the-honest-tokens-per-second.md),
+and [the decision loop](chapters/02-the-decision-loop.md), which carries the
+grammar, the state reuse and the control harness every later chapter links.
+After those, any project whose parts you have.
 
 ## Run a project on the host
 
