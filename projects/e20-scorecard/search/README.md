@@ -78,12 +78,26 @@ end of a run is a null, and is to be reported as one.
 
 ## Running it
 
-Not yet possible on the authoring laptop: Ollama is not installed there, verified on Monday
-9 November 2026. The weights are present, 59.1 GB of them, on the Extreme Pro, which mounts
-as `E:` and not `D:`.
+The mutation side is ready on the authoring laptop as of Monday 9 November 2026: Ollama
+0.40.5 is installed, `openevolve` 0.4.1 is in the repository's virtual environment, and
+`ollama list` shows all eleven models, `qwen2.5-coder:7b` among them at 4.7 GB.
 
-    OLLAMA_MODELS=E:\OllamaModels        so no weights are copied or downloaded
-    llama-server                         serving e20's own model, as e20 already expects
+**The weights are read in place from the Extreme Pro, so that drive has to stay attached
+while anything is serving.** Its letter is not stable and was `E:` here; identify it by
+volume name. And the tray app does not pass `OLLAMA_MODELS` to the server it starts, which
+cost three wrong fixes before the log settled it, so the server is run in the foreground:
+
+    $env:OLLAMA_MODELS='E:\OllamaModels'
+    & "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" serve
+
+`%LOCALAPPDATA%\Ollama\server.log` prints `total blobs` on every start. It is 0 when the
+server is on the wrong store and 65 when it is on the right one, and that line is worth
+more than any amount of reasoning about environment variables.
+
+**The model under test is still not available here.** e20 posts to llama-server's
+`/completion` with a GBNF grammar, Ollama does not serve that shape, and this laptop has no
+llama-server built because it is the machine that never compiles. That half runs on
+skyhorizon, which is what `--server`'s own help says.
 
 **But the first thing to run needs no engine at all.** e20 has a `--stub` mode, so the
 whole chain from the project's command line through the proposals file to the scorer can be

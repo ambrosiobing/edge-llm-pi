@@ -1,17 +1,17 @@
 # OpenEvolve configuration for the e20 prompt search.
 #
-# TO VERIFY, and marked as this volume marks anything unread: the field names below are
-# taken from OpenEvolve's README and not from the installed package. Before the first run,
-# reconcile this file against the example the package ships, which is the authority:
-#
-#     python -c "import openevolve, pathlib; print(pathlib.Path(openevolve.__file__).parent)"
-#     # then read examples/function_minimization/config.yaml under the installed tree
+# Reconciled against the installed package on Monday 9 November 2026, openevolve 0.4.1, by
+# reading the dataclasses in openevolve/config.py rather than the README. One field in the
+# first draft of this file did not exist: `evaluator.path`. The evaluator is a command-line
+# argument and not a configuration key, so it is gone from here.
 #
 # Nothing here is a measurement and nothing here has been run.
 
 # The model that WRITES candidate prompts. It is not the model under test.
-# Ollama serves a /v1/chat/completions route and reads its weights from the Extreme
-# Pro when OLLAMA_MODELS points there, so no weights are copied and none are downloaded.
+# Ollama serves a /v1/chat/completions route and reads its weights from the Extreme Pro,
+# whose drive letter is not stable and was E: on this laptop on Monday 9 November 2026.
+# The tray app does not pass OLLAMA_MODELS to the server it starts, so the server is run
+# in the foreground from a shell that has the variable set.
 llm:
   api_base: "http://localhost:11434/v1"
   api_key: "ollama"                      # Ollama ignores it; the client requires one
@@ -23,20 +23,41 @@ llm:
 
 # The model UNDER TEST is not configured here at all. It is e20's own, served by
 # llama-server under e20's grammar, and the evaluator reaches it through --server. Keeping
-# it out of this file is deliberate: if the two models were set in one place, one edit
-# could change the subject of the experiment without anybody noticing.
+# it out of this file is deliberate: if both models were set in one place, one edit could
+# change the subject of the experiment without anybody noticing.
 
-evaluator:
-  path: "evaluator.py"
-  timeout: 1800
+# What is being evolved is prompt.txt, a plain text file of about four hundred tokens, and
+# the defaults are written for Python source.
+#
+#   file_suffix defaults to .py, which would name every candidate wrongly.
+#   enforce_evolve_blocks defaults to false, so prompt.txt needs no markers added to it.
+#     That is checked rather than assumed, and it is why the project file is untouched.
+#   full_rewrite_probability defaults to 0.0, meaning every candidate is a diff. A diff is
+#     the right tool for a thousand-line program and a poor one for a short instruction,
+#     where a rewrite is often the smaller edit, so half the proposals are rewrites here.
+file_suffix: ".txt"
+full_rewrite_probability: 0.5
 
 database:
   population_size: 20
   num_islands: 2
 
-max_iterations: 40
+evaluator:
+  timeout: 1800
 
-# Every component seeded, because the next experiment after this one is whether choosing
-# the parent beats choosing at random, and that comparison is meaningless if the two arms
-# do not share their randomness.
+max_iterations: 40
+# checkpoint_interval defaults to 100, so a forty-iteration run would write none at all and
+# a crash would lose everything.
+checkpoint_interval: 10
+
+# The trace is the record the next experiment reads. Whether choosing the parent beats
+# choosing at random cannot be answered from a final score, only from which parent each
+# child came from, and that is what this writes.
+evolution_trace:
+  enabled: true
+  include_prompts: true
+  include_failures: true
+
+# Every component seeded, because that next experiment compares two arms and the comparison
+# is meaningless if they do not share their randomness.
 random_seed: 2026
