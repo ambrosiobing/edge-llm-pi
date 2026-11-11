@@ -56,10 +56,31 @@ name that reads as covering both. The remedy is unchanged, since the cost is a m
 This is the third instance of the same class in this volume and the first found in a gate
 rather than in a published figure:
 
-    grammar_pairs.py   pairs 19 grammars and parses neither copy. STILL OPEN
+    grammar_pairs.py   NOT an instance. Corrected Wednesday 11 November 2026, see below
+    free_text_slots.py measured the exposure and stood outside CI, so the count could grow
+                       unseen. CLOSED Wednesday 11 November 2026 by a ratchet
     agreement.py       printed a rate with no constant baseline. FIXED Friday 6 November 2026
     datecheck.py       counted weekday names without computing the weekday. FIXED
     oracle.rs          guards the two-literal column, ignores the one-literal column. THIS
+
+**CORRECTED Wednesday 11 November 2026, and the correction removes one row and adds another.**
+`grammar_pairs.py` does not belong in this list and was carried in it for days. It promises
+one thing in its docstring, that a grammar's two copies are byte identical, and it delivers
+exactly that, with CRLF normalised and with a reasoned skip for the one project that decides
+nothing. Its not parsing is a stated decision, written down beside the reason: a grammar
+differing only in whitespace is still two files somebody edited once and not twice. A tool
+that keeps its own promise is not an instance of a gate checking the form and not the fact,
+and listing it as one was a claim about the code that reading the code refutes.
+
+**The gap behind the row was real, and it belonged to the other tool.** Nothing in CI could
+see that fourteen of fifteen free-text slots admit a sentence of their own prompt verbatim,
+not because `grammar_pairs.py` fails to parse, but because `free_text_slots.py`, which does
+measure it, was deliberately left out of CI: a gate failing on fourteen of fifteen teaches a
+reader to ignore it. That is now closed by a third route its own docstring did not list. A
+ratchet passes on exactly the fourteen that admit today and refuses a fifteenth joining them,
+one of the fourteen being narrowed without the baseline moving, and a listed slot leaving the
+tree. It fires on nothing that stands, so it cannot train anyone to ignore it, and it cannot
+be satisfied by making the problem bigger. The fourteen remain fourteen open defects.
 
 ## WHAT THIS WITHDRAWS FROM THIS MORNING'S RECORD
 

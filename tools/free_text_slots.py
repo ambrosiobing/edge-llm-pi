@@ -54,9 +54,24 @@ and choosing where to put it; it is continuing the text, and a grammar that pins
 shape cannot refuse a continuation. See project 6's evidence of that date.
 
 **--check currently fails on 14 of 15 slots**, which is the finding rather than a broken
-gate. It is not wired into CI for that reason: a gate that fires on almost everything
-teaches a reader to ignore it. Wire it in when the slots have been narrowed or when each
-project carries a check that rejects its own instruction. Prompt layout is not that check.
+gate, and it is still not in CI for the reason it always was: a gate that fires on almost
+everything teaches a reader to ignore it. --check is the survey's verdict and stays the
+thing to run when the slots are narrowed or when each project carries a check that rejects
+its own instruction. Prompt layout is not that check.
+
+**--ci is the part that CI runs, added Wednesday 11 November 2026, and it is a ratchet
+rather than an approval.** It passes on exactly the fourteen slots that admit today and
+refuses three changes: a slot that starts admitting and is not on the list, a slot on the
+list that stops admitting, and a name on the list with no measured slot behind it. So it
+fires on nothing that stands and cannot be satisfied by making the problem bigger. The
+second case refuses a genuine improvement on purpose, because a ratchet that does not
+notice progress never advances: narrowing a slot is finished by removing it from ADMITTING
+in the same change.
+
+**What this does NOT do, stated because the list looks like a waiver.** ADMITTING records
+that a slot admits its own instruction, it does not bless it. Fourteen entries is fourteen
+open defects, measured twice on hardware, and the remedy is still to narrow the class or to
+give each project a check that rejects its own instruction.
 """
 import argparse
 import pathlib
@@ -122,6 +137,63 @@ def admissible(prompt_text, prefix, allowed, lo, hi):
     return None
 
 
+# The slots that admit a sentence of their own prompt, measured Wednesday 11 November 2026
+# and unchanged since the survey of Sunday 1 November 2026. Each pair is (grammar stem, rule
+# name). This is a ratchet and NOT an approval: see the module docstring. e12_band is absent
+# because it refuses, its class being [A-Z] [a-z0-9 ,.%-]{8,100}, which admits no capital
+# after the first character and so refuses any instruction naming "Raspberry Pi".
+ADMITTING = frozenset({
+    ("e03_colour", "reason"),
+    ("e04_thermal", "summary"),
+    ("e05_event", "sentence"),
+    ("e06_range", "beam"),
+    ("e07_pressure", "sentence"),
+    ("e08_answer", "answer"),
+    ("e11_impact", "line"),
+    ("e13_presence", "why"),
+    ("e14_inspect", "summary"),
+    ("e16_interval", "reason"),
+    ("e17_status", "report"),
+    ("e18_drift", "summary"),
+    ("e19_message", "note"),
+    ("e20_next", "reason"),
+})
+
+
+def ratchet(rows, baseline=ADMITTING):
+    """Problems that should fail CI, given survey rows and the recorded baseline.
+
+    Pure, so the tests exercise every branch without building a tree of grammars. Keyed on
+    (grammar, rule) and not on the grammar alone, because a grammar that grows a second
+    free-text slot must register as new rather than overwrite the first.
+    """
+    problems = []
+    measured = set()
+    for stem, rule, _lo, _hi, verdict, _example in rows:
+        key = (stem, rule)
+        measured.add(key)
+        if verdict == "ADMITS" and key not in baseline:
+            problems.append(
+                "NEW: %s's %s slot admits a sentence of its own prompt and is not in "
+                "ADMITTING. Narrow the class, or add it and say in the commit why it "
+                "stands." % (stem, rule))
+        elif verdict == "refuses" and key in baseline:
+            problems.append(
+                "NARROWED: %s's %s slot no longer admits its own prompt. This is the "
+                "good direction; remove it from ADMITTING in the same change."
+                % (stem, rule))
+        elif verdict not in ("ADMITS", "refuses"):
+            problems.append(
+                "UNMEASURED: %s's %s slot reports %r, so nothing was compared. A slot "
+                "that cannot be measured is not thereby cleared."
+                % (stem, rule, verdict))
+    for stem, rule in sorted(baseline - measured):
+        problems.append(
+            "STALE: ADMITTING names %s's %s slot, which is not in the tree. Remove it, or "
+            "find out which grammar stopped being surveyed." % (stem, rule))
+    return problems
+
+
 def survey():
     rows = []
     for gram in sorted((ROOT / "grammars").glob("*.gbnf")):
@@ -147,6 +219,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if any slot admits a sentence of its own prompt")
+    ap.add_argument("--ci", action="store_true",
+                    help="exit 1 only on a change against the recorded baseline: a new "
+                         "admitting slot, a listed slot that now refuses, or a listed "
+                         "slot that has left the tree")
     args = ap.parse_args()
 
     rows = survey()
@@ -159,6 +235,15 @@ def main():
     admits = [r for r in rows if r[4] == "ADMITS"]
     print("\nfree_text_slots: %d slots, %d admit a sentence of their own prompt verbatim"
           % (len(rows), len(admits)))
+
+    if args.ci:
+        problems = ratchet(rows)
+        for item in problems:
+            print(item)
+        print("free_text_slots --ci: %d slots measured, %d against the baseline of %d"
+              % (len(rows), len(problems), len(ADMITTING)))
+        return 1 if problems else 0
+
     if not args.check:
         return 0
     if admits:

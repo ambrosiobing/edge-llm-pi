@@ -79,6 +79,15 @@ jobs:
         # this step nothing compared them: an edit to one would leave the test passing
         # against the old rules while the book printed the new ones.
         run: python3 tools/grammar_pairs.py
+      - name: no new free-text slot admits the project's own instruction
+        # A ratchet and not a pass. Fourteen of the fifteen free-text slots admit a sentence
+        # of their own prompt verbatim, measured twice on hardware, and --check still fails
+        # on all fourteen; that is the finding and it is not what runs here. --ci passes on
+        # exactly those fourteen and refuses a change: a fifteenth joining them, one of the
+        # fourteen being narrowed without the baseline being updated, or a listed slot
+        # leaving the tree. So this cannot be satisfied by making the problem bigger, and it
+        # fires on nothing that stands today.
+        run: python3 tools/free_text_slots.py --ci
       - name: ASCII and 99 columns
         run: python3 tools/line_check.py
       - name: No chapter reachable from no page, and the front page's paths exist
