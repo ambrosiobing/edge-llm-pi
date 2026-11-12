@@ -33,10 +33,26 @@ the difference. The baseline is printed unconditionally for that reason.
 the default, because today it would fail e06 and e20, and a gate that fires on the projects
 it was written for teaches a reader to ignore it before it has ever caught anything new.
 Turn it on per project as each one is shown to clear its own baseline.
+
+**It also prints how many SENTENCE FORMS the free-text field held, for the same reason the
+baseline is printed.** Added Thursday 12 November 2026. A count of distinct answers misleads
+exactly as a rate without its baseline does, and in the same way: both look like evidence
+about the model and are properties of the data. Project 3's 200-row run held 191 distinct
+values in its `reason` field, which reads as a model writing something new nearly every row;
+masking the numbers gives four shapes, 187 of them "level #, slope # per second", the event's
+own measurements re-spelled. The event supplied the variety and the model supplied the form
+once.
+
+Printed only when the ledger sits under `projects/`, so a grammar names its free-text field,
+and only when that field carries values, so a decision-only log such as e02's prints nothing
+extra. Never an exit code: a low shape count is not by itself a defect, a project whose
+answer is a fixed report line honestly having one. See `tools/answer_shapes.py` for the
+measure and the three things it cannot see.
 """
 import argparse
 import csv
 import json
+import os
 import sys
 
 
@@ -60,6 +76,26 @@ def load(path):
                 "model" not in reader.fieldnames:
             raise SystemExit("agreement: %s lacks rule and model columns" % path)
         return list(reader)
+
+
+def shape_summary(rows, log_path):
+    """(field, values, distinct, shapes, commonest form, its count), or None.
+
+    None rather than zeroes when no grammar names a free-text field for this ledger, or
+    when the field is empty on every row, so that the caller prints nothing instead of
+    printing an empty finding.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import answer_shapes
+    field = answer_shapes.field_from_grammar(log_path)
+    if not field:
+        return None
+    values, _unparsable, _empty = answer_shapes.field_values(rows, field)
+    if not values:
+        return None
+    counted = answer_shapes.shapes(values)
+    form, n_top = counted.most_common(1)[0]
+    return (field, len(values), len(set(values)), len(counted), form, n_top)
 
 
 def main():
@@ -130,11 +166,21 @@ def main():
         print("N %d, scored %d, empty model column %d, "
               "not a decision of the rule %d, agreement %d (%.1f percent)" %
               (n_total, n_scored, n_empty, len(malformed), agree, rate))
+        # Capped at eight. A model column holds one literal per distinct answer, so a log
+        # this tool was not meant for prints one column per row: pointed at project 3's
+        # ledger, whose decision key is "colour" and not "decision", it printed 200 columns
+        # of whole JSON strings on a single line, tens of thousands of characters wide.
+        # The cap keeps the diagnosis readable; the count below says what was left out, and
+        # the "not a decision of the rule" number above is the thing to read in that case.
+        shown = models[:8]
         width = max([len(r) for r in rules] + [12])
-        print("rule \\ model".ljust(width) + "".join(m.rjust(12) for m in models))
+        print("rule \\ model".ljust(width) + "".join(m[:11].rjust(12) for m in shown))
         for r in rules:
             print(r.ljust(width) + "".join(str(confusion[r].get(m, 0)).rjust(12)
-                                           for m in models))
+                                           for m in shown))
+        if len(models) > len(shown):
+            print("... and %d more model columns, not shown. A column per row means this "
+                  "log's answers are not the rule's literals" % (len(models) - len(shown)))
     # The baseline, printed in both modes and unconditionally. An agreement rate without it
     # cannot be read: the same constant output scored 0.0 percent and 54.0 percent on two
     # slices of one replay, and the difference was the class balance of the rows.
@@ -156,6 +202,24 @@ def main():
             print("  always %-14s %5.1f percent" % (label, c_rate))
         print("THE MODEL %s THE BEST CONSTANT: %.1f percent against always %s at %.1f"
               % ("BEATS" if beats else "DOES NOT BEAT", rate, best_label, best_rate))
+    # The second figure of the baseline's kind: how many sentence forms the free text held,
+    # not how many distinct strings. Never an exit code, for the reason in the docstring.
+    summary = shape_summary(rows, args.log)
+    if summary:
+        field, n_values, n_distinct, n_shapes, form, n_top = summary
+        share = 100.0 * n_top / n_values
+        shown = form.replace("|", "\\|")[:58]
+        if args.md:
+            print()
+            print("| free text | values | distinct | shapes | commonest shape | its share |")
+            print("|---|---|---|---|---|---|")
+            print("| `%s` | %d | %d | **%d** | `%s` | %.1f percent |"
+                  % (field, n_values, n_distinct, n_shapes, shown, share))
+        else:
+            print()
+            print("the free-text field %r held %d values, %d distinct, %d shapes"
+                  % (field, n_values, n_distinct, n_shapes))
+            print("  commonest shape, %d rows (%.1f percent): %s" % (n_top, share, form[:70]))
     if malformed:
         print()
         print("rows whose model column is not a decision of the rule, which every chapter's "

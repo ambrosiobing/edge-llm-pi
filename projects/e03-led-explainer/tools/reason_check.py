@@ -23,6 +23,7 @@ the GREEN fraction on the first line and zero on the second, by construction.
 import argparse
 import csv
 import json
+import os
 import sys
 
 COLOURS = ("GREEN", "YELLOW", "RED")
@@ -59,6 +60,48 @@ def load(path):
         if reader.fieldnames is None or any(c not in reader.fieldnames for c in need):
             raise SystemExit("reason_check: %s lacks raw, rule and model columns" % path)
         return list(reader)
+
+
+def shape_lines(rows, md=False):
+    """How many sentence forms the reason field held, as printed lines.
+
+    e03 is the project this measure came from: its 200-row run holds 191 distinct reasons
+    and four shapes, 187 of them "level #, slope # per second", the event's own numbers
+    re-spelled. The reason fraction above cannot see that, because it asks whether the
+    sentence names the field that tripped, and a template naming the field every time
+    scores well while saying nothing new. Imported from tools/answer_shapes.py rather than
+    re-implemented, so that the volume has one definition of a shape.
+    """
+    root = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))))
+    sys.path.insert(0, os.path.join(root, "tools"))
+    try:
+        import answer_shapes
+    except Exception:
+        return []
+    values = []
+    for row in rows:
+        # parse_model returns three values, the third being its own status word. Unpacking
+        # two of them raised, which is the kind of error a tool that is never run with the
+        # real file does not surface.
+        _colour, reason, status = parse_model(row.get("model", ""))
+        if status == "ok" and reason:
+            values.append(reason)
+    if not values:
+        return []
+    counted = answer_shapes.shapes(values)
+    form, n_top = counted.most_common(1)[0]
+    share = 100.0 * n_top / len(values)
+    if md:
+        return ["",
+                "| free text | values | distinct | shapes | commonest shape | its share |",
+                "|---|---|---|---|---|---|",
+                "| `reason` | %d | %d | **%d** | `%s` | %.1f percent |"
+                % (len(values), len(set(values)), len(counted),
+                   form.replace("|", "\\|")[:58], share)]
+    return ["reason shapes      %d values, %d distinct, %d shapes" % (
+                len(values), len(set(values)), len(counted)),
+            "  commonest shape, %d rows (%.1f percent): %s" % (n_top, share, form[:66])]
 
 
 def main():
@@ -109,10 +152,15 @@ def main():
         print("|---|---|---|---|")
         for r in COLOURS:
             print("| %s | " % r + " | ".join(str(confusion[r][m]) for m in COLOURS) + " |")
+        for line in shape_lines(rows, md=True):
+            print(line)
     else:
         print("N %d, scored %d, empty %d, unparsed %d" % (n_total, n_scored, n_empty, n_unparsed))
         print("colour agreement   %d of %d, %.1f percent" % (colour_ok, n_scored, c_rate))
         print("reason names field %d of %d, %.1f percent" % (reason_ok, n_scored, r_rate))
+        shapes = shape_lines(rows)
+        for line in shapes:
+            print(line)
         print("rule \\ model".ljust(14) + "".join(m.rjust(9) for m in COLOURS))
         for r in COLOURS:
             print(r.ljust(14) + "".join(str(confusion[r][m]).rjust(9) for m in COLOURS))
