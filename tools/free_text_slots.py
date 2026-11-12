@@ -59,6 +59,19 @@ everything teaches a reader to ignore it. --check is the survey's verdict and st
 thing to run when the slots are narrowed or when each project carries a check that rejects
 its own instruction. Prompt layout is not that check.
 
+**AND NARROWING BY CAPITALS IS REFUTED, measured Thursday 12 November 2026.** The obvious way
+to narrow is to copy project 12, whose class `[A-Z] [a-z0-9 ,.%-]{8,100}` admits no capital
+after the first character and is the one slot that refuses its own prompt. Applied to the
+others it would refuse the instruction in 12 of the 14, and it would also refuse every answer
+a real engine has produced in e04, whose field needs SoC, C, ARM and MHz, and all twenty of
+e06's 0.5B answers, and the 13 of e03's 200 that explain rather than restate, while leaving
+all 187 template rows and all twenty verbatim instruction echoes of e06 arm A untouched,
+those being lower case. **A capital marks what a correct answer needs here, not what an
+instruction has**, so that class refuses the answer and keeps the echo. The record is
+2026-11-12_1352_narrowing-the-class-kills-the-wrong-answers_aquamarine.md, under
+projects/e19-cellular-alert/evidence/.
+Some other class might still separate the two; the capital rule does not.
+
 **--ci is the part that CI runs, added Wednesday 11 November 2026, and it is a ratchet
 rather than an approval.** It passes on exactly the fourteen slots that admit today and
 refuses three changes: a slot that starts admitting and is not on the list, a slot on the
