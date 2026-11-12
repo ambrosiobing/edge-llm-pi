@@ -317,8 +317,9 @@ C, catalogue variant D: a client of `llama-server` over HTTP, with libcurl under
 
 | **Route** | **prompt ms** | **generate ms** | **round trip ms** | **HTTP ms** | **Instrument** |
 | --- | --- | --- | --- | --- | --- |
-| D, llama-server, SmolLM2-360M (chosen) | not measured | not measured | not measured | not measured | the e04\_live\_rtt.csv file on the Pi 4B, not run yet |
-| C, in-process, SmolLM2-360M, e02's loop | not measured | not measured | not applicable | not applicable | the edgellm-e02 log on the Pi 4B with the 360M file, not run yet |
+| D, llama-server, SmolLM2-360M (chosen) | 2124.8 | 5555.1 | 7683.4 | 3.5 | the `e04_replay_rtt.csv` file, Pi 4B, Monday 26 October 2026, four threads, 64-token budget |
+| C, in-process, SmolLM2-360M, e02's loop | 2771.2 | 1110.1 | not applicable | not applicable | the edgellm-e02 log, Pi 4B, Tuesday 27 October 2026, TWO threads, 12-token budget |
+| **the two rows do not compare** |  |  |  | this table asks for e02's loop with no other change, and honouring that moves the thread count and the budget at once, so the totals are not comparable. The HTTP figure survives because it is a subtraction within row D |  |
 
 ## Embedded Linux and Yocto
 
@@ -358,14 +359,35 @@ Three quantities, all on the Pi 4B, with `vcgencmd get_throttled` read before ea
 
 ## Agreement table
 
-Over the replayed benchmark of 180 rows as generated on Wednesday 14 October 2026 by `tools/make_replay.py` with its fixed seed, the rule column holds 63 COOL, 66 WARM and 51 THROTTLED, and 24 rows carry a decision that differs from the previous row's, most of them around the soft limit at 80 C. On the bench the model column is not measured: the Pi 4B run has not been taken. In CI the mock answers COOL for every row, so the agreement is the COOL fraction of the rule column, 63 of 180, 35.0 percent, and every disagreement is of one kind; the 95 percent of the acceptance is therefore a real distance from doing nothing, which it was not in [Project 2](02-the-decision-loop.md), whose replay is 82 percent NORMAL.
+Over the replayed benchmark of 180 rows as generated on Wednesday 14 October 2026 by `tools/make_replay.py` with its fixed seed, the rule column holds 63 COOL, 66 WARM and 51 THROTTLED, and 24 rows carry a decision that differs from the previous row's, most of them around the soft limit at 80 C. In CI the mock answers COOL for every row, so the agreement is the COOL fraction of the rule column, 63 of 180, 35.0 percent, and every disagreement is of one kind; the 95 percent of the acceptance is therefore a real distance from doing nothing, which it was not in [Project 2](02-the-decision-loop.md), whose replay is 82 percent NORMAL.
+
+**The bench run was taken on Monday 26 October 2026 at 22:55** on the Pi 4B with SmolLM2-360M and `llama-server`, and this paragraph said it was pending until Thursday 12 November 2026, seventeen days later. **It fails the first acceptance clause and the agreement figure is therefore not a result:** 136 of the 180 answers never closed their JSON object, 75.6 percent, because 159 of 180 reached the 64-token budget. Every row still carries a readable decision literal, so a figure can be computed, and which figure depends on how the truncated rows are treated:
+
+```text
+    rows                              n     model agrees    best constant on those rows
+    the object closed                44     31, 70.5%       always COOL, 79.5%
+    the object was truncated        136     45, 33.1%       always WARM, 44.1%
+    all rows, literal taken anyway  180     76, 42.2%       always WARM, 36.7%
+```
+
+**A constant beats the model on both parts and loses to it on the union.** The parts have different balances, the well-formed 44 being 79.5 percent COOL and the truncated 136 being 44.1 percent WARM and only 20.6 percent COOL, because the rows that overran the budget are mostly the rows the rule called WARM or THROTTLED. So the 42.2 percent is the one row set of the three on which this model is ahead, and quoting it alone would say more about the row set than about the model, which is the same trap [Project 6](06-vl53l4cd-too-close-explainer.md) published and withdrew. `tools/agreement.py` reports 17.2 percent on this file, counting only the 44 well-formed rows as scored, which it has done since Saturday 17 October 2026. The reasoning and the row splits are in `projects/e04-thermal-narrator/evidence/2026-11-12_1308_the-model-loses-every-slice-and-wins-the-union_aquamarine.md`.
+
+**The one unambiguous fact in the model column is that THROTTLED is never said.** The rule says it 51 times; the model says COOL 111 times, WARM 69 and THROTTLED not once. The clause this chapter exists for, the HTTP cost, passes at 3.5 ms of a 7683.4 ms round trip, 0.046 percent.
 
 | **Rule says** | **Model COOL** | **Model WARM** | **Model THROTTLED** | **Instrument** |
 | --- | --- | --- | --- | --- |
-| COOL, 63 | 63 | 0 | 0 | the mock in CI; bench: not measured |
-| WARM, 66 | 66 | 0 | 0 | the mock in CI; bench: not measured |
-| THROTTLED, 51 | 51 | 0 | 0 | the mock in CI; bench: not measured |
-| agreement | 35.0 percent |  |  | the mock in CI; bench: not measured, run pending on the Pi 4B |
+| COOL, 63 | 63 | 0 | 0 | the mock in CI |
+| WARM, 66 | 66 | 0 | 0 | the mock in CI |
+| THROTTLED, 51 | 51 | 0 | 0 | the mock in CI |
+| COOL, 63 | 42 | 21 | 0 | the Pi 4B, Monday 26 October 2026 |
+| WARM, 66 | 32 | 34 | 0 | the Pi 4B, Monday 26 October 2026 |
+| THROTTLED, 51 | 37 | 14 | 0 | the Pi 4B, Monday 26 October 2026; the model never says THROTTLED |
+| agreement | 35.0 percent |  |  | the mock in CI |
+| agreement | 42.2 percent |  |  | the Pi 4B over all 180 rows, against a best constant of 36.7 percent; see the two rows below before reading it |
+| agreement | 70.5 percent |  |  | the Pi 4B over the 44 rows whose object closed, against a best constant of 79.5 percent, so the model loses that slice |
+| agreement | 33.1 percent |  |  | the Pi 4B over the 136 truncated rows, against a best constant of 44.1 percent, so the model loses that slice too |
+| object never closed | 136 of 180 |  |  | the Pi 4B; 75.6 percent, and 159 of 180 reached the 64-token budget, so the first acceptance clause fails and no agreement figure here is a result |
+| summary sentence forms | 7 of 44 values |  |  | the Pi 4B, over the well-formed rows; 36 of them share one shape, so the free text is a template |
 | rule changed, rows | 24 |  |  | `tools/make_replay.py`; the within-one-interval allowance |
 
 ## Measured data
