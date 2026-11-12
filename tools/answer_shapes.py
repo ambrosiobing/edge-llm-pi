@@ -30,11 +30,36 @@ repository's ledgers:
 A checker that refuses the instruction catches the first and neither of the others. A shape
 count catches the first and the second, and catches the third as a count of one.
 
-**What this does NOT measure, stated because the number looks stronger than it is.** Masking
-digits cannot see an answer that varies its words while saying nothing, and a low shape count
-is not by itself a defect: a decision enum SHOULD have few shapes, and a project whose answer
-is a fixed report line honestly has one. The figure is evidence about a free-text slot, to be
-read beside the agreement rate and its constant baseline, never on its own.
+**It also prints the LOOKUP-TABLE baseline, added Thursday 12 November 2026, which is the
+constant baseline's counterpart for free text.** The rule's verdict is known without any
+model, so the question is what a table from that verdict to a fixed sentence would score. The
+figure is the share of rows whose shape is the commonest shape within their own verdict class:
+
+    e19_run.csv     4 notes, 2 shapes, table 100.0 percent over 2 classes
+    e20_run.csv    50 rows,  1 shape,  table 100.0 percent over 1 class
+    e03_run.csv   200 rows,  4 shapes, table  93.5 percent over 3 classes
+
+**This is the figure that catches a paraphrase**, which no text comparison can. Project 19's
+four notes are three of one sentence and one of another, and the one that differs is the one
+FREEFALL row among three TAPs, so a two-entry table reproduces every note exactly. Calling
+that note "the instruction" was a reading of its meaning; calling it a lookup of its verdict
+is a measurement.
+
+**What NONE of these three figures measures on its own, and why there are three.** Each catches
+a different way of contributing nothing, and each is blind to the others:
+
+    tools/prompt_echo.py    the instruction echoed verbatim. Catches e06 arm A at 20 of 20,
+                            where the shape count reads 5 shapes because the same echo
+                            carries different rubbish after it
+    the shape count here    a template the prompt did not supply. Catches e03 at 187 of 200,
+                            which no echo check sees, the template being the model's own
+    the lookup baseline     a sentence predictable from the verdict alone. Catches e19 and
+                            e20 at 100 per cent, which neither of the others sees
+
+And masking digits still cannot see an answer that varies its words while saying nothing. A
+low shape count is not by itself a defect either: a decision enum SHOULD have few shapes, and
+a project whose answer is a fixed report line honestly has one. All of this is evidence about a
+free-text slot, to be read beside the agreement rate and its constant baseline, never alone.
 
 Added Thursday 12 November 2026, from ledgers that had been in the tree since Tuesday
 27 October 2026. Nothing here needs a board: every input is a file a past run already wrote.
@@ -65,6 +90,40 @@ def shapes(values):
     return collections.Counter(shape(v) for v in values)
 
 
+def lookup_baseline(rows, field):
+    """(share, hits, n, classes) for a table from the rule's verdict to one fixed shape.
+
+    The rule column is what is known without a model, so a table keyed on it is the free-text
+    counterpart of the constant baseline that tools/agreement.py prints beside every rate.
+    Rows with no verdict or no value are skipped; None when fewer than two rows remain, a
+    baseline over one row being meaningless.
+    """
+    import collections
+    pairs = []
+    for row in rows:
+        verdict = (row.get("rule") or "").strip()
+        cell = (row.get("model") or "").strip()
+        if not verdict or not cell:
+            continue
+        if cell.startswith("{"):
+            try:
+                value = str(json.loads(cell).get(field, "")).strip()
+            except Exception:
+                continue
+        else:
+            # e19's answer is an SMS body with no braces, so the cell IS the free text.
+            value = cell
+        if value:
+            pairs.append((verdict, shape(value)))
+    if len(pairs) < 2:
+        return None
+    by = collections.defaultdict(collections.Counter)
+    for verdict, form in pairs:
+        by[verdict][form] += 1
+    hits = sum(c.most_common(1)[0][1] for c in by.values())
+    return (hits / float(len(pairs)), hits, len(pairs), len(by))
+
+
 def field_values(rows, field):
     """The free-text field of every row whose model cell is parsable and non-empty.
 
@@ -78,6 +137,13 @@ def field_values(rows, field):
         cell = (row.get("model") or "").strip()
         if not cell:
             empty += 1
+            continue
+        if not cell.startswith(("{", "[")):
+            # e19's answer is an SMS body with no braces, so the cell IS the free text.
+            # Tested on the first character and not by trying to parse, so that a
+            # truncated object, which starts with a brace and does not parse, still
+            # counts as broken rather than being read as a sentence.
+            values.append(cell)
             continue
         try:
             obj = json.loads(cell)
@@ -146,6 +212,15 @@ def report(ledger, field=None, top=5):
     print("%6s  %6s  %s" % ("rows", "share", "shape"))
     for form, n in counted.most_common(top):
         print("%6d  %5.1f%%  %s" % (n, 100.0 * n / len(values), form[:84]))
+    base = lookup_baseline(rows, field)
+    if base:
+        share, hits, n, classes = base
+        print()
+        print("a table from the rule's verdict to one fixed shape reproduces %d of %d rows,"
+              % (hits, n))
+        print("  %.1f percent, over %d verdict class(es). That is what no model is needed for."
+              % (100.0 * share, classes))
+
     if "stub" in eng:
         print()
         print("NOTE: this run used the stub engine, whose expansion of the grammar is fixed,")

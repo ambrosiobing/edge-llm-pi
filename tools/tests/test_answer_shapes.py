@@ -38,11 +38,31 @@ def test_words_are_not_masked_so_two_real_sentences_stay_two_shapes():
     assert len(answer_shapes.shapes(values)) == 2
 
 
-def test_an_unparsable_model_cell_is_counted_and_not_shaped():
-    rows = [{"model": '{"beam": "level 1.0"}'}, {"model": "not json at all"}]
+def test_a_truncated_object_is_counted_as_unparsable_and_not_shaped():
+    # A cell that STARTS with a brace and does not parse is an answer the token budget cut
+    # off, which is e02's 949 rows of 1000 and e04's 136 of 180. It must not be read as a
+    # sentence, or a broken run would report a tidy shape count.
+    rows = [{"model": '{"beam": "level 1.0"}'},
+            {"model": '{  "beam": "level 2.0, 3.0, 4.0'}]
     values, unparsable, empty = answer_shapes.field_values(rows, "beam")
     assert values == ["level 1.0"]
     assert unparsable == 1 and empty == 0
+
+
+def test_a_cell_with_no_braces_is_the_free_text_itself():
+    """Corrected Thursday 12 November 2026, and the old assertion was wrong about e19.
+
+    This test used to feed "not json at all" and require it to count as unparsable, on the
+    assumption that a cell which is not JSON is a broken run. Project 19's answer is an SMS
+    body with no braces, so for that project a brace-free cell is the correct answer and the
+    whole cell is the free text. Treating it as broken reported "with a value 0, unparsable
+    4" on a run of four good notes and hid the finding underneath.
+    """
+    rows = [{"model": "ALERT TAP peak 2.33 g at t+00:00:05. Check the settings."},
+            {"model": "ALERT"}]
+    values, unparsable, empty = answer_shapes.field_values(rows, "note")
+    assert len(values) == 2 and unparsable == 0 and empty == 0
+    assert values[1] == "ALERT"
 
 
 def test_json_that_is_not_an_object_counts_as_unparsable():
