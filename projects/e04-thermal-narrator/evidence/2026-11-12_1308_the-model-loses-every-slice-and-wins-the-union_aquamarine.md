@@ -8,9 +8,23 @@
                agreement and the best constant on each part and on the whole
     tree       7348873 plus this change
 
-**NO RUN WAS TAKEN.** The ledger has been in the repository since Monday 26 October 2026.
-What this establishes is that its published agreement figure is not robust to the choice of
-rows, and that the chapter has carried the run as pending for seventeen days.
+**THE REVERSAL BELOW IS WITHDRAWN AS AN ARTEFACT OF THE TOKEN CEILING, at 16:16 the same
+day**, by
+`2026-11-12_1616_the-budget-was-the-cause-and-nine-rows-loop_pi4b-eplepi_smollm2-360m-instruct-q4_k_m.md`.
+A rerun on board A with the budget at 128 instead of 64 closed 127 of the 136 objects, so the
+split that produced the reversal is 171 to 9 rather than 44 to 136, and the model then beats
+its best constant on the 171 and on the whole file: 43.3 against 36.3, and 42.2 against 36.7.
+The effect was real on these data and its cause was the configuration: the ceiling cut the
+rows the rule called WARM or THROTTLED more often than the rows it called COOL, which split
+the file into two halves with different class balances. **So a defect in the configuration
+produced a statistical artefact that read as a finding about the model.** Everything below
+stands as a description of these 180 rows at 64 tokens; what is withdrawn is reading it as a
+property of the model.
+
+**NO RUN WAS TAKEN FOR THIS RECORD.** The ledger has been in the repository since Monday
+26 October 2026. What this establishes is that its published agreement figure is not robust
+to the choice of rows, and that the chapter has carried the run as pending for seventeen
+days.
 
 ## THE CHAPTER SAID THE RUN WAS PENDING
 
@@ -81,8 +95,10 @@ is to print the shape count beside the rate.
     established   the best constant beats the model on both parts and loses on the union
     established   the HTTP cost is 3.5 ms of 7683.4 ms, which is the chapter's question
     established   the 44 well-formed summaries hold 7 shapes, 36 of them one shape
-    NOT shown     what the model would do with a budget that lets the object close, which
-                  is the run worth taking next and needs the board
+    withdrawn     the reversal, as an artefact of the ceiling; see the record of 16:16
+    answered      what the model would do with a budget that lets the object close: the
+                  run was taken the same day at 128 tokens, closing 127 of 136 objects,
+                  changing not one decision, and leaving nine rows looping at the ceiling
     NOT shown     the route comparison, which cannot be made as specified
     NOT a defect  the record's 42.2 per cent, which is the whole-file figure honestly
                   computed; what was missing is the row set and the baseline beside it

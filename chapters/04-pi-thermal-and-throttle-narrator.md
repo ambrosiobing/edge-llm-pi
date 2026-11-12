@@ -370,9 +370,24 @@ Over the replayed benchmark of 180 rows as generated on Wednesday 14 October 202
     all rows, literal taken anyway  180     76, 42.2%       always WARM, 36.7%
 ```
 
-**A constant beats the model on both parts and loses to it on the union.** The parts have different balances, the well-formed 44 being 79.5 percent COOL and the truncated 136 being 44.1 percent WARM and only 20.6 percent COOL, because the rows that overran the budget are mostly the rows the rule called WARM or THROTTLED. So the 42.2 percent is the one row set of the three on which this model is ahead, and quoting it alone would say more about the row set than about the model, which is the same trap [Project 6](06-vl53l4cd-too-close-explainer.md) published and withdrew. `tools/agreement.py` reports 17.2 percent on this file, counting only the 44 well-formed rows as scored, which it has done since Saturday 17 October 2026. The reasoning and the row splits are in `projects/e04-thermal-narrator/evidence/2026-11-12_1308_the-model-loses-every-slice-and-wins-the-union_aquamarine.md`.
+On those rows a constant beat the model on both parts and lost to it on their union, and **that reversal was an artefact of the budget, which the rerun below settled the same day**. The two parts had different balances, the well-formed 44 being 79.5 percent COOL and the truncated 136 being 44.1 percent WARM and only 20.6 percent COOL, because the rows that overran the ceiling were mostly the rows the rule called WARM or THROTTLED. `tools/agreement.py` reports 17.2 percent on that file, counting only the 44 well-formed rows as scored, which it has done since Saturday 17 October 2026.
 
-**The one unambiguous fact in the model column is that THROTTLED is never said.** The rule says it 51 times; the model says COOL 111 times, WARM 69 and THROTTLED not once. The clause this chapter exists for, the HTTP cost, passes at 3.5 ms of a 7683.4 ms round trip, 0.046 percent.
+**The rerun of Thursday 12 November 2026 at 16:16 changed one variable, the budget from 64 to 128, and it settles three things.** First, the ceiling was the cause for 127 of the 136: objects that never closed fall from 136 to **9**. Second, those nine stop at exactly 128 and what they write there is a repetition loop, `79.7, COOL, 79.7, COOL` on one row and a run of zeros on another, so no larger budget reaches them and the clause is not budget reachable. Third, the typical answer is now measured and needs 97 tokens on 64 rows and 95 on 41, which is why 64 fell short by about a third.
+
+**And the model is deterministic here, which is why no decision moved.** On all 180 rows one answer is a prefix of the other, 44 being byte identical; the agreement is 76 of 180 in both runs and **the same 76 rows**, and the confusion table is identical cell for cell. So the two runs are one measurement seen at two lengths. With the split now 171 to 9 the reversal is gone:
+
+```text
+    rows                     n     model agrees    best constant on those rows
+    the object closed      171     74, 43.3%       always COOL, 36.3%
+    the object was open      9      2, 22.2%       always WARM, 55.6%
+    all rows               180     76, 42.2%       always WARM, 36.7%
+```
+
+The model beats its best constant on the 171 and on the whole file, and 42.2 percent against 95 still fails the clause by a wide margin. **The one unambiguous fact in the model column is that THROTTLED is never said**: the rule says it 51 times; the model says COOL 111 times, WARM 69 and THROTTLED not once, in both runs alike.
+
+**What the rerun makes visible is the free text, and only 21 percent of it has the intended form.** Of the 171 closed answers, 74 distinct values hold 33 shapes; 36 rows carry the report this chapter asks for, `SoC temperature # C, throttle bits #, ARM clock # MHz, previous temperatures #, #, #`, and more than ninety list decision words instead, of which 11 write `COLD`, a literal in neither the grammar, the prompt nor `src/rules_e04.c`. That invention was equally present at 64 tokens, in the same 17 rows; what the ceiling hid was the shape statistic, which counts only closed objects.
+
+The clause this chapter exists for passes in both runs, and its figure is not a constant of the route: **3.5 ms of a 7683.4 ms round trip in October and 15.8 ms of 14013.9 ms in the rerun**, four and a half times higher on the same client, server and wire. It remains 0.11 percent, so variant D is free at this interval either way, but the number scales with load. The rerun was throttled throughout, `get_throttled` going from `0x0` at 54.0 C to `0xe0008` at 84.2 C with the soft limit active and back to `0xe0000` at 62.8 C, with no under-voltage bit at any point, so none of its timings is published as a latency. The record is `projects/e04-thermal-narrator/evidence/2026-11-12_1616_the-budget-was-the-cause-and-nine-rows-loop_pi4b-eplepi_smollm2-360m-instruct-q4_k_m.md`.
 
 | **Rule says** | **Model COOL** | **Model WARM** | **Model THROTTLED** | **Instrument** |
 | --- | --- | --- | --- | --- |
@@ -386,8 +401,11 @@ Over the replayed benchmark of 180 rows as generated on Wednesday 14 October 202
 | agreement | 42.2 percent |  |  | the Pi 4B over all 180 rows, against a best constant of 36.7 percent; see the two rows below before reading it |
 | agreement | 70.5 percent |  |  | the Pi 4B over the 44 rows whose object closed, against a best constant of 79.5 percent, so the model loses that slice |
 | agreement | 33.1 percent |  |  | the Pi 4B over the 136 truncated rows, against a best constant of 44.1 percent, so the model loses that slice too |
-| object never closed | 136 of 180 |  |  | the Pi 4B; 75.6 percent, and 159 of 180 reached the 64-token budget, so the first acceptance clause fails and no agreement figure here is a result |
-| summary sentence forms | 7 of 44 values |  |  | the Pi 4B, over the well-formed rows; 36 of them share one shape, so the free text is a template |
+| object never closed | 136 of 180 |  |  | the Pi 4B at 64 tokens; 75.6 percent, and 159 of 180 reached the budget |
+| object never closed | 9 of 180 |  |  | the Pi 4B at 128 tokens, Thursday 12 November 2026; the nine stop at the ceiling writing repetition loops, so the clause is not budget reachable |
+| agreement | 42.2 percent |  |  | the Pi 4B at 128 tokens, over all 180 rows and the SAME 76 rows as at 64, against a best constant of 36.7 percent; the clause asks 95 |
+| agreement | 43.3 percent |  |  | the Pi 4B at 128 tokens, over the 171 closed rows, against a best constant of 36.3 percent |
+| summary sentence forms | 33 of 171 values |  |  | the Pi 4B at 128 tokens; only 36 rows carry the intended report, over ninety list decision words, and 11 write COLD, a literal in neither grammar, prompt nor rule |
 | rule changed, rows | 24 |  |  | `tools/make_replay.py`; the within-one-interval allowance |
 
 ## Measured data
