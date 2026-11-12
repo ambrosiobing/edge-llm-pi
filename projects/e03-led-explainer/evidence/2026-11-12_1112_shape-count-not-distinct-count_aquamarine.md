@@ -49,7 +49,19 @@ others, which matters because that checker is the remedy `tools/free_text_slots.
 its own docstring. The shape count catches the first and the second, and reports the third as
 a count of one.
 
-## THE ECHO DETECTOR WAS BUILT, VALIDATED AND IS NOT SHIPPED
+## THE ECHO DETECTOR WAS BUILT, VALIDATED AND WAS SHIPPED THE SAME EVENING
+
+**THIS SECTION'S CONCLUSION WAS REVERSED AT 14:30 THE SAME DAY**, and the reason is a
+measurement taken after it. The detector is now `tools/prompt_echo.py`, with ten tests. What
+changed is not the detector but the alternative: this record left it unshipped because it
+cannot see a paraphrase, on the reasoning that the remedy ought to be a narrower grammar
+class. That evening the narrowing was measured and refuted, since removing capitals refuses
+every correct answer in two projects while keeping every verbatim echo, recorded in
+projects/e19-cellular-alert/evidence/
+2026-11-12_1352_narrowing-the-class-kills-the-wrong-answers_aquamarine.md. With the
+alternative gone, a tool that closes project 6's case completely and says plainly that it
+cannot see project 19's is worth having. Its limit is in its own docstring and printed as a
+note whenever it reports zero.
 
 A prototype asked whether an answer carries a contiguous word run of a prompt sentence. It
 reproduces the measured counts exactly once the coverage is measured the right way round:
@@ -65,13 +77,15 @@ is still an echo, so coverage belongs against the prompt sentence. Measured that
 honest case stays out: a real answer such as "a wall is in front of the sensor" shares a
 five-word run with a fourteen-word instruction and covers 36 per cent of it.
 
-**It is not shipped because of e19, where it finds nothing and is right to.** That note reads
-"Check the message type, peak value, and time." and its longest run shared with any prompt
-sentence is three words out of thirty-four. The model paraphrased rather than copied. The
-record of Sunday 1 November 2026 calls that note "the instruction", which is a fair reading
-of its meaning and not a textual fact, and **no string comparison can find it.** A verbatim
-echo check would therefore close e06's case and leave e19's open, which is worth doing and
-worth saying plainly rather than shipping as a general remedy.
+**The limit that first argued against shipping it is e19, where it finds nothing and is right
+to.** That note reads "Check the message type, peak value, and time." and its longest run
+shared with any prompt sentence is three words out of thirty-four. The model paraphrased
+rather than copied. The record of Sunday 1 November 2026 calls that note "the instruction",
+which is a fair reading of its meaning and not a textual fact, and **no string comparison can
+find it.** So a verbatim echo check closes e06's case and leaves e19's open. At 11:12 that
+read as a reason to withhold it; by 14:30, the grammar-narrowing alternative having been
+refuted, it reads as a limit to state rather than a reason to withhold, and the tool prints
+it as a note whenever it reports zero.
 
 ## WHAT I ALMOST REPORTED, AND THE COLUMN THAT STOPPED IT
 
@@ -100,5 +114,7 @@ distinct count. Corrected in that record and in the journal.
     established   the three defect kinds are separate and need separate remedies
     withdrawn     the claim that two of two measured projects answered one constant literal
     NOT shown     anything about any model's behaviour under a narrower grammar
-    NOT SHIPPED   the echo detector, for the reason above; only the shape count is here
+    SHIPPED       the shape count, here; and the echo detector as tools/prompt_echo.py,
+                  on Thursday 12 November 2026 at 14:30, after the narrowing alternative
+                  was measured and refuted. This record first said NOT SHIPPED
     NOT IN CI     answer_shapes.py needs a ledger, and a ledger exists only after a run
