@@ -81,6 +81,14 @@ percent baseline, three outcomes are worth distinguishing in advance:
 
 **The second is the outcome to expect** on the evidence so far: a 0.5B model on this volume's
 tasks has answered with one constant literal in two projects out of two measured. If it does,
+WITHDRAWN AS WRITTEN on Thursday 12 November 2026 by
+`projects/e03-led-explainer/evidence/2026-11-12_1112_shape-count-not-distinct-count_aquamarine.md`:
+a third project was measured and contradicts it literally. e03 answered with 191 distinct
+strings over 200 rows with the real engine. The spirit survives, because those 191 strings are
+four sentence forms and 187 of the rows are one of them, "level #, slope # per second", the
+event's own measurements re-spelled. The figure that reconciles the two is the shape count and
+not the distinct count. So the expectation below still stands, and the reason given for it was
+a generalisation from two cases while a third sat in the tree.
 that is a publishable finding and not a failure, and it should be published with the baseline
 beside it rather than as a bare percentage.
 
