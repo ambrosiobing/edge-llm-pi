@@ -22,6 +22,14 @@ FIFO watermark; this project polls sysfs and never touches GPIO24.
 
 ## Addresses, measured Wednesday 30 September 2026
 
+**THE DRIVER AND DEVICE COLUMNS BELOW DESCRIBE THE YOCTO 6.6.63-v8 IMAGE, NOT THE TRIXIE
+IMAGE THIS SHEET NAMES IN ITS FIRST PARAGRAPH.** Measured on Friday 13 November 2026:
+on Raspberry Pi OS trixie 6.18.50+rpt-rpi-v8 the modules `st_magn_i2c`, `st_pressure_i2c`
+and `st_lsm6dsx_i2c` are not in the kernel package, `iio/magnetometer` does not exist as a
+directory, `iio/pressure` holds only bmp280 and ms5637, and `bench-iks4a1.dtbo` is not on
+card eplepi. Only `sht4x` is present. The address column was measured; the driver column
+was assumed, which is the same defect e05's sheet carries about the ADXL345.
+
 | Address | Part | Driver | Device | Read by e07 |
 |---|---|---|---|---|
 | 0x19 | LIS2DUXS12 | st_lis2duxs12 not in the image | none | no; answers `i2cdetect -r` only |

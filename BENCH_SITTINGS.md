@@ -17,7 +17,7 @@ recorded in `PITFALLS.md`.
 | B | Pi 3B, the 3.5 inch panel on eleven jumpers, ADXL345 and LEDs re-pinned | e09 | yes |
 | C | Pi 4B, no HAT | e04 | needs a second card |
 | D | Pi 4B card B, WS-28164 | e13, e14, e18 | yes |
-| E | Pi 3B+, bare header, IKS4A1 on flying leads | e07 | yes |
+| E | Pi 3B+, bare header, IKS4A1 on flying leads | e07 | **no**, three of four drivers are absent on Pi OS trixie, the pressure one the rule reads included; the parts are present and the measurement is not reachable, see e07 evidence of Friday 13 November 2026 |
 | F | Pi 3B+, Explorer700 | e08 | yes |
 | G | Pi 4B card A, MCC 118 and the Nucleo DAC | e10 | yes |
 | H | Pi 4B, USB only: Nucleo CDC, STWIN.box, ESP32 and the PPK2 | e11, e12, e15 | yes |

@@ -11,6 +11,16 @@ grammar  = "grammars/e07_pressure.gbnf"
 prompt   = "projects/e07-iks4a1-narrator/prompt.txt"
 rule     = "projects/e07-iks4a1-narrator/src/rules_e07.c"
 binary   = "edgellm-e07"
+# BLOCKED on the image this project names, measured Friday 13 November 2026 at 19:00 and
+# recorded in evidence/2026-11-13_1900_the-image-the-sheet-names-carries-no-driver-for-
+# three-of-four-parts_pi4b-eplepi.md. On Raspberry Pi OS trixie 6.18.50+rpt-rpi-v8,
+# st_magn, st_pressure and st_lsm6dsx are absent from the kernel package and the
+# iio/magnetometer directory does not exist at all; only sht4x is present. The missing
+# pressure part is the one number the rule reads, so the control rule cannot run either,
+# and this is not a question about what the model adds. Unblocking means the Yocto
+# 6.6.63 image where all four are registered, or four out-of-tree modules, or dropping
+# the IIO path for user-space I2C, which would touch the shared io.h and not only e07.
+blocked_on = "three of four drivers are absent from Pi OS trixie, the pressure one included; needs the Yocto image or an out-of-tree build"
 
 [build]
 # From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The
