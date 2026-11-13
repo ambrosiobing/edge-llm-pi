@@ -97,7 +97,13 @@ abi      = "projects/e18-industrial-logger/c/abi.h"
 # that name one and its verdict is independent of that number, answering DRIFT in 0 of the
 # 57 rows where it writes a span above 100. Also measured, and failing: 600 of 600 events
 # overrun the 2.0 s period at a mean call of 16134 ms.
-blocked_on = "the echo needs the WS-28164 on card B; clause three, the per-call cost, is a separate run on board A"
+# Clause three, Friday 13 November 2026: the boundary is measured at 0.064 us per call
+# and the seam is free, four parts in a billion of a decision. The clause is NOT closed.
+# The chapter's condition is all four rows from one sitting with get_throttled reading
+# 0x0 before and after, and a run with any bit set discarded. The model sitting of this
+# day was never read before, read 0xe0000 after, and the FFI and socket rows were never
+# run at all. Sticky bits clear only at boot, so the sitting has to start from a reboot.
+blocked_on = "the echo needs the WS-28164 on card B; clause three needs all four latency rows from one sitting that starts at a reboot with get_throttled 0x0"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned
@@ -143,6 +149,19 @@ table = "python tools/agreement.py projects/e18-industrial-logger/evidence/e18_r
 # Three: what the boundary costs per call. Three figures on one prompt, one board, one
 # model: in process with no boundary, through the C ABI in process, and through the
 # daemon's socket. The first two come from the C test, the third from the service.
+#
+# RUN "boundary" FIRST. It takes seconds and it is the only one of these that measures
+# the seam. Measured Friday 13 November 2026 on board A: 0.286 us through the ABI
+# against 0.222 us in process over 2000 calls, so the boundary is 0.064 us with a
+# standard error of 0.0006 us, which is a mutex pair and a 36-byte copy.
+#
+# The model run below does NOT measure the boundary, and the chapter said it did until
+# the same day. Its two arms are blocks, every ABI call before any in-process call, so
+# the first pays for paging in 463 MiB and the second does not. On 200 calls that
+# subtraction printed 294367 us, 4.6 million times what the stub measures on the same
+# host. What the model run does contribute is the cost of a decision, 15.4 s, and the
+# three ABI checks against the real engine.
+boundary = "build-e18c-stub/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --calls 2000"
 in_process_and_abi = "build-e18c/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200"
 ffi = "RUSTFLAGS='-L build-e18c' cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
 socket = "target/release/edgellm-e18 --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"

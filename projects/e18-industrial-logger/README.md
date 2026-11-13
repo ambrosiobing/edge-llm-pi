@@ -380,13 +380,24 @@ Rust for the device service and C for the inference daemon, catalogue variants R
 
 | **Boundary** | **Mean per call** | **Sample sd** | **Calls** | **Instrument** |
 | --- | --- | --- | --- | --- |
-| none, `edgellm_decide` in process | not measured | not measured | 200 | `e18_abi_test`, the in process figure; not run yet |
-| the C ABI, in process | not measured | not measured | 200 | `e18_abi_test`, the ABI figure; not run yet |
+| none, in process, stub build, first run | 0.222 us | 0.021 us | 2000 | `e18_abi_test` with no `--model`, Friday 13 November 2026 |
+| the C ABI, in process, stub build, first run | 0.286 us | 0.017 us | 2000 | the same run |
+| none, in process, stub build, second run | 0.226 us | 0.023 us | 2000 | the same binary and board, minutes later |
+| the C ABI, in process, stub build, second run | 0.318 us | 0.481 us | 2000 | the same binary; the sd is 28 times the first run's |
+| **the C ABI alone, the difference** | **0.064 us and 0.092 us** | two runs, not one | 2000 each | tens of nanoseconds, which is a mutex pair and a 36-byte copy and nothing else in `edgellm_abi_decide` |
+| none, `edgellm_decide` in process, real model | 15 385 790 us | 453 777 us | 200 | `e18_abi_test` with qwen2.5-0.5b, Friday 13 November 2026; DISCARDED, see below |
+| the C ABI, in process, real model | 15 680 157 us | 547 282 us | 200 | the same run; DISCARDED |
+| the difference of those two | NOT a boundary | se 50 271 us | 200 | 294 367 us, which is the order of the two blocks and not the seam |
 | the C ABI from Rust over the FFI | not measured | not measured | 200 | `edgellm-e18 --bench`, the ffi backend; needs the ffi feature, not run yet |
 | the same four over the Unix socket | not measured | not measured | 200 | `edgellm-e18 --bench`, the socket backend; not run yet |
-| the stub, no engine at all | not measured | not measured | 200 | `e18_abi_test` in a stub build; this row isolates the boundary from the decision |
 
-The last row is the one to read first when the table is filled. With the stub behind the same four functions the decision itself costs almost nothing, so the difference between the first two rows in a stub build is the boundary alone; with the real model the same difference is the boundary against a decision of tens of milliseconds, which is the ratio that decides whether the seam is affordable. A boundary cost that is a few microseconds against a decision of that size is a result, and so is one that is not.
+The fifth row is the one to read first, and the eighth is the one this chapter got wrong. With the stub behind the same four functions the decision costs almost nothing, so the difference between the stub's two arms is the boundary alone: **tens of nanoseconds**. Against a decision of 15.4 seconds that is four to six parts in a billion, and **the seam is free**. That is the answer to the question this chapter was built around, and it needed no model at all.
+
+**It is quoted as a range because one run cannot give it.** The first run put it at 0.064 us with a standard error inside the run of 0.0006 us, which invites a figure to three decimals. The second run of the same binary on the same board minutes later put it at 0.092 us, 44 per cent higher, while the ABI arm's sample standard deviation went from 0.017 to 0.481. A mean rising 0.032 us while the sd rises 0.464 over 2000 calls is one call of about 20 us, which is the scheduler taking the thread away. So the within-run standard error is not the uncertainty of this measurement and was never going to be: the run-to-run spread is two orders of magnitude larger. `e18_abi_test` now prints the median and the maximum of each arm as well, and gives the boundary by both the means and the medians, the median being the figure to quote. The conclusion is unharmed either way, because the question is whether a seam costing nanoseconds matters against a decision costing seconds. The record is `projects/e18-industrial-logger/evidence/2026-11-13_1039_the-boundary-is-tens-of-nanoseconds-and-the-model-run-measured-order_pi4b-eplepi.md`.
+
+**What it did need was not subtracting two inference means.** This paragraph used to say that with the real model the same difference is the boundary against a decision, and it is not. The test runs its two arms as blocks, every call through the ABI before any call in process, so the first block pays for paging in 463 MiB and ramping the governor and the second finds them done. On Friday 13 November 2026 that subtraction printed 294 367 us, which is 5.9 standard errors from zero and therefore not noise, and also 4.6 million times the boundary the stub measures on the same host and the same shared object. A difference can be real and still measure the wrong thing. `e18_abi_test` now prints the standard error of the difference always and refuses to label it a boundary when a model is loaded.
+
+**And the model sitting is discarded by the condition below, not by this finding.** `vcgencmd get_throttled` was never read before it, and after it read `0xe0000`, three sticky bits that had been set since the night before. Sticky bits clear only at boot, so a sitting that is to satisfy the condition has to start from a reboot. Clause three therefore stays open: the boundary is known, and the four rows from one clean sitting are not.
 
 ## Embedded Linux and Yocto
 

@@ -17,12 +17,34 @@
  *
  * Then the measurement: N calls through edgellm_abi_decide, and N calls through
  * edgellm_decide in this process with no boundary between, one engine at a time
- * because two models do not fit on the board. The difference of the two means is
- * the cost of the boundary per call. It is printed in microseconds, with the mean
- * and the sample standard deviation of each, and it is a figure of this host: with
- * the stub the engine itself costs almost nothing, so the stub run measures the
- * boundary alone, and the run with the real model measures it against a decision.
- * Both go into the chapter's table, each with its own row and its own instrument.
+ * because two models do not fit on the board.
+ *
+ * THE DIFFERENCE OF THE TWO MEANS IS THE BOUNDARY ONLY IN THE STUB RUN, and this
+ * comment claimed otherwise until Friday 13 November 2026. The two arms are blocks,
+ * every call through the ABI before any call in process, so the first block pays
+ * whatever the second finds warm. With the stub that is nothing measurable and the
+ * difference is the boundary: 2000 calls on the Pi 4B gave 0.286 us through the ABI
+ * against 0.222 us in process, a boundary of 0.064 us, which is a mutex pair and a
+ * 36-byte copy and nothing else. With the real model both arms are inference, and
+ * on 200 calls the same subtraction printed 294367 us, 4.6 million times the figure
+ * the stub measures on the same host and the same library. That is the first block
+ * paging in 463 MiB and ramping the governor, not a boundary.
+ *
+ * So the model run contributes the cost of a decision and the three checks against
+ * the real engine; the stub run contributes the boundary. Each is its own row in
+ * the chapter's table with its own instrument, and the difference is printed with
+ * the standard error of the difference so that neither can be read as the other.
+ *
+ * AND THE MEAN IS NOT ENOUGH, which the second stub run of the same afternoon showed.
+ * Run against run of the same binary on the same board, the boundary by the means moved
+ * from 0.064 us to 0.092 us, 44 per cent, while the ABI arm's sample sd went from 0.017
+ * to 0.481, twenty-eight times. A mean rising by 0.032 us while the sd rises by 0.464
+ * over 2000 calls is one call of roughly 20 us, which is the scheduler taking the thread
+ * away and not the boundary. So the median and the maximum of each arm are printed too,
+ * and the boundary is given by both the means and the medians: the median is the figure
+ * to quote, the maximum is there so that a preemption is visible rather than hidden in
+ * an inflated mean, and the two runs together are the reason no single run of this test
+ * should be published with its standard error as though that were its uncertainty.
  */
 #define _GNU_SOURCE
 #include "abi.h"
@@ -39,6 +61,21 @@
 #define USER_TEXT \
     "register 0 level 577 counts, span 141 counts over 30 frames, " \
     "temperature 42.4 C, pressure 5.8 bar. Decide."
+
+static int cmp_double(const void *a, const void *b)
+{
+    double x = *(const double *)a, y = *(const double *)b;
+    return x < y ? -1 : (x > y ? 1 : 0);
+}
+
+
+/* Sorts v in place, so call it only after stats() has read the unsorted order. */
+static double median_of(double *v, int n)
+{
+    qsort(v, (size_t)n, sizeof(double), cmp_double);
+    return n % 2 ? v[n / 2] : 0.5 * (v[n / 2 - 1] + v[n / 2]);
+}
+
 
 static double us_now(void)
 {
@@ -106,7 +143,8 @@ int main(int argc, char **argv)
     int calls = 200, i, failures = 0, rc;
     char out[OUT_MAX];
     double *abi_us = NULL, *direct_us = NULL;
-    double abi_mean, abi_sd, dir_mean, dir_sd;
+    double abi_mean, abi_sd, dir_mean, dir_sd, diff, se;
+    double abi_med, dir_med, abi_max, dir_max;
     char *prompt_text = NULL;
 
     for (i = 1; i < argc; i++) {
@@ -234,9 +272,26 @@ int main(int argc, char **argv)
     stats(abi_us, calls, &abi_mean, &abi_sd);
     stats(direct_us, calls, &dir_mean, &dir_sd);
     printf("calls %d, engine %s\n", calls, edgellm_engine_version());
+    abi_med = median_of(abi_us, calls);
+    dir_med = median_of(direct_us, calls);
+    abi_max = abi_us[calls - 1];
+    dir_max = direct_us[calls - 1];
     printf("through the ABI   mean %10.3f us  sd %10.3f us\n", abi_mean, abi_sd);
+    printf("                median %10.3f us  max %10.3f us\n", abi_med, abi_max);
     printf("in process        mean %10.3f us  sd %10.3f us\n", dir_mean, dir_sd);
-    printf("boundary per call      %10.3f us\n", abi_mean - dir_mean);
+    printf("                median %10.3f us  max %10.3f us\n", dir_med, dir_max);
+    diff = abi_mean - dir_mean;
+    se = sqrt(abi_sd * abi_sd / (double)calls + dir_sd * dir_sd / (double)calls);
+    printf("difference        %10.3f us  se %10.3f us\n", diff, se);
+    if (model != NULL) {
+        printf("NOT A BOUNDARY: with a model loaded both arms are inference and this\n");
+        printf("  difference is the order of the two blocks, every ABI call running\n");
+        printf("  before any in-process call. Run without --model for the boundary.\n");
+    } else {
+        printf("boundary per call      %10.3f us  by the means\n", diff);
+        printf("boundary per call      %10.3f us  by the medians, the figure to quote\n",
+               abi_med - dir_med);
+    }
     free(abi_us);
     free(direct_us);
 
