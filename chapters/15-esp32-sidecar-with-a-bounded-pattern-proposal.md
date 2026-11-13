@@ -299,6 +299,7 @@ cd ~/edge-llm-pi; .venv/bin/python projects/e15-esp32-sidecar/tools/make_replay.
 ```bash
 # Raspberry Pi 4 Model B, card eplepi
 cd ~/edge-llm-pi; .venv/bin/edgellm-e15 --project e15 \
+  --n-predict 16 \
   --replay projects/e15-esp32-sidecar/replay/budgets_200.csv \
   --grammar projects/e15-esp32-sidecar/grammar.gbnf \
   --prompt projects/e15-esp32-sidecar/prompt.txt \
