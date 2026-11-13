@@ -34,8 +34,22 @@ confidently and each time in the direction of inventing a defect rather than mis
 
   2. `ls .../edgellm-e17/files/*.service | head -1` returned edgellm-e17-sampler.service, which
      has no budget because it is a sampler and not the model loop, and e17 was reported as a
-     defect on the strength of the wrong file. Every service file is read here and the values
-     collected as a set.
+     defect on the strength of the wrong file. Every service file OF A PROJECT is read here
+     and the values collected as a set; which files those are is item 4.
+
+  4. From this file's first line on Monday 19 October 2026 the search looked under the Yocto
+     recipe only, and eight of the twenty-three unit files in the tree sit beside their
+     project instead,
+     under projects/<slug>/files. So e04, e08, e14 and e18, the four projects that split a
+     daemon off the service, each printed "no unit budget" with two units sitting there
+     carrying one. The verdict read as "there is nothing to compare" and the sentence above
+     read as a guarantee that it had looked. Found on Friday 13 November 2026 while checking
+     why e18's manifest could say 128 and its unit 64 without this gate noticing: it had
+     never read e18's unit at all. Both directories are searched now, and all_units() walks
+     the tree so that a unit belonging to no compared project is printed rather than
+     silently dropped. On the day of the fix that count went to zero and no disagreement
+     came with it: the four projects were each self-consistent, so this had hidden a false
+     absence and not a contradiction.
 
   3. With both of those fixed it still reported e07, e13 and e19 as defects, because it compared
      sheet against unit and assumed every binary defaults to 8. Three of them do, in the shared
@@ -54,12 +68,13 @@ variant_a_cpp.cpp, which is the comparison binary's own budget rather than the o
 runs, and for e18 it names a test file. Both happen to carry the same number as the real default,
 which is luck and not a reason to trust the column.
 
-The verdict does not rest on it except where a sheet is silent, which is e07, e13 and e19. For
-those three the default was read by hand in their own main, 64 in main.cpp, main.rs and
-e19_main.c, and each matches its unit. Anywhere the sheet sets the option the default cannot be
-reached and the column is decoration. Finding the true default per project would mean knowing
-which of several sources is the binary the unit starts, which this tool deliberately does not
-try to work out.
+The verdict does not rest on it except where a sheet is silent, which is e04, e07, e13 and
+e19. For those four the default was read by hand in their own main, 64 in e04_client.c,
+main.cpp, main.rs and e19_main.c, and each matches its unit. e04 joined that set on Friday 13
+November 2026, when item 4 made its unit visible. Anywhere the sheet sets the option the
+default cannot be reached and the column is decoration. Finding the true default per project
+would mean knowing which of several sources is the binary the unit starts, which this tool
+deliberately does not try to work out.
 """
 import argparse
 import io
@@ -132,11 +147,35 @@ def own_default(proj):
 
 
 def units_of(slug):
-    app = os.path.join(ROOT, "meta-edgellm", "recipes-app",
-                       "edgellm-" + slug.split("-")[0], "files")
-    if not os.path.isdir(app):
-        return []
-    return [os.path.join(app, n) for n in sorted(os.listdir(app)) if n.endswith(".service")]
+    """Every unit file of this project, from BOTH places the volume keeps them.
+
+    Until Friday 13 November 2026 this looked only under the Yocto recipe, and so it
+    reported "no unit budget" for e04, e08, e14 and e18, which keep their two unit files
+    beside the project because each of them splits a daemon off the service. Eight of the
+    twenty-three unit files in the tree were invisible, and the verdict for those four
+    projects read as "there is nothing to compare" while two units each sat there with a
+    budget in them. The recipes install them from exactly these paths, so the project
+    directory is not a draft location. all_units() below now makes that claim
+    falsifiable instead of trusting this list.
+    """
+    out = []
+    for d in (os.path.join(ROOT, "meta-edgellm", "recipes-app",
+                           "edgellm-" + slug.split("-")[0], "files"),
+              os.path.join(ROOT, "projects", slug, "files")):
+        if os.path.isdir(d):
+            out += [os.path.join(d, n) for n in sorted(os.listdir(d))
+                    if n.endswith(".service")]
+    return sorted(out)
+
+
+def all_units():
+    """Every .service in the tree, so that an absence can be contradicted."""
+    skip = {".git", ".venv", "third_party", "build", "target", "__pycache__", "node_modules"}
+    out = []
+    for here, dirs, files in os.walk(ROOT):
+        dirs[:] = [d for d in dirs if d not in skip and not d.startswith("build-")]
+        out += [os.path.join(here, n) for n in files if n.endswith(".service")]
+    return sorted(out)
 
 
 def verdict_for(sheet, units, dflt):
@@ -216,13 +255,16 @@ def main():
     print(" the sheet is silent, and those were confirmed by hand.)")
     bad = 0
     unknown = 0
+    seen_units = set()
     for slug in sorted(os.listdir(projects)):
         proj = os.path.join(projects, slug)
         sheet_path = os.path.join(proj, "wiring.md")
         if not os.path.isfile(sheet_path):
             continue
         sheet = option_values(sheet_path)
-        units = sorted({v for u in units_of(slug) for v in option_values(u)})
+        found = units_of(slug)
+        seen_units.update(found)
+        units = sorted({v for u in found for v in option_values(u)})
         dflt, where = own_default(proj)
 
         verdict, kind = verdict_for(sheet, units, dflt)
@@ -235,7 +277,18 @@ def main():
               % (slug, dflt if dflt is not None else "?",
                  ",".join(str(v) for v in units) or "none", where, verdict))
 
+    orphans = [u for u in all_units() if u not in seen_units]
+    if orphans:
+        unknown += len(orphans)
+        print()
+        print("NOT ATTRIBUTED: %d unit file(s) belong to no project this tool compared,"
+              % len(orphans))
+        print("so any budget in them is checked against nothing:")
+        for u in orphans:
+            print("    " + os.path.relpath(u, ROOT).replace(os.sep, "/"))
+
     print()
+    print("%d unit file(s) read and attributed" % len(seen_units))
     print("%d real disagreement(s), %d default(s) this tool could not read" % (bad, unknown))
     if bad:
         print("A bench run at a default below the unit's budget is caught by")
