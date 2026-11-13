@@ -237,7 +237,7 @@ cd ~/src/edge-llm-pi; build/projects/e08-explorer700-console/edgellm-e08-console
 ```bash
 # Raspberry Pi 3 Model B Plus, card eplepi, over SSH
 cd ~; i2cdetect -y 1; cat /sys/bus/iio/devices/iio:device*/name /sys/class/graphics/fb*/name; \
-  gpioinfo | grep pcf8574; free -m
+  gpiodetect; free -m
 ```
 
 **Step 6.** Build on the Pi 3B+ against the real engine with the board's own flags and the gpiod backend, at two parallel jobs, because this tree at four swaps a 1 GB board.

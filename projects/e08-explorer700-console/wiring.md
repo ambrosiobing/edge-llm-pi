@@ -11,9 +11,15 @@ and the HAT covers the header for the whole sitting. The board's serial console 
 Every BCM number below comes from page 3 of the JOY-iT manual (the per-peripheral block
 diagram, read Wednesday 14 October 2026), whose page 2 fixes the convention that all
 numbers are Raspberry Pi BCM numbers. The Linux volume's project 6 worked the same page
-through line by line and its pin map carries the evidence column; none of these rows has
-been confirmed on a powered board yet, and the first `i2cdetect`, `gpioinfo` and a thumb
-on the joystick fill that column.
+through line by line and its pin map carries the evidence column.
+
+**The bus half of that column was filled on Friday 13 November 2026**, with the HAT seated
+on the Pi 3B+ and the four overlays in `config.txt`: `i2cdetect -y 1` answers at 0x20, 0x48,
+0x68 and 0x76, three of them `UU` because a driver holds them and 0x48 bare as expected; the
+IIO device is named `bmp280`; the framebuffer is `ssd130xdrmfb`, which is the DRM driver and
+not the older `ssd1307fb`; and `gpiodetect` lists `gpiochip2 [pcf8574] (8 lines)`. **The
+contact half is not filled**: no thumb has been on the joystick and no line has been read
+through a press, so the four direction rows and the push row still carry no evidence.
 
 | Header pin | BCM | Part pin | Wire colour |
 |---|---|---|---|
@@ -71,7 +77,7 @@ Reboot after the edit; overlays are applied by the firmware before the kernel st
     ls -l /dev/rtc0 /sys/class/rtc/rtc0/since_epoch
     cat /sys/bus/iio/devices/iio:device*/name
     cat /sys/class/graphics/fb*/name
-    gpioinfo | grep -E 'pcf8574|gpiochip'
+    gpiodetect
     gpioget -c /dev/gpiochip0 20
     free -m; vcgencmd get_throttled
 
