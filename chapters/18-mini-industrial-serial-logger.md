@@ -416,14 +416,32 @@ Three quantities, and each can fail. First, the echo: 1000 frames of 64 bytes wr
 
 ## Agreement table
 
-Over the 600 frames of `replay/registers_600.csv` as written on Wednesday 14 October 2026 by `tools/make_replay.py` with its fixed seed, the rule column holds 542 NOMINAL and 58 DRIFT: two bands of 29 frames each, one after the step up at frame 180 and one after the step down at frame 400, and the slow drift between them never reaches the threshold. On the bench the model column is not measured, because the Pi 4B run has not been taken, and on Monday 9 November 2026 the reason became specific. The run needs one host holding cargo, the C daemon's engine and the model together. Board A, the Pi 4B on card eplepi, holds the engine and `qwen2.5-0.5b-instruct-q4_k_m.gguf` at 491 400 032 bytes and has no Rust toolchain. skyhorizon's WSL holds cargo 1.99.0, builds this project clean against its 1.75 floor and passes its 22 unit tests and 2 oracle tests, but its only instruction model is `qwen2.5-1.5b-instruct-q4_k_m.gguf` at 1 117 320 736 bytes, which is a different model and not the one this volume measures. So the figure stays pending on a decision about where the 0.5B runs rather than on an unknown. In CI the Rust stub answers NOMINAL for every row, so the agreement is the NOMINAL fraction of the rule column, 542 of 600, 90.3 per cent, and every disagreement is of one kind, the stub calling a DRIFT frame NOMINAL. That number is here so that the first number from the real model has something beside it: a model that scores 90 per cent on this set has learned nothing the first literal did not already give it, and the figure to watch is the DRIFT row, where a useful model scores far above zero.
+Over the 600 frames of `replay/registers_600.csv` as written on Wednesday 14 October 2026 by `tools/make_replay.py` with its fixed seed, the rule column holds 542 NOMINAL and 58 DRIFT: two bands of 29 frames each, one after the step up at frame 180 and one after the step down at frame 400, and the slow drift between them never reaches the threshold. In CI the Rust stub answers NOMINAL for every row, so the agreement is the NOMINAL fraction of the rule column, 542 of 600, 90.3 per cent, and every disagreement is of one kind, the stub calling a DRIFT frame NOMINAL. That number is here so that the first number from the real model has something beside it: a model that scores 90 per cent on this set has learned nothing the first literal did not already give it, and the figure to watch is the DRIFT row, where a useful model scores far above zero.
+
+**The bench run was taken on Friday 13 November 2026 at 07:37**, on board A with `cargo 1.85.1` installed from trixie, the C daemon built against the submodule's `libllama.so`, and the service over the daemon's Unix socket at ABI 1000. It took 2 hours 40 minutes at 16.1 seconds per event. **The model scores 352 of 600, 58.7 per cent, which is 31.6 points BELOW the constant**, and that is a different failure from the one this paragraph was written to guard against. e06 and e20 produced a model that answers one literal and ties its own baseline; this one uses both literals and is wrong with both, saying DRIFT 192 times and being right once. Of the two 29-frame episodes it finds one frame of the first and none of the second, while producing 103 DRIFT runs of its own, the longest 14 frames.
+
+**And the reason is not a missing number, which is what makes this run worth the sitting.** The rule is arithmetic over a 30-frame window, and **481 of the 600 answers state that span in words**, as `span N counts over 30 frames`. Recomputed from the ledger's own raw column, **all 481 are exactly right, not one off by a count**. The verdict is independent of it:
+
+```text
+    of the 481 rows naming a span      model DRIFT   model NOMINAL
+      the span it named is > 100                 0              57
+      the span it named is <= 100               73             351
+```
+
+**Not once in the 57 rows where it writes a span above 100 does it answer DRIFT.** Row 405 reads "register 0 level 426 counts, span 175 counts over 30 frames" and answers NOMINAL; rows 411 and 421 do the same at 178 and 179. So the model computes the deciding quantity without error and then contradicts it. The single row it gets right, row 190, names no span at all: it reads "Register 0 span is above 100 counts, which is a tenth of its range", which is the rule paraphrased rather than the input reported. Of the 600 answers, 398 share one template of the input and six shapes cover them all, so the 414 distinct strings would have read as variety. The record is `projects/e18-industrial-logger/evidence/2026-11-13_0737_the-model-computes-the-span-and-ignores-it_pi4b-eplepi_qwen2.5-0.5b-instruct-q4_k_m.md`.
 
 | **Rule says** | **Model NOMINAL** | **Model DRIFT** | **No literal** | **Instrument** |
 | --- | --- | --- | --- | --- |
-| NOMINAL, 542 | 542 | 0 | 0 | the Rust stub in CI; bench: not measured |
-| DRIFT, 58 | 58 | 0 | 0 | the Rust stub in CI; bench: not measured |
-| agreement | 90.3 per cent |  | 0 | the Rust stub in CI; bench: not measured, run pending on the Pi 4B |
-| overruns past the 2 s period | not measured |  |  | the service's own counter; replay has no real time pressure, so this row needs the live run or a timed replay |
+| NOMINAL, 542 | 542 | 0 | 0 | the Rust stub in CI |
+| DRIFT, 58 | 58 | 0 | 0 | the Rust stub in CI |
+| NOMINAL, 542 | 351 | 191 | 0 | the Pi 4B, Friday 13 November 2026 |
+| DRIFT, 58 | 57 | 1 | 0 | the Pi 4B; one frame of 58, and none of the second episode |
+| agreement | 90.3 per cent |  | 0 | the Rust stub in CI |
+| agreement | 58.7 per cent |  | 0 | the Pi 4B, 352 of 600, which is 31.6 points below the constant's 90.3 |
+| names the deciding span | 481 of 600 |  |  | the Pi 4B; recomputed from the raw column, all 481 exact, and 0 of the 57 naming a span above 100 answer DRIFT |
+| summary sentence forms | 6 of 600 values |  |  | the Pi 4B; 398 rows share one template of the input, so the 414 distinct strings are not variety |
+| overruns past the 2 s period | 600 of 600 |  |  | the Pi 4B; mean call 16134 ms, minimum 9996, maximum 23375, so the service is slower than its period by a factor of eight on every frame |
+| prompt time and tokens per call | not measurable |  |  | the socket ABI does not carry the daemon's counters back, so both columns are zero on all 600 rows |
 
 ## Measured data
 

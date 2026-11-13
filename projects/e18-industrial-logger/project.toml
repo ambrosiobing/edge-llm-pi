@@ -89,7 +89,15 @@ abi      = "projects/e18-industrial-logger/c/abi.h"
 #     WSL holds cargo and its model file is unchecked. Either host produces a valid
 #     agreement table, since agreement is host independent, but neither produces a Pi
 #     latency, and the table must be published with its baseline beside it.
-blocked_on = "the echo needs the WS-28164 on card B; the table needs a host with both cargo and the model"
+# Clause two is MEASURED as of Friday 13 November 2026 at 07:37, on board A with cargo
+# 1.85.1 installed from trixie and the C daemon built against the submodule's libllama.so.
+# The result is in evidence/2026-11-13_0737_the-model-computes-the-span-and-ignores-it_...md:
+# 352 of 600, 58.7 per cent, against a constant NOMINAL's 90.3, so the model is 31.6 points
+# below answering NOMINAL always. It computes the deciding span exactly in 481 of 481 rows
+# that name one and its verdict is independent of that number, answering DRIFT in 0 of the
+# 57 rows where it writes a span above 100. Also measured, and failing: 600 of 600 events
+# overrun the 2.0 s period at a mean call of 16134 ms.
+blocked_on = "the echo needs the WS-28164 on card B; clause three, the per-call cost, is a separate run on board A"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned
@@ -109,8 +117,20 @@ rust_ffi = "RUSTFLAGS='-L build-e18c' cargo test --manifest-path projects/e18-in
 # The oracle run: the Rust stub, no C, no model, no board. This is what CI does.
 stub = "cargo run --manifest-path projects/e18-industrial-logger/rust/Cargo.toml -- --replay projects/e18-industrial-logger/replay/registers_600.csv --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine stub --log /tmp/e18_stub.csv"
 # The daemon, then the service over its socket, with the real engine on the board.
-daemon = "build-e18c/edgellm-e18-daemon --socket /run/edgellm/e18-daemon.sock --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 64"
-replay = "target/release/edgellm-e18 --replay projects/e18-industrial-logger/replay/registers_600.csv --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine socket --socket /run/edgellm/e18-daemon.sock --rs232 /dev/ttyAMA0 --log projects/e18-industrial-logger/evidence/e18_replay.csv"
+# --n-predict is 128 and NOT 64, corrected Friday 13 November 2026 before the first real
+# run. This project's summary rule is [A-Za-z0-9 ,.%]{9,159} plus a full stop, character for
+# character the class e04 uses, and e04 measured on this same board on Thursday 12 November
+# 2026 that such an answer needs 95 to 97 tokens: at 64 it left 136 of its 180 objects
+# unclosed. With 128 this project's run reports 0 unclosed of 600. The 64 here was never
+# exercised against the real engine, only against the stub, whose answer is a full stop.
+daemon = "build-e18c/edgellm-e18-daemon --socket /run/edgellm/e18-daemon.sock --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 128"
+# The binary path is under rust/, because cargo places target/ beside the manifest it was
+# given and this project's manifest is a level deeper than the repository root. Corrected
+# Friday 13 November 2026, having been written as if relative to the root.
+# --rs232 is dropped: it is an Option in the service and only an extra output channel, so
+# the replay path opens no serial port at all, which is what makes this clause boardless
+# apart from needing the engine and the model on one host.
+replay = "projects/e18-industrial-logger/rust/target/release/edgellm-e18 --replay projects/e18-industrial-logger/replay/registers_600.csv --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine socket --socket /run/edgellm/e18-daemon.sock --log projects/e18-industrial-logger/evidence/e18_replay.csv"
 live   = "target/release/edgellm-e18 --live --rs485-a /dev/ttySC0 --rs232 /dev/ttyAMA0 --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --engine socket --socket /run/edgellm/e18-daemon.sock --log projects/e18-industrial-logger/evidence/e18_live.csv"
 
 [acceptance]
