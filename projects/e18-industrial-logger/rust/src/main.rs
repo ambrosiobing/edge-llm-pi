@@ -407,8 +407,23 @@ fn bench(engine: &mut Backend, n: usize) -> Result<(), String> {
     let mean = us.iter().sum::<f64>() / n as f64;
     let sd = (us.iter().map(|v| (v - mean) * (v - mean)).sum::<f64>()
               / (n as f64 - 1.0).max(1.0)).sqrt();
+    // The median and the maximum, for the reason e18_abi_test carries them since
+    // Friday 13 November 2026: one preempted call distorts the mean of a latency
+    // sample without touching the median, and in the C test the mean-based figure
+    // went NEGATIVE on one run of six, which is impossible for the quantity it
+    // named. The four rows of the chapter's table have to be comparable on one
+    // statistic, so this half of the measurement prints the same four numbers.
+    let mut sorted = us.clone();
+    sorted.sort_by(|a, c| a.partial_cmp(c).unwrap_or(std::cmp::Ordering::Equal));
+    let median = if n % 2 == 1 {
+        sorted[n / 2]
+    } else {
+        0.5 * (sorted[n / 2 - 1] + sorted[n / 2])
+    };
+    let max = sorted[n - 1];
     println!("bench: backend {}, abi {}, {} calls", engine.name(), EXPECTED_ABI_VERSION, n);
     println!("bench: mean {:.3} us, sd {:.3} us", mean, sd);
+    println!("bench: median {:.3} us, max {:.3} us", median, max);
     Ok(())
 }
 
