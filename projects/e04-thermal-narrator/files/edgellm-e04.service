@@ -9,6 +9,10 @@ After=edgellm-llama-server.service
 
 [Service]
 Type=simple
+# --n-predict is 128 and not the volume's usual 64, raised on Friday 13 November 2026.
+# The Pi 4B measured on Thursday 12 November 2026 that at 64 the object never closed in
+# 136 of 180 rows while the typical answer needs 95 to 97 tokens. This unit shipped the
+# number the project's own published table refutes.
 ExecStart=/usr/bin/edgellm-e04 --project e04 \
     --live sysfs /sys/class/thermal/thermal_zone0/temp:60 \
     --server http://127.0.0.1:8080 \
@@ -16,7 +20,7 @@ ExecStart=/usr/bin/edgellm-e04 --project e04 \
     --prompt /usr/share/edgellm/e04/prompt.txt \
     --log /var/lib/edgellm/e04.csv \
     --rtt /var/lib/edgellm/e04_rtt.csv \
-    --n-predict 64 --temperature 0.3 --wait-s 120
+    --n-predict 128 --temperature 0.3 --wait-s 120
 StateDirectory=edgellm
 # vcgencmd opens the firmware mailbox /dev/vcio, which the video group owns on
 # Raspberry Pi OS; the service runs unprivileged with that one group added.

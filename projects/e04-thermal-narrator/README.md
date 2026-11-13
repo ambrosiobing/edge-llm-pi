@@ -69,7 +69,7 @@ The system prompt, sent with every request and cached by the server, reads in fu
 
 ## What the model decides or writes
 
-One of three literals and one sentence, through the grammar, with `n_predict` 64 and temperature 0.3, the volume's setting for a sentence. The object cannot close before the sentence has at least ten characters and a full stop, and the sentence cannot contain a quote, a brace or a newline, so the model column holds one JSON object or an object that did not close inside 64 tokens, which the agreement tool counts as a row whose model column is not one of the rule's decisions and the chapter counts as its own failure. The sentence is not scored by any rule; it is read, and a sentence that names a temperature or a clock the row does not hold is counted as an invented number, as [Project 7](../../chapters/07-iks4a1-climate-and-motion-narrator.md) and [Project 17](../../chapters/17-cellular-status-summariser.md) count theirs. In CI there is no engine: `tools/mock_server.py` answers every request with the grammar's first alternative walked from `root`, exactly as `common/c/src/edgellm_stub.c` does for the in-process projects, so the content is `{"decision":"COOL","summary":"."}` with zero timings, and the engine column reads `llama-server mock mock`, from the `build_info` and `model_path` the mock's `/props` returns.
+One of three literals and one sentence, through the grammar, with `n_predict` 128 and temperature 0.3. The volume's usual setting for a sentence is 64, and this project raised it to 128 on Friday 13 November 2026: the rerun below measured that its own answer needs 97 tokens on 64 rows and 95 on 41, so 64 fell short by about a third and left 136 of 180 objects unclosed. The object cannot close before the sentence has at least ten characters and a full stop, and the sentence cannot contain a quote, a brace or a newline, so the model column holds one JSON object or an object that did not close inside 128 tokens, which the agreement tool counts as a row whose model column is not one of the rule's decisions and the chapter counts as its own failure. The sentence is not scored by any rule; it is read, and a sentence that names a temperature or a clock the row does not hold is counted as an invented number, as [Project 7](../../chapters/07-iks4a1-climate-and-motion-narrator.md) and [Project 17](../../chapters/17-cellular-status-summariser.md) count theirs. In CI there is no engine: `tools/mock_server.py` answers every request with the grammar's first alternative walked from `root`, exactly as `common/c/src/edgellm_stub.c` does for the in-process projects, so the content is `{"decision":"COOL","summary":"."}` with zero timings, and the engine column reads `llama-server mock mock`, from the `build_info` and `model_path` the mock's `/props` returns.
 
 ## Control rule
 
@@ -191,7 +191,7 @@ sequenceDiagram
     Z->>C: v0 millidegrees (io_next), v1 bits, v2 clock (popen)
     C->>R: event
     R-->>C: index 0, 1 or 2 (this is what the log keys on)
-    C->>S: POST /completion: ChatML prompt, grammar, 64 tokens
+    C->>S: POST /completion: ChatML prompt, grammar, 128 tokens
     S-->>C: content, prompt_ms, predicted_ms
     C->>G: row: rule, model, server ms; rtt row
 ```
@@ -333,6 +333,10 @@ After=edgellm-llama-server.service
 
 [Service]
 Type=simple
+# --n-predict is 128 and not the volume's usual 64, raised on Friday 13 November 2026.
+# The Pi 4B measured on Thursday 12 November 2026 that at 64 the object never closed in
+# 136 of 180 rows while the typical answer needs 95 to 97 tokens. This unit shipped the
+# number the project's own published table refutes.
 ExecStart=/usr/bin/edgellm-e04 --project e04 \
     --live sysfs /sys/class/thermal/thermal_zone0/temp:60 \
     --server http://127.0.0.1:8080 \
@@ -340,7 +344,7 @@ ExecStart=/usr/bin/edgellm-e04 --project e04 \
     --prompt /usr/share/edgellm/e04/prompt.txt \
     --log /var/lib/edgellm/e04.csv \
     --rtt /var/lib/edgellm/e04_rtt.csv \
-    --n-predict 64 --temperature 0.3 --wait-s 120
+    --n-predict 128 --temperature 0.3 --wait-s 120
 StateDirectory=edgellm
 # vcgencmd opens the firmware mailbox /dev/vcio, which the video group owns on
 # Raspberry Pi OS; the service runs unprivileged with that one group added.

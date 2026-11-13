@@ -444,7 +444,14 @@ int main(int argc, char **argv)
     const char *project = NULL, *replay = NULL, *backend = NULL, *spec = NULL;
     const char *grammar_path = NULL, *prompt_path = NULL, *log_path = NULL;
     const char *server_url = NULL, *rtt_path = NULL;
-    int n_predict = 64, max_events = 0, wait_s = 120, rule_only = 0, i, r = 0, rc = 0;
+    /* n_predict is 128 and not the volume's usual 64. Measured on the Pi 4B on
+     * Thursday 12 November 2026: at 64 the object never closed in 136 of 180 rows,
+     * 159 of them reaching the ceiling, and the typical answer needs 97 tokens on 64
+     * rows and 95 on 41. At 128 the unclosed count is 9, and those nine stop at the
+     * ceiling writing repetition loops, so no larger budget reaches them. Raised
+     * here, in the unit and in the chapter on Friday 13 November 2026, the three
+     * having agreed on 64 until then. */
+    int n_predict = 128, max_events = 0, wait_s = 120, rule_only = 0, i, r = 0, rc = 0;
     double temperature = 0.3;
     long timeout_ms = 60000;
     char *system_prompt = NULL, *grammar = NULL, *prompt_buf = NULL;

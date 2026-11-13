@@ -206,7 +206,7 @@ Two, the agreement table, with the daemon running and the real model:
       --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
       --grammar projects/e18-industrial-logger/grammar.gbnf \
       --prompt projects/e18-industrial-logger/prompt.txt \
-      --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 64 &
+      --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 128 &
     vcgencmd get_throttled
     target/release/edgellm-e18 \
       --replay projects/e18-industrial-logger/replay/registers_600.csv \

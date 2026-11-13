@@ -7,13 +7,18 @@ Documentation=https://github.com/ambrosiobing/edge-llm-pi
 
 [Service]
 Type=simple
+# --n-predict is 128 and not the volume's usual 64, raised on Friday 13 November 2026.
+# This project's summary rule is [A-Za-z0-9 ,.%]{9,159} plus a full stop, character for
+# character e04's class, and the bench run of Friday 13 November 2026 at 128 reports 0
+# unclosed objects of 600. The 64 that stood here was never exercised against the real
+# engine, only against the stub, whose answer is a full stop.
 ExecStart=/usr/bin/edgellm-e18-daemon \
     --socket /run/edgellm/e18-daemon.sock \
     --model /usr/share/edgellm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
     --grammar /usr/share/edgellm/e18/grammar.gbnf \
     --prompt /usr/share/edgellm/e18/prompt.txt \
     --state /run/edgellm/e18.state \
-    --n-ctx 512 --threads 4 --n-predict 64 --temperature 0
+    --n-ctx 512 --threads 4 --n-predict 128 --temperature 0
 RuntimeDirectory=edgellm
 RuntimeDirectoryMode=0750
 # The socket is group readable and the service joins that group, so the two processes

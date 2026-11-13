@@ -336,7 +336,7 @@ cd ~/edge-llm-pi; build-e18c/edgellm-e18-daemon --socket /run/edgellm/e18-daemon
   --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt \
-  --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 64 &
+  --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 128 &
 ```
 
 **Step 9.** Run the 600 frames over the socket with the RS232 line driven, read the bits again, and score the log. The count of rows whose model column is not one of the rule's decisions must be zero and the overrun count goes into the table with its date.
