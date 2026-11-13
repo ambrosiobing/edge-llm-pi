@@ -131,7 +131,7 @@ Two things in the figure are the design. The buzzer's arrow ends at the rule, no
 | 24 | GPIO8, CE0 | SSD1306 CS, driven by the SPI controller | on the HAT |
 | 36, 35 | GPIO16, GPIO19 | SSD1306 D/C (printed DNC on the manual's diagram) and RES, active low | on the HAT |
 | 38 | GPIO20 | joystick push contact, closes to ground; the console requests the pull-up | on the HAT |
-| expander | P0 to P3, P7 | joystick Left, Up, Down, Right, nets A to D, idle high by the part; buzzer, net Buzz, polarity to verify on the first sound | on the HAT |
+| expander | P0 to P3, P7 | joystick Left, Up, Down, Right, nets A to D, idle high by the part; buzzer, net Buzz, **active low, verified by the first sound on Saturday 14 November 2026**: it sounds when P7 is pulled low and is silent at the idle high of the expander | on the HAT |
 | 40, 12, 37, 7 | GPIO21, 18, 26, 4 | expander INT, IR receiver, LED1, 1-Wire: routed on the HAT, not used here | on the HAT |
 
 Every BCM number is from page 3 of the JOY-iT manual, the per-peripheral block diagram, [RB-Explorer700-Manual-16.11.2020.pdf](https://www.joy-it.net/files/files/Produkte/RB-Explorer700/RB-Explorer700-Manual-16.11.2020.pdf) (verified Wednesday 14 October 2026), dated Monday 16 November 2020, whose page 2 fixes that all numbers are Raspberry Pi BCM numbers. The same page calls the pressure sensor a BMP 180 in the diagram and a BMP280 in the component callout; the Linux volume's project 6 chose `bosch,bmp280` and the IIO driver covers both, naming the chip id it reads if the guess is wrong.

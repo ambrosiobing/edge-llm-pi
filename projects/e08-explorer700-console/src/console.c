@@ -478,6 +478,18 @@ static struct gpiod_line_request *request_lines(struct gpiod_chip *chip, const u
             gpiod_line_settings_set_bias(ls, GPIOD_LINE_BIAS_PULL_UP);
     } else {
         gpiod_line_settings_set_direction(ls, GPIOD_LINE_DIRECTION_OUTPUT);
+        /* The Explorer700's Buzz net sounds when expander line P7 is pulled LOW, which
+           is the opposite of what this file assumed until Saturday 14 November 2026.
+           wiring.md had carried "polarity to verify on the first sound" since the sheet
+           was written, and the first sound verified it: the console was started with the
+           line requested at INACTIVE, and the buzzer began to sound at that instant and
+           stopped when the console exited and the line went back to the expander's idle
+           high. Without active_low the three writes in this file mean the reverse of what
+           they say: the buzzer would sound for the whole run and fall silent for 150 ms
+           on each transition into LOST. With it, INACTIVE is silent and ACTIVE sounds,
+           which is what console_actuate and the teardown are written to mean. The only
+           output this helper requests is the buzzer. */
+        gpiod_line_settings_set_active_low(ls, true);
         gpiod_line_settings_set_output_value(ls, GPIOD_LINE_VALUE_INACTIVE);
     }
     if (gpiod_line_config_add_line_settings(lc, offs, n, ls) != 0)
