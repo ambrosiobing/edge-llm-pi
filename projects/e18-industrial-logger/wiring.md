@@ -191,7 +191,7 @@ C code changes between the three.
 One, the echo, which needs no model and no daemon:
 
     cd ~/edge-llm-pi
-    target/release/edgellm-e18 --echo 1000 \
+    projects/e18-industrial-logger/rust/target/release/edgellm-e18 --echo 1000 \
       --rs485-a /dev/ttySC0 --rs485-b /dev/ttySC1 --baud 115200 \
       --grammar projects/e18-industrial-logger/grammar.gbnf \
       --prompt projects/e18-industrial-logger/prompt.txt
@@ -208,7 +208,7 @@ Two, the agreement table, with the daemon running and the real model:
       --prompt projects/e18-industrial-logger/prompt.txt \
       --state /run/edgellm/e18.state --n-ctx 512 --threads 4 --n-predict 128 &
     vcgencmd get_throttled
-    target/release/edgellm-e18 \
+    projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
       --replay projects/e18-industrial-logger/replay/registers_600.csv \
       --grammar projects/e18-industrial-logger/grammar.gbnf \
       --prompt projects/e18-industrial-logger/prompt.txt \
@@ -224,7 +224,7 @@ Three, what the boundary costs per call, three figures on one prompt and one mod
       --grammar projects/e18-industrial-logger/grammar.gbnf \
       --prompt projects/e18-industrial-logger/prompt.txt \
       --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200
-    target/release/edgellm-e18 --bench 200 --engine socket \
+    projects/e18-industrial-logger/rust/target/release/edgellm-e18 --bench 200 --engine socket \
       --socket /run/edgellm/e18-daemon.sock \
       --grammar projects/e18-industrial-logger/grammar.gbnf \
       --prompt projects/e18-industrial-logger/prompt.txt
