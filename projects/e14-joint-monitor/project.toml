@@ -22,6 +22,16 @@ command = "cargo build --manifest-path projects/e14-joint-monitor/Cargo.toml"
 test    = "cargo test --manifest-path projects/e14-joint-monitor/Cargo.toml"
 bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Cargo.toml --features live,engine"
 
+# PARTLY BLOCKED, recorded Friday 13 November 2026. The rule is "INSPECT when the CAN
+# error counter rose and the vibration peak was above 2.00 g in the same minute", and the
+# vibration half reads the ADXL345, retired from the bench plan on Saturday 24 October 2026
+# by decision 138: it scanned empty six times against a positive control and is reachable
+# only by soldering, which this bench rules out. Its replacement is readable on the Yocto
+# card and not on trixie. The CAN half is clear: mcp251x and mcp251xfd are both in the
+# trixie kernel package, measured Friday 13 November 2026. See "The image decides" in
+# BENCH_SITTINGS.md.
+blocked_on = "the rule's vibration half reads the retired ADXL345; the CAN half is clear and its drivers are present"
+
 [run]
 # Two processes. The daemon first, then the service; the service reconnects by itself if
 # the order is the other way round or if the daemon is restarted under it.

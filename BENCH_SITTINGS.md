@@ -13,8 +13,8 @@ recorded in `PITFALLS.md`.
 
 | sitting | host and wiring | projects | reachable today |
 |---|---|---|---|
-| A | Pi 3B, bare header: ADXL345, VL53L4CD, three LED modules | e03, e05 | yes; **e06 needs the ULD first**, see below |
-| B | Pi 3B, the 3.5 inch panel on eleven jumpers, ADXL345 and LEDs re-pinned | e09 | yes |
+| A | Pi 3B, bare header: ADXL345, VL53L4CD, three LED modules | e03, e05 | e03 is done; **e05 no**, it reads a retired part and its replacement needs the other card, see "The image decides" below; **e06 needs the ULD first** |
+| B | Pi 3B, the 3.5 inch panel on eleven jumpers, ADXL345 and LEDs re-pinned | e09 | **no**, e09 runs e05's rule and reads the same retired part, see "The image decides" below |
 | C | Pi 4B, no HAT | e04 | needs a second card |
 | D | Pi 4B card B, WS-28164 | e13, e14, e18 | yes |
 | E | Pi 3B+, bare header, IKS4A1 on flying leads | e07 | **no**, three of four drivers are absent on Pi OS trixie, the pressure one the rule reads included; the parts are present and the measurement is not reachable, see e07 evidence of Friday 13 November 2026 |
@@ -45,6 +45,50 @@ one evening unless the sensor and LEDs are moved in the middle of it.
 A seated panel is not an option in either sitting. Its 26-pin socket mates with header
 pins 1 to 26 and its carrier runs over pins 27 to 40 without contacts, so a seated panel
 leaves nothing reachable at all. That fact is in `PITFALLS.md`.
+
+## The image decides, not only the parts
+
+**The "reachable today" column above was written from the parts box and was never checked
+against the kernel on the card.** Sitting E was found that way on Friday 13 November 2026:
+every part present, and three of the four drivers e07 reads absent from the image its own
+sheet names. The two cards differ completely and the difference is the whole story for
+every sensor shield in this volume.
+
+    Yocto 6.6.63-v8, raspberrypi3-64      st_lsm6dsx_i2c, st-magn-i2c, st-press-i2c and
+                                          sht4x all registered; no ADXL345 symbol
+    Pi OS trixie 6.18.50+rpt-rpi-v8       NO ST IIO driver of any kind. iio/magnetometer
+                                          does not exist as a directory; iio/pressure holds
+                                          only bmp280 and ms5637; iio/imu holds only bno055
+                                          and inv_mpu6050; iio/accel holds the ADXL355 and
+                                          not the ADXL345
+
+The first two lines were measured on Tuesday 27 October 2026 and are in
+`projects/e05-adxl345-events/evidence/2026-10-27_2110_iks5a1-substitution-survey_pi3bplus.md`.
+The rest was measured on Friday 13 November 2026 and is in the one record under
+`projects/e07-iks4a1-narrator/evidence/`, stamped that date at 19:00.
+
+**Two traps live in that last line.** `iio/accel` holds `adxl355_core` and `adxl355_i2c`,
+one digit away from the part three of these projects read, so the directory listing looks
+right at a glance. And `input/misc` holds `adxl34x`, `adxl34x-i2c` and `adxl34x-spi`: the
+ADXL345 **does** have a driver on Pi OS, in the wrong subsystem. It binds, it works, and it
+appears under `/dev/input/` and never under `/sys/bus/iio/devices/`, so a project polling
+IIO sysfs sees nothing while a driver loaded and the part answers.
+
+**And the ADXL345 itself is retired.** Decision 138 of Saturday 24 October 2026: the
+DFRobot SEN0032 breakout scanned completely empty six times, with a positive control
+twenty minutes earlier when an IKS4A1 answered on six addresses through the same four
+header pins. The only route to it is a soldering iron and an 8-pin header, which this bench
+rules out. The substitution to an X-NUCLEO shield reached e05, whose sheet names it, and
+reached neither e09 nor e14 nor this file until now. Fifty-six files in this repository
+name the ADXL345.
+
+**So the sensor projects need the Yocto card and the Pi OS card will not do**, while e08's
+parts are Pi OS mainstream and were confirmed present on Friday 13 November 2026:
+`gpio-pcf857x`, `rtc_ds1307`, `bmp280_i2c`, `ssd1307fb` and the DRM `ssd130x` family, with
+all four of its overlays on the card. Check the image before the parts, and check it by
+listing the driver directory rather than by `modinfo` on a guessed name: two names were
+guessed wrong in one session, `pcf857x` for `gpio-pcf857x` and `solomon-ssd130x` for
+`ssd130x`, and both near-misses would have been reported as a missing driver.
 
 ## Sitting A: what must exist before the board is touched
 
