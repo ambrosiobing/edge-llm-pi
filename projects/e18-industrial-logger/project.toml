@@ -171,8 +171,17 @@ table = "python tools/agreement.py projects/e18-industrial-logger/evidence/e18_r
 # host. What the model run does contribute is the cost of a decision, 15.4 s, and the
 # three ABI checks against the real engine.
 boundary = "build-e18c-stub/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --calls 2000"
-in_process_and_abi = "build-e18c/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200"
-ffi = "RUSTFLAGS='-L build-e18c' cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+# ALL FOUR ROWS MUST CARRY THE SAME BUDGET or the table compares budgets and not
+# boundaries. The number is 128, which is what this project ships since Friday
+# 13 November 2026. Three of these four would otherwise run at 64: e18_abi_test had it
+# as a literal until that day and the Rust service defaults to it in main.rs. The
+# socket row takes its budget from the daemon's own command line, which is the
+# [run] daemon entry above and already says 128, so it is the one that needs no flag
+# and the one that would silently have differed.
+in_process_and_abi = "build-e18c/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200 --n-predict 128"
+ffi = "RUSTFLAGS='-L build-e18c' cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --n-predict 128 --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+# No --n-predict here on purpose: over the socket the daemon decides, and passing one
+# would be read as governing when it does not.
 socket = "projects/e18-industrial-logger/rust/target/release/edgellm-e18 --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
 
 [oracle]

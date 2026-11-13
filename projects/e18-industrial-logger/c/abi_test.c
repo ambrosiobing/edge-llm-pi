@@ -2,6 +2,14 @@
  * the volume's variant comparison.
  *
  *     e18_abi_test --grammar <gbnf> --prompt <txt> [--model <gguf>] [--calls N]
+ *                  [--n-predict N]
+ *
+ * --n-predict defaults to 64, the volume's budget for a sentence, and exists because
+ * the four rows of the chapter's latency table must share one budget or they compare
+ * budgets instead of boundaries. Three of the four already run at 64; the fourth goes
+ * through the daemon, whose budget is its own command line, and this project's daemon
+ * ships 128 since Friday 13 November 2026. Pass the same number to both and the
+ * comparison is of paths again.
  *
  * The three checks, each of which can fail:
  *
@@ -140,7 +148,7 @@ static int one_complete_decision(const char *s)
 int main(int argc, char **argv)
 {
     const char *grammar = NULL, *prompt_path = NULL, *model = NULL;
-    int calls = 200, i, failures = 0, rc;
+    int calls = 200, n_predict = 64, i, failures = 0, rc;
     char out[OUT_MAX];
     double *abi_us = NULL, *direct_us = NULL;
     double abi_mean, abi_sd, dir_mean, dir_sd, diff, se;
@@ -156,11 +164,12 @@ int main(int argc, char **argv)
         else if (strcmp(a, "--prompt") == 0) prompt_path = v;
         else if (strcmp(a, "--model") == 0) model = v;
         else if (strcmp(a, "--calls") == 0) calls = atoi(v);
+        else if (strcmp(a, "--n-predict") == 0) n_predict = atoi(v);
         i++;
     }
     if (grammar == NULL || prompt_path == NULL || calls < 1) {
         fprintf(stderr, "usage: %s --grammar <gbnf> --prompt <txt> [--model <gguf>]"
-                        " [--calls N]\n", argv[0]);
+                        " [--calls N] [--n-predict N]\n", argv[0]);
         return 2;
     }
 
@@ -181,12 +190,14 @@ int main(int argc, char **argv)
         printf("ok decide before open refused\n");
     }
 
-    if (edgellm_abi_open(model, grammar, prompt_path, NULL, 512, 4, 64, 0.0f) != 0) {
+    if (edgellm_abi_open(model, grammar, prompt_path, NULL, 512, 4, n_predict,
+                         0.0f) != 0) {
         printf("FAIL the engine did not open\n");
         return 1;
     }
     /* check 2b: a second open */
-    if (edgellm_abi_open(model, grammar, prompt_path, NULL, 512, 4, 64, 0.0f) != -1) {
+    if (edgellm_abi_open(model, grammar, prompt_path, NULL, 512, 4, n_predict,
+                         0.0f) != -1) {
         printf("FAIL a second open was not refused\n");
         failures++;
     } else {
@@ -252,7 +263,7 @@ int main(int argc, char **argv)
         cfg.state_path = NULL;
         cfg.n_ctx = 512;
         cfg.n_threads = 4;
-        cfg.n_predict = 64;
+        cfg.n_predict = n_predict;
         cfg.temperature = 0.0f;
         e = edgellm_open(&cfg, err, sizeof(err));
         if (e == NULL) {
@@ -271,7 +282,8 @@ int main(int argc, char **argv)
 
     stats(abi_us, calls, &abi_mean, &abi_sd);
     stats(direct_us, calls, &dir_mean, &dir_sd);
-    printf("calls %d, engine %s\n", calls, edgellm_engine_version());
+    printf("calls %d, n_predict %d, engine %s\n", calls, n_predict,
+           edgellm_engine_version());
     abi_med = median_of(abi_us, calls);
     dir_med = median_of(direct_us, calls);
     abi_max = abi_us[calls - 1];
