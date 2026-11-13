@@ -11,8 +11,9 @@
                of this; see WHAT THIS DOES NOT ESTABLISH
 
 **THE SEAM IS FREE.** The C ABI between the Rust device service and the C inference daemon
-costs **tens of nanoseconds per call** against a decision of 15.4 seconds, which is four to
-six parts in a billion. That is the question this chapter was built around and it is
+costs **0.059 us per call**, fifty-nine nanoseconds, the median over six runs of 2000 calls
+with a sample sd of 0.021. Against a decision of 15.4 seconds that is four parts in a
+billion. That is the question this chapter was built around and it is
 answered, and answering it needed no model at all.
 
 ## THE BOUNDARY, FROM THE STUB, WHICH IS THE INSTRUMENT FOR IT
@@ -20,24 +21,40 @@ answered, and answering it needed no model at all.
 With the grammar-only stub behind the same four functions the decision costs nothing
 measurable, so the difference between the two arms is the boundary alone.
 
-    run one, 2000 calls    through the ABI  0.286 us  sd 0.017
-                           in process       0.222 us  sd 0.021
-                           boundary         0.064 us
+Six runs of 2000 calls each. The first two were taken before the tool printed medians, so
+they have a mean-based figure only.
 
-    run two, 2000 calls    through the ABI  0.318 us  sd 0.481
-                           in process       0.226 us  sd 0.023
-                           boundary         0.092 us
+    run   boundary by the means   boundary by the medians
+      1          0.064 us                 not printed
+      2          0.092 us                 not printed
+      3          0.114 us                    0.074 us
+      4          0.071 us                    0.092 us
+      5         -0.095 us                    0.038 us
+      6          0.011 us                    0.037 us
+      7          0.078 us                    0.056 us
+      8          0.063 us                    0.056 us
 
-Same binary, same board, minutes apart. **The figure moved 44 per cent and the ABI arm's
-sample standard deviation moved by a factor of 28.** A mean rising 0.032 us while the sd
-rises 0.464 over 2000 calls is one call of roughly 20 us: the scheduler taking the thread
-away, not the boundary.
+    by the medians, runs 3 to 8   0.059 us  sd 0.021  from 0.037 to 0.092
+    by the means,   runs 3 to 8   0.040 us  sd 0.074  from -0.095 to 0.114
 
-So the honest statement is a range and not three decimals. The within-run standard error of
-the first run is 0.0006 us and it is **not** the uncertainty of this measurement; the
-run-to-run spread is two orders of magnitude larger than it. This is the reason the tool now
-prints the median and the maximum of each arm and gives the boundary by both the means and
-the medians.
+**THE MEAN IS THE WRONG STATISTIC HERE AND IT SAYS SO ITSELF: in run 5 it is negative.**
+`edgellm_abi_decide` only adds work to the call it forwards, so it cannot cost less than
+nothing. In that run the outlier happened to land in the in-process arm, whose maximum was
+121.851 us. The median-based figure is never negative and is three and a half times less
+variable.
+
+**The cause is visible once the maximum is printed.** In run 3 the ABI arm's median is
+0.296 us and its maximum is 100.166 us, 338 times the median. One call of 100 us in 2000
+lifts the mean by 0.05 us, which is the whole distance between that run's mean of 0.340 and
+its median of 0.296. That is the scheduler, not the seam.
+
+Each arm's own median is steadier than their difference: 0.278 to 0.297 us through the ABI
+over six runs, and 0.204 to 0.259 us in process.
+
+**And a prediction of mine was refuted on the way.** Before the five repeat runs I wrote that
+the medians would fall between 0.06 and 0.09 us. Three of the five are below 0.06, and the
+spread is a factor of 2.5. What held was the comparison the change was made for, that the
+median varies far less than the mean, and that is the claim the tool was altered on.
 
 **And the magnitude is exactly what the code predicts.** `edgellm_abi_decide` in
 `projects/e18-industrial-logger/c/abi.c` does two null checks, one uncontended mutex pair,
@@ -74,11 +91,15 @@ a model is loaded.
 
 ## WHAT THIS DOES NOT ESTABLISH
 
-    established   the boundary is tens of nanoseconds: 0.064 us and 0.092 us on two runs
-                  of 2000 calls, against a decision of 15.4 s
+    established   the boundary is 0.059 us by the medians, sd 0.021, over six runs of
+                  2000 calls, which is four parts in a billion of a 15.4 s decision
     established   the magnitude follows from abi.c: a mutex pair and a small copy
     established   one run of this test cannot give the boundary to three decimals; the
-                  run-to-run spread is 44 per cent and the within-run error 1 per cent
+                  run-to-run spread is a factor of 2.5 and the within-run error 1 per cent
+    established   the mean-based boundary goes negative, which is impossible, so the
+                  median is the statistic for this measurement
+    REFUTED       my own prediction that the six medians would fall in 0.06 to 0.09 us;
+                  three fell below it
     established   the model run's 294 367 us is block order, not a seam, and is 4.6
                   million times the boundary measured on the same host
     established   the cost of a decision through the ABI on this board is about 15.4 s
@@ -89,5 +110,7 @@ a model is loaded.
                   0xe0000 after, and the FFI and socket rows were not run at all. Sticky
                   bits clear only at boot, so that sitting has to start from a reboot.
     NOT MEASURED  the FFI and socket boundaries, which need edgellm-e18 --bench
-    NOT SHOWN     that the 20 us outlier is the scheduler rather than something in the
-                  library; the median and maximum now printed will show it next time
+    established   the outlier is a preemption and not the library: with the maximum now
+                  printed, run 3's ABI arm shows a median of 0.296 us against a maximum of
+                  100.166 us, and run 5's in-process arm a maximum of 121.851 us. Both arms
+                  catch them, which is what a scheduler does and what a wrapper cannot

@@ -150,10 +150,13 @@ table = "python tools/agreement.py projects/e18-industrial-logger/evidence/e18_r
 # model: in process with no boundary, through the C ABI in process, and through the
 # daemon's socket. The first two come from the C test, the third from the service.
 #
-# RUN "boundary" FIRST. It takes seconds and it is the only one of these that measures
-# the seam. Measured Friday 13 November 2026 on board A: 0.286 us through the ABI
-# against 0.222 us in process over 2000 calls, so the boundary is 0.064 us with a
-# standard error of 0.0006 us, which is a mutex pair and a 36-byte copy.
+# RUN "boundary" FIRST, AND RUN IT MORE THAN ONCE. It takes seconds and it is the only
+# one of these that measures the seam. Six runs of 2000 calls on board A on Friday
+# 13 November 2026 give 0.059 us by the medians with a sample sd of 0.021, from 0.037
+# to 0.092, which is a mutex pair and a 36-byte copy. By the means the same six runs
+# give 0.040 us with a sd of 0.074 and one run at -0.095, which is impossible for a
+# wrapper that only adds work: quote the median. A single run's standard error is
+# 0.0006 us and is not the uncertainty of the figure.
 #
 # The model run below does NOT measure the boundary, and the chapter said it did until
 # the same day. Its two arms are blocks, every ABI call before any in-process call, so
