@@ -23,7 +23,9 @@ jobs:
           fetch-depth: 0
       - name: packages
         run: |
-          sudo apt-get update
+          sudo apt-get update \
+            || { sleep 10; sudo apt-get update; } \
+            || { sleep 30; sudo apt-get update; }
           sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev pkg-config
       - name: libgpiod 2, built from source
         # Ubuntu noble's libgpiod-dev is 1.6.3, and this repository's GPIO backend is
@@ -34,7 +36,12 @@ jobs:
         # compiles the backend against the same API the board runs. Takes about a minute.
         run: |
           base=https://mirrors.edge.kernel.org/pub/software/libs/libgpiod
-          curl -sL "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
+          # -f so an HTTP error page is not written to the tarball and then handed
+          # to tar, and --retry because this fetch leaves the runner: on Friday
+          # 13 November 2026 it returned curl 28, a timeout, and reddened main on a
+          # commit that had touched no code at all.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-connrefused \
+            --max-time 300 "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
           tar -C /tmp -xf /tmp/libgpiod.tar.gz
           cd /tmp/libgpiod-2.2.1
           ./configure --prefix=/usr --enable-tools=no --enable-bindings-cxx=no
@@ -152,14 +159,21 @@ jobs:
           submodules: true
       - name: packages
         run: |
-          sudo apt-get update
+          sudo apt-get update \
+            || { sleep 10; sudo apt-get update; } \
+            || { sleep 30; sudo apt-get update; }
           sudo apt-get install -y cmake ninja-build pkg-config
       - name: libgpiod 2, built from source
         # See the same step in the host job: Ubuntu has no v2 package and the backend is
         # written against v2, which is what the bench runs.
         run: |
           base=https://mirrors.edge.kernel.org/pub/software/libs/libgpiod
-          curl -sL "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
+          # -f so an HTTP error page is not written to the tarball and then handed
+          # to tar, and --retry because this fetch leaves the runner: on Friday
+          # 13 November 2026 it returned curl 28, a timeout, and reddened main on a
+          # commit that had touched no code at all.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-connrefused \
+            --max-time 300 "$base/libgpiod-2.2.1.tar.gz" -o /tmp/libgpiod.tar.gz
           tar -C /tmp -xf /tmp/libgpiod.tar.gz
           cd /tmp/libgpiod-2.2.1
           ./configure --prefix=/usr --enable-tools=no --enable-bindings-cxx=no
@@ -191,7 +205,9 @@ jobs:
           submodules: true
       - name: packages
         run: |
-          sudo apt-get update
+          sudo apt-get update \
+            || { sleep 10; sudo apt-get update; } \
+            || { sleep 30; sudo apt-get update; }
           sudo apt-get install -y cmake ninja-build libgpiod-dev libclang-dev
       # THE ORDER OF THESE TWO IS LOAD BEARING. This action makes the toolchain it installs
       # the default, so the newer one has to come second: with stable first and 1.75.0
@@ -282,7 +298,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: packages
         run: |
-          sudo apt-get update
+          sudo apt-get update \
+            || { sleep 10; sudo apt-get update; } \
+            || { sleep 30; sudo apt-get update; }
           sudo apt-get install -y gawk diffstat unzip texinfo chrpath cpio xz-utils \
             debianutils iputils-ping python3-git python3-jinja2 python3-pexpect \
             python3-subunit zstd liblz4-tool file locales libacl1
