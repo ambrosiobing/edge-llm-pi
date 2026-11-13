@@ -66,9 +66,21 @@
 #include <time.h>
 
 #define OUT_MAX 1024
+/* The same bytes the Rust service sends, ChatML wrapper included. Until Friday
+ * 13 November 2026 this was the bare sentence while the Rust half wrapped it through
+ * wrap_user(Template::ChatMl, BENCH_TEXT), so the chapter's four latency rows were
+ * taken by two instruments sending two different prompts, against a condition that
+ * says in its own words "on the same prompt". The sitting of that afternoon split
+ * exactly along the instrument and not along the boundary: 15.185 and 15.189 s for the
+ * two C arms, 17.635 and 18.115 s for the two Rust arms, with the two boundaries
+ * inside each pair agreeing to a few milliseconds. The wrapper is what the deployed
+ * service sends; the bare sentence is what no real path sends, so the C test moves and
+ * not the Rust one. */
 #define USER_TEXT \
+    "<|im_start|>user\n" \
     "register 0 level 577 counts, span 141 counts over 30 frames, " \
-    "temperature 42.4 C, pressure 5.8 bar. Decide."
+    "temperature 42.4 C, pressure 5.8 bar. Decide." \
+    "<|im_end|>\n<|im_start|>assistant\n"
 
 static int cmp_double(const void *a, const void *b)
 {

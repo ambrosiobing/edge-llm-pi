@@ -179,7 +179,14 @@ boundary = "build-e18c-stub/e18_abi_test --grammar projects/e18-industrial-logge
 # [run] daemon entry above and already says 128, so it is the one that needs no flag
 # and the one that would silently have differed.
 in_process_and_abi = "build-e18c/e18_abi_test --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200 --n-predict 128"
-ffi = "RUSTFLAGS='-L build-e18c' cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --n-predict 128 --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
+# -L MUST BE ABSOLUTE and LD_LIBRARY_PATH must be set, and this line carried neither
+# until Friday 13 November 2026, when it was run for the first time and failed at the
+# link with "cannot find -ledgellm_abi". cargo runs the compiler in the directory of
+# the Cargo.toml it was given, not in the directory cargo was invoked from, so a
+# relative -L against --manifest-path looks under projects/e18-industrial-logger/rust
+# and not under the repository root. The shared object is found at link time by -L and
+# at run time by LD_LIBRARY_PATH, which are two different searches and both needed.
+ffi = "RUSTFLAGS=\"-L $PWD/build-e18c\" LD_LIBRARY_PATH=$PWD/build-e18c cargo run --release --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi -- --bench 200 --engine ffi --n-predict 128 --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
 # No --n-predict here on purpose: over the socket the daemon decides, and passing one
 # would be read as governing when it does not.
 socket = "projects/e18-industrial-logger/rust/target/release/edgellm-e18 --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock --grammar projects/e18-industrial-logger/grammar.gbnf --prompt projects/e18-industrial-logger/prompt.txt"
