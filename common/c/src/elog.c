@@ -182,7 +182,19 @@ int elog_row(elog *l, const io_event *ev, const char *rule, const edgellm_result
     write_quoted(l->fp, ev->tag);
     fputc(',', l->fp);
     for (i = 0; i < ev->n; i++)
-        fprintf(l->fp, "%s%.6g", i == 0 ? "" : ";", ev->v[i]);
+        /* %.13g and not %.6g, corrected Saturday 14 November 2026. Six significant
+           digits is generous for a sensor reading and destructive for a clock: an epoch
+           second has ten digits, so %.6g wrote 1794670963 as 1.79467e+09 and threw away
+           the last four, a resolution of ten thousand seconds. e08 logs the DS3231 and
+           the Pi clock in this column and asks the model for their difference and for
+           the time of day, and from such a line neither can be checked: both clocks
+           round to the same value, so the difference reads 0.0 s whatever it was, and
+           the time of day is wrong by up to two hours and forty-seven minutes. Thirteen
+           digits keep an epoch second to the millisecond and still print 97.2953 and
+           27.74 unchanged, because %g strips trailing zeros and a double holds those to
+           well past thirteen places. No oracle or replay file in the tree contains a
+           value that changes: e08 is the only project logging a number this large. */
+        fprintf(l->fp, "%s%.13g", i == 0 ? "" : ";", ev->v[i]);
     fputc(',', l->fp);
     write_quoted(l->fp, rule != NULL ? rule : "");
     fputc(',', l->fp);

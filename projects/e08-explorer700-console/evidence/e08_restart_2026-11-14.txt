@@ -1,0 +1,44 @@
+Nov 14 17:52:10 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:52:11 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:52:12 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:52:13 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:52:14 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:52:14 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:52:15 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:52:16 rpi3BV1p2 edgellm-e08-console[859]: e08: key RIGHT
+Nov 14 17:52:26 rpi3BV1p2 edgellm-e08-console[859]: e08: daemon away at t=857.567, retrying every 0.5 s
+Nov 14 17:54:25 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:54:26 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:54:27 rpi3BV1p2 edgellm-e08-console[859]: e08: key RIGHT
+Nov 14 17:56:30 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:56:31 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:56:32 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:33 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:33 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:34 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:34 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:35 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:35 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:36 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:36 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:36 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:37 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:56:38 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:38 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:56:39 rpi3BV1p2 edgellm-e08-console[859]: e08: key LEFT
+Nov 14 17:56:39 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:41 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:56:59 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:57:00 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:57:00 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:57:01 rpi3BV1p2 edgellm-e08-console[859]: e08: key RIGHT
+Nov 14 17:58:24 rpi3BV1p2 edgellm-e08-console[859]: e08: daemon recovered after 357.635 s (lost reply to first good one, CLOCK_MONOTONIC of the console)
+Nov 14 17:58:30 rpi3BV1p2 edgellm-e08-console[859]: e08: key RIGHT
+Nov 14 17:58:31 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:58:32 rpi3BV1p2 edgellm-e08-console[859]: e08: key DOWN
+Nov 14 17:58:33 rpi3BV1p2 edgellm-e08-console[859]: e08: key UP
+Nov 14 17:59:17 rpi3BV1p2 edgellm-e08-console[859]: e08: 10 events, 6 model answers, 4 events with the daemon away, 0 buzzer sounds, mean prompt 7689.0 ms, mean generate 13852.3 ms, last recovery 357.635 s, rss 4964 kB, engine unknown, daemon away at start, source live
+Nov 14 17:59:17 rpi3BV1p2 systemd[1]: Stopping edgellm-e08-console.service - edge-llm-pi e08, the Explorer700 console...
+Nov 14 17:59:17 rpi3BV1p2 systemd[1]: edgellm-e08-console.service: Deactivated successfully.
+Nov 14 17:59:17 rpi3BV1p2 systemd[1]: Stopped edgellm-e08-console.service - edge-llm-pi e08, the Explorer700 console.
+Nov 14 17:59:17 rpi3BV1p2 systemd[1]: edgellm-e08-console.service: Consumed 2.138s CPU time.

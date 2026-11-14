@@ -31,10 +31,18 @@ into it.
 
     true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.2 C.
 
-The question asks for the difference between the DS3231 and the Pi clock in seconds. The
-logged difference is 0.0 s. The answer does not contain it. What it contains is
-**`IN-SYNC`, which is the rule's own verdict and sits in the next column of the same log
-row**, plus the pressure and the temperature, which nobody asked for.
+The question asks for the difference between the DS3231 and the Pi clock in seconds, and
+the answer contains no difference at all. What it contains is **`IN-SYNC`, which is the
+rule's own verdict and sits in the next column of the same log row**, plus the pressure and
+the temperature, which nobody asked for.
+
+**The expected value the checker printed, 0.0 s, is itself not a measurement**, and that
+was found later the same day: `common/c/src/elog.c` wrote every raw value with `%.6g`, so
+both clocks were stored as `1.79467e+09` and the difference of two numbers rounded to the
+same ten thousand seconds is zero whatever it was. The five answers fail independently of
+that, because they state no figure in seconds for the checker to compare against anything;
+but this record should not be read as saying the two clocks agreed. The format is `%.13g`
+from Saturday 14 November 2026 and the next log can answer that question.
 
 **And this is not the budget.** Those five answers stop at 32 generated tokens against a
 ceiling of 64: the model had half its allowance left and still did not state the number.

@@ -1,0 +1,11 @@
+t_s,tag,raw,rule,model,prompt_ms,generate_ms,n_generated,engine
+248.705156,"explorer700",1;1.79467e+09;1.79467e+09;97.2953;27.74,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.30 kPa, temperature 27.7 C."" }",6799.372,7897.458,32,"unknown, daemon away at start"
+273.897114,"explorer700",3;1.79467e+09;1.79467e+09;97.2923;27.97,"IN_SYNC","{ ""answer"": ""16:42:43 UTC, Pi 16:42:42 UTC, difference 1.0 s, clock IN-SYNC."" }",7071.131,10126.649,41,"unknown, daemon away at start"
+326.645082,"explorer700",3;1.79467e+09;1.79467e+09;97.2916;27.93,"IN_SYNC","{""answer"": ""16:43:35 UTC, Pi 16:43:35 UTC, difference 0.0 s, clock IN-SYNC. Pressure 97.29 kPa, previous 97.29 kPa. Temperature 27.",8191.585,17906.295,64,"unknown, daemon away at start"
+409.609052,"explorer700",3;1.79467e+09;1.79467e+09;97.2872;29.13,"IN_SYNC","{""answer"": ""16:44:58 UTC, Pi 16:44:58 UTC, difference 0.0 s, clock IN-SYNC. Pressure 97.29 kPa, previous 97.29 kPa. Temperature 29.",8190.722,17978.563,64,"unknown, daemon away at start"
+464.605235,"explorer700",3;1.79467e+09;1.79467e+09;97.2912;28.85,"IN_SYNC","",,,,"unknown, daemon away at start"
+605.117235,"explorer700",4;1.79467e+09;1.79467e+09;97.2876;31.17,"IN_SYNC","",,,,"unknown, daemon away at start"
+759.777123,"explorer700",0;1.79468e+09;1.79468e+09;97.2893;32.26,"IN_SYNC","{ ""answer"": ""Pressure trend: 97.29 kPa, previous pressure: 97.29 kPa, temperature: 32.3 C."" }",7936.378,11494.722,42,"unknown, daemon away at start"
+847.781061,"explorer700",4;1.79468e+09;1.79468e+09;97.2833;31.28,"IN_SYNC","",,,,"unknown, daemon away at start"
+978.241305,"explorer700",3;1.79468e+09;1.79468e+09;97.2764;33.01,"IN_SYNC","",,,,"unknown, daemon away at start"
+1132.333061,"explorer700",4;1.79468e+09;1.79468e+09;97.2828;32.02,"IN_SYNC","{ ""answer"": ""summarise the last hour. RTC 16:57:01 UTC, Pi 16:57:01 UTC, difference 0.0 s, clock IN-SYNC. Pressure 97.28 kPa, previous",7944.607,17710.212,64,"unknown, daemon away at start"
