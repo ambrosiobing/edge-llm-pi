@@ -85,4 +85,9 @@ contains a value that changes, e08 being the only project that logs a number tha
     NOT A RECOVERY  the 365 s and 358 s figures; they span many kills
     NOT MEASURED  a recovery from a cold page cache
     NOT ACCEPTED  the thermal condition: 0x0 at 17:39 and 0x80000 at 17:59
+    established   the corrected format works on the board, verified at 18:40 with one
+                  replayed event through the real engine: the raw column reads
+                  0;1760440028.35;1760440028.34;98.08;24, twelve digits with hundredths
+                  of a second, and the two clocks differ by 0.01 s where %.6g would have
+                  written 1.76044e+09 twice and a difference of zero
     NOT RESCORED  the ten answers under the corrected format; that needs a new run
