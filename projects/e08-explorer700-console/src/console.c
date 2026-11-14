@@ -646,8 +646,19 @@ static int joystick_wait(hat *h)
         for (i = 0; i < 5; i++) {
             int pressed = now[i] && !h->was[i];
             h->was[i] = now[i];
-            if (pressed)
+            if (pressed) {
+                /* One line per key, on stderr. Added Saturday 14 November 2026 after a
+                   morning in which three runs ended with "0 events" and nothing in the
+                   tree could say whether a contact had closed or whether nobody had
+                   touched the stick. A bench tool that reports only a total cannot tell
+                   an idle operator from a dead input, and that ambiguity cost more time
+                   than every real defect found the same day. */
+                static const char *const key_name[5] = {
+                    "LEFT", "UP", "DOWN", "RIGHT", "PRESS"
+                };
+                fprintf(stderr, "e08: key %s\n", key_name[i]);
                 return i;
+            }
         }
         sleep_s(POLL_MS / 1000.0);
     }
