@@ -1,0 +1,17 @@
+e08: HAT open: expander /dev/gpiochip2, press on GPIO20, /dev/fb1 128x64 at 32 bpp, /sys/bus/iio/devices/iio:device0, /sys/class/rtc/rtc0
+e08: key DOWN
+e08: key RIGHT
+e08: key DOWN
+e08: key RIGHT
+e08: key DOWN
+e08: key RIGHT
+e08: key DOWN
+e08: key RIGHT
+e08: key DOWN
+e08: key RIGHT
+e08: key UP
+e08: key DOWN
+e08: key RIGHT
+e08: key DOWN
+e08: key RIGHT
+e08: 7 events, 7 model answers, 0 events with the daemon away, 0 buzzer sounds, mean prompt 7148.2 ms, mean generate 10396.5 ms, last recovery 0.000 s, rss 5284 kB, engine llama.cpp v0.6.0, source live

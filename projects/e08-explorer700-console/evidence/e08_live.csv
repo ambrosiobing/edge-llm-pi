@@ -1,0 +1,8 @@
+t_s,tag,raw,rule,model,prompt_ms,generate_ms,n_generated,engine
+181.373245,"explorer700",1;1.79466e+09;1.79466e+09;97.4637;27.23,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.2 C."" }",6838.461,8010.094,32,"llama.cpp v0.6.0"
+197.409057,"explorer700",1;1.79466e+09;1.79466e+09;97.4564;27.25,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.2 C."" }",6795.948,8020.191,32,"llama.cpp v0.6.0"
+213.129057,"explorer700",1;1.79466e+09;1.79466e+09;97.4588;27.2,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.2 C."" }",6974.044,8010.844,32,"llama.cpp v0.6.0"
+230.101237,"explorer700",1;1.79466e+09;1.79466e+09;97.4598;27.15,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.1 C."" }",7085.958,8090.259,32,"llama.cpp v0.6.0"
+247.617055,"explorer700",1;1.79466e+09;1.79466e+09;97.4539;27.07,"IN_SYNC","{ ""answer"": ""true, clock IN-SYNC, pressure 97.46 kPa, temperature 27.1 C."" }",7231.642,8141.019,32,"llama.cpp v0.6.0"
+264.901058,"explorer700",2;1.79466e+09;1.79466e+09;97.4532;27.06,"IN_SYNC","{ ""answer"": ""97.45 kPa, 27.1 C, 0.0 s, IN-SYNC, 97.45 kPa, 27.1 C, 0.0 s, IN-SYNC."" }",7458.344,15484.729,59,"llama.cpp v0.6.0"
+289.105057,"explorer700",2;1.79466e+09;1.79466e+09;97.4549;27.09,"IN_SYNC","{ ""answer"": ""The box is warm. RTC 11:20:59 UTC, Pi 11:20:59 UTC, difference 0.0 s, clock IN-SYNC. Pressure 97.45 kPa, previous 97.4",7653.042,17018.224,64,"llama.cpp v0.6.0"
