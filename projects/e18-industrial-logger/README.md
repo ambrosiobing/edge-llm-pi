@@ -380,8 +380,18 @@ cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18
 # Raspberry Pi 4 Model B, card B. The fourth arm, which had no command block
 # in this chapter until Thursday 19 November 2026 although its row was in the
 # table. It needs the ffi feature and a link path to the C library.
-cd ~/edge-llm-pi; export LD_LIBRARY_PATH=build-e18c
-projects/e18-industrial-logger/rust/target/release/edgellm-e18-ffi \
+# The feature does not change the binary name: it is the same edgellm-e18, built
+# once with --features ffi and a link path to the C library. An earlier draft of
+# this block named a binary edgellm-e18-ffi, which cargo never produces.
+cd ~/edge-llm-pi; RUSTFLAGS="-L $PWD/build-e18c" cargo build --release \
+  --manifest-path projects/e18-industrial-logger/rust/Cargo.toml --features ffi
+```
+
+```bash
+# Raspberry Pi 4 Model B, card B. build-e18c here is the REAL engine build, not
+# the stub one, or this row times the grammar and not the model.
+cd ~/edge-llm-pi; LD_LIBRARY_PATH=$PWD/build-e18c \
+  projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
   --bench 20 --engine ffi --n-predict 128 \
   --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
