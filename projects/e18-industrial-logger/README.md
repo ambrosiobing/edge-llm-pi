@@ -363,7 +363,7 @@ cd ~/edge-llm-pi; python tools/agreement.py projects/e18-industrial-logger/evide
 cd ~/edge-llm-pi; build-e18c/e18_abi_test \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt \
-  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 20 --n-predict 128
+  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 5 --n-predict 128
 ```
 
 ```bash
@@ -371,7 +371,7 @@ cd ~/edge-llm-pi; build-e18c/e18_abi_test \
 # The budget here is the daemon's 128, not this client's; --n-predict does not
 # reach the socket backend and the tool says so on its own output line.
 cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
-  --bench 20 --engine socket --socket /run/edgellm/e18-daemon.sock \
+  --bench 5 --engine socket --socket /run/edgellm/e18-daemon.sock \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
 ```
@@ -392,7 +392,7 @@ cd ~/edge-llm-pi; RUSTFLAGS="-L $PWD/build-e18c" cargo build --release \
 # the stub one, or this row times the grammar and not the model.
 cd ~/edge-llm-pi; LD_LIBRARY_PATH=$PWD/build-e18c \
   projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
-  --bench 20 --engine ffi --n-predict 128 \
+  --bench 5 --engine ffi --n-predict 128 \
   --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
@@ -469,7 +469,9 @@ Three quantities, and each can fail. First, the echo: 1000 frames of 64 bytes wr
 
 **And the rows already in the table below were taken at 64 and are therefore not the rows this clause asks for.** They stay, with their date and their budget, because a figure measured and superseded is a different statement from a figure never taken; but the clause wants four rows from one sitting at one budget, and that sitting has not run. **The cost of a call at 128 is not known**: the 18.307 s figure is a 64-token answer, and the 16.134 s mean of the replay is a different instrument on 600 different prompts with no saved state, so neither predicts it. One call per arm is the control that gives the sitting its length, and it comes before the sitting.
 
-**The shape of that sitting was changed on Friday 13 November 2026, from 200 calls per arm run one arm after another to 20 calls per arm repeated three times with the arms interleaved.** It is not a concession to the clock, although it does turn three hours and thirty-five minutes into about seventy. It is the design the day's two findings asked for.
+**The shape of that sitting was changed on Friday 13 November 2026, from 200 calls per arm run one arm after another to a small block per arm repeated three times with the arms interleaved.** It is not a concession to the clock, although it does turn three hours and thirty-five minutes into a fraction of that. It is the design the day's two findings asked for.
+
+**That shape was written as twenty calls per arm, and on Thursday 19 November 2026 a control measured that twenty does not fit.** This chapter already held both halves of the contradiction two paragraphs apart: twenty calls times three repetitions times four arms is 240 calls, which it called "about seventy" minutes, against its own measurement that this board reaches its soft limit **twenty-three minutes** after a reboot under load. The two were never held against each other. One call per arm at budget 128 was measured at **18.3 s**, a warm model load at 5.75 s and a cold one at about 50 s, so the 1380 second window admits about 69 calls once the loads are paid. At four arms and three repetitions that is **five calls per arm per repetition**: 60 calls, about twenty minutes, three minutes of margin. Five gives a median over five and three repetitions give the run-to-run spread, which is the quantity this project has twice found to matter. The record is `projects/e18-industrial-logger/evidence/2026-11-19_1714_a-call-costs-18.3-s-and-the-budget-never-binds_pi4b.md`.
 
 One arm after another is a blocked comparison, and a blocked comparison carries the order as well as the arm: whichever arm runs first pays for paging in 463 MiB and for the governor ramping, and on this project that artefact once printed 294 367 us and called it a boundary. Interleaving spreads any drift over all four rows instead of loading it onto the first. Repeating gives each row more than one reading, and this project has twice found that the standard error inside a single run understates the real spread by two orders of magnitude, so a figure with no repetition has no honest uncertainty at all.
 
