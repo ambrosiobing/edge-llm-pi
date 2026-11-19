@@ -97,13 +97,14 @@ abi      = "projects/e18-industrial-logger/c/abi.h"
 # that name one and its verdict is independent of that number, answering DRIFT in 0 of the
 # 57 rows where it writes a span above 100. Also measured, and failing: 600 of 600 events
 # overrun the 2.0 s period at a mean call of 16134 ms.
-# Clause three, Friday 13 November 2026: the boundary is measured at 0.064 us per call
-# and the seam is free, four parts in a billion of a decision. The clause is NOT closed.
-# The chapter's condition is all four rows from one sitting with get_throttled reading
-# 0x0 before and after, and a run with any bit set discarded. The model sitting of this
-# day was never read before, read 0xe0000 after, and the FFI and socket rows were never
-# run at all. Sticky bits clear only at boot, so the sitting has to start from a reboot.
-blocked_on = "the echo needs the WS-28164 on card B; clause three needs all four latency rows from one sitting that starts at a reboot with get_throttled 0x0"
+# Clause three is MET, Thursday 19 November 2026. Four rows from one sitting that began
+# at a reboot, read get_throttled 0x0 before and after each of three repetitions, ended
+# at 0x0 and 57.4 C, and ran all four arms at one budget of 128. Twelve medians between
+# 15.245 and 15.902 s, a spread of 4.2 per cent, so the four paths are not
+# distinguishable, which is what the stub said at tens of nanoseconds. The ABI minus
+# in-process difference changes sign twice and is therefore noise. The record is
+# evidence/2026-11-19_2142_clause-three-met_pi4b.md.
+blocked_on = "the echo needs the WS-28164 on card B. Clause three is met as of Thursday 19 November 2026"
 
 [build]
 # The C half is its own CMake project on purpose: the daemon is installed, versioned

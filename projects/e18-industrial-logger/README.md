@@ -370,7 +370,10 @@ cd ~/edge-llm-pi; build-e18c/e18_abi_test \
 # Raspberry Pi 4 Model B, card B
 # The budget here is the daemon's 128, not this client's; --n-predict does not
 # reach the socket backend and the tool says so on its own output line.
-cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
+# LD_LIBRARY_PATH is needed even though this arm never calls the C library:
+# a binary built with --features ffi carries the dependency in every arm.
+cd ~/edge-llm-pi; LD_LIBRARY_PATH=$PWD/build-e18c \
+  projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
   --bench 5 --engine socket --socket /run/edgellm/e18-daemon.sock \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
@@ -414,8 +417,15 @@ Rust for the device service and C for the inference daemon, catalogue variants R
 | the C ABI from Rust over the FFI | 18.115, 18.035, 18.391 s | medians | 20, three times | the same sitting; WRAPPED prompt |
 | **the C ABI alone, with the model** | **<span class="math">-0.004</span>, <span class="math">+0.298</span>, <span class="math">+0.072</span> s** | each inside 1 se of zero | 20, three times | the ABI arm minus the in-process arm, sign changing; invisible, as the stub says |
 | in process, real model, WRAPPED prompt | 18.307 s | median | 5 | the same board at 79.3 C after the prompts were equalised: <span class="math">+2.49</span> s, within 0.4 per cent of both Rust arms |
-| the C ABI from Rust over the FFI | not measured | not measured | 200 | `edgellm-e18 --bench`, the ffi backend; needs the ffi feature, not run yet |
-| the same four over the Unix socket | not measured | not measured | 200 | `edgellm-e18 --bench`, the socket backend; not run yet |
+| **in process, the qualifying sitting** | **15.410, 15.508, 15.245 s** | medians | 5, three times | Thursday 19 November 2026, 18:11 to 21:41, from a reboot, throttle `0x0` before and after every repetition, budget 128 |
+| **the C ABI, in process** | **15.652, 15.260, 15.264 s** | medians | 5, three times | the same sitting |
+| **the C ABI from Rust over the FFI** | **15.877, 15.706, 15.902 s** | medians | 5, three times | the same sitting |
+| **the same over the Unix socket** | **15.801, 15.685, 15.425 s** | medians | 5, three times | the same sitting; the budget here is the daemon's, which this client cannot set and the tool says so instead of printing a number |
+| **the C ABI alone, qualifying** | **<span class="math">+0.437</span>, <span class="math">-0.117</span>, <span class="math">+0.030</span> s** | the sign changes twice | 5, three times | impossible as a boundary, so noise; the repetition is what shows it |
+
+**Acceptance clause three is met, on Thursday 19 November 2026.** The last five rows are the four boundaries and their difference from one sitting that began at a reboot, read `0x0` before and after each of its three repetitions, ended at `0x0` and 57.4 C, and ran all four arms at one budget of 128. **All twelve medians lie between 15.245 and 15.902 s, a spread of 4.2 per cent**, so the four paths are not distinguishable, which is what the stub already said when it put the seam at tens of nanoseconds. **The ABI minus in-process difference changes sign twice**: a wrapper cannot make the call it forwards faster, so the quantity is noise, and one repetition would have published the first of the three at 1.19 standard errors. The record is `projects/e18-industrial-logger/evidence/2026-11-19_2142_clause-three-met_pi4b.md`.
+
+**Two things this chapter had wrong are corrected with it.** The table carried two rows saying the FFI and socket boundaries were not measured, at a call count nothing uses, six days after the sitting of Friday 13 November 2026 had measured both; they are gone. And the thermal window of twenty-three minutes is twenty-three minutes of **continuous** load: this sitting spanned three and a half hours of wall clock with idle gaps between its repetitions, peaked at 61.8 C and never set a bit, so five calls per arm fitted with room to spare and whether twenty would fit when spaced is not measured. The two Rust arms read 17.6 to 18.4 s at about 80 C on Friday 13 November 2026 and 15.4 to 15.9 s at 48 to 62 C here, a difference of fifteen per cent of which throttling accounts for four to five points.
 
 The fifth row is the one to read first, and the eighth is the one this chapter got wrong. With the stub behind the same four functions the decision costs almost nothing, so the difference between the stub's two arms is the boundary alone: **tens of nanoseconds**. Against a decision of 15.4 seconds that is four to six parts in a billion, and **the seam is free**. That is the answer to the question this chapter was built around, and it needed no model at all.
 
