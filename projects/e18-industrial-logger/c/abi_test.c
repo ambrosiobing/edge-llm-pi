@@ -160,7 +160,13 @@ static int one_complete_decision(const char *s)
 int main(int argc, char **argv)
 {
     const char *grammar = NULL, *prompt_path = NULL, *model = NULL;
-    int calls = 200, n_predict = 64, i, failures = 0, rc;
+    /* n_predict is 128 and not 64 from Thursday 19 November 2026, for the same two
+       reasons the Rust service's default was raised on that day: 64 truncates a summary
+       that e04 measured at 95 to 97 tokens on this board on Thursday 12 November 2026,
+       and acceptance clause three compares these two rows against the FFI and socket
+       rows on "the same budget", where the socket arm's budget is the daemon's 128. The
+       two rows this file prints state the value on their own output line already. */
+    int calls = 200, n_predict = 128, i, failures = 0, rc;
     char out[OUT_MAX];
     double *abi_us = NULL, *direct_us = NULL;
     double abi_mean, abi_sd, dir_mean, dir_sd, diff, se;

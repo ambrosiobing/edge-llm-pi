@@ -363,13 +363,27 @@ cd ~/edge-llm-pi; python tools/agreement.py projects/e18-industrial-logger/evide
 cd ~/edge-llm-pi; build-e18c/e18_abi_test \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt \
-  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 200
+  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --calls 20 --n-predict 128
 ```
 
 ```bash
 # Raspberry Pi 4 Model B, card B
+# The budget here is the daemon's 128, not this client's; --n-predict does not
+# reach the socket backend and the tool says so on its own output line.
 cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
-  --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock \
+  --bench 20 --engine socket --socket /run/edgellm/e18-daemon.sock \
+  --grammar projects/e18-industrial-logger/grammar.gbnf \
+  --prompt projects/e18-industrial-logger/prompt.txt
+```
+
+```bash
+# Raspberry Pi 4 Model B, card B. The fourth arm, which had no command block
+# in this chapter until Thursday 19 November 2026 although its row was in the
+# table. It needs the ffi feature and a link path to the C library.
+cd ~/edge-llm-pi; export LD_LIBRARY_PATH=build-e18c
+projects/e18-industrial-logger/rust/target/release/edgellm-e18-ffi \
+  --bench 20 --engine ffi --n-predict 128 \
+  --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
 ```
@@ -440,6 +454,10 @@ cd ~/bench/edge-llm-pi; kas shell meta-edgellm/kas/edgellm-pi4.yml -c "bitbake -
 ## Acceptance test
 
 Three quantities, and each can fail. First, the echo: 1000 frames of 64 bytes written on `/dev/ttySC0`, read and echoed on `/dev/ttySC1`, read back on `/dev/ttySC0`, at 115200 baud, with the instrument being the service's own `--echo` mode, which counts short reads, checksum failures, other refusals and sequence gaps separately. The pass condition is zero errors and zero gaps over all 1000 frames; one short read fails it, and the order to read afterwards is the leads, then the direction control, then the overlay. Second, the agreement over the 600 replayed frames, with the instrument being `tools/agreement.py` reading the log: the number of rows whose model column holds neither literal must be zero, and the agreement rate is whatever it is and goes into the table below with its date. Third, the boundary cost per call, with the instruments being `e18_abi_test` for the in-process and ABI figures and `edgellm-e18 --bench` for the FFI and socket figures, on the same prompt, the same model, the same board and **the same budget**; the condition is that all four rows are filled from one sitting that begins at a reboot with `vcgencmd get_throttled` reading `0x0`, read again at every repetition, and a repetition with any bit set is discarded rather than the whole sitting.
+
+**The four rows would have run at two different budgets, and that was found on Thursday 19 November 2026 before the sitting rather than after it.** The Rust service defaulted `--n-predict` to 64 and `e18_abi_test` did the same, while the socket arm takes its budget from the **daemon**, which this chapter starts at 128. So an FFI row at 64 would have been compared against a socket row at 128 and the difference called a boundary, which is the defect of Friday 13 November 2026 in a second dimension: then the two instruments sent two prompts, here they would have granted two budgets. **Worse, the client's flag is accepted and ignored on the socket path**, because `Socket::connect` takes no engine configuration at all, so a number on the command line would have looked like a setting and governed nothing. Three changes: both defaults are 128, which is also the value e04 measured a summary of this character class to need, 95 to 97 tokens on this same board on Thursday 12 November 2026; every bench command states the budget; and `--bench` now prints the budget beside the medians, printing for the socket arm that the daemon owns it rather than printing a number that did not govern the run.
+
+**And the rows already in the table below were taken at 64 and are therefore not the rows this clause asks for.** They stay, with their date and their budget, because a figure measured and superseded is a different statement from a figure never taken; but the clause wants four rows from one sitting at one budget, and that sitting has not run. **The cost of a call at 128 is not known**: the 18.307 s figure is a 64-token answer, and the 16.134 s mean of the replay is a different instrument on 600 different prompts with no saved state, so neither predicts it. One call per arm is the control that gives the sitting its length, and it comes before the sitting.
 
 **The shape of that sitting was changed on Friday 13 November 2026, from 200 calls per arm run one arm after another to 20 calls per arm repeated three times with the arms interleaved.** It is not a concession to the clock, although it does turn three hours and thirty-five minutes into about seventy. It is the design the day's two findings asked for.
 

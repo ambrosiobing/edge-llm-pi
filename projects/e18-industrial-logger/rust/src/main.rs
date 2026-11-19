@@ -142,7 +142,19 @@ fn parse() -> Option<Options> {
         bench: 0,
         n_ctx: 512,
         threads: 4,
-        n_predict: 64,
+        // 128 and NOT 64, corrected Thursday 19 November 2026. Two reasons, and the
+        // second is the one that made this a defect rather than a preference. First,
+        // 64 truncates: this project's summary rule is the character class e04 uses,
+        // and e04 measured on the same board on Thursday 12 November 2026 that such an
+        // answer needs 95 to 97 tokens. Second, acceptance clause three compares four
+        // latency rows on "the same prompt, the same model, the same board and the same
+        // budget", and the socket arm's budget is the DAEMON's, which this project's
+        // own daemon command sets to 128. So a --bench run that took this default
+        // compared an FFI arm at 64 against a socket arm at 128 and called the
+        // difference a boundary. tools/budget_agree.py reported this project as
+        // agreeing throughout, because it reads the unit file, which passes 128
+        // explicitly, and the bench path passes nothing.
+        n_predict: 128,
         temperature: 0.0,
     };
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -396,7 +408,7 @@ fn echo_test(o: &Options) -> Result<(), String> {
 /// `--bench N`: N decisions on one fixed prompt through the chosen boundary. The
 /// figure this prints is the Rust side of the chapter's comparison; the C side comes
 /// from `e18_abi_test`, which times the same engine with no boundary at all.
-fn bench(engine: &mut Backend, n: usize) -> Result<(), String> {
+fn bench(engine: &mut Backend, n: usize, n_predict: i32, which: &str) -> Result<(), String> {
     let user = wrap_user(Template::ChatMl, BENCH_TEXT);
     let mut us = Vec::with_capacity(n);
     for i in 0..n {
@@ -422,6 +434,17 @@ fn bench(engine: &mut Backend, n: usize) -> Result<(), String> {
     };
     let max = sorted[n - 1];
     println!("bench: backend {}, abi {}, {} calls", engine.name(), EXPECTED_ABI_VERSION, n);
+    // The budget belongs in the printed row, because clause three compares the four rows
+    // on it and a row that does not state it cannot be checked against the others. The
+    // socket arm is the one that cannot state it: the budget there is the daemon's, the
+    // client's --n-predict never reaches it, and printing this process's value would be
+    // a number that did not govern the run.
+    if which == "socket" {
+        println!("bench: budget set by the daemon and not by this client; read it from \
+                  the daemon's own command line before comparing this row");
+    } else {
+        println!("bench: budget {} tokens", n_predict);
+    }
     println!("bench: mean {:.3} us, sd {:.3} us", mean, sd);
     println!("bench: median {:.3} us, max {:.3} us", median, max);
     Ok(())
@@ -599,7 +622,7 @@ fn main() -> ExitCode {
         }
     };
     let outcome = if o.bench > 0 {
-        bench(&mut engine, o.bench)
+        bench(&mut engine, o.bench, o.n_predict, &o.engine)
     } else {
         run(&o, &mut engine)
     };

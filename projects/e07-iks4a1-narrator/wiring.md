@@ -40,7 +40,7 @@ under `/lib/modules`. The October reading and this one both report `6.6.63-v8` o
 does not identify an image**. Until that is resolved on the bench, read the Driver and Device
 columns below as the mainline names of the drivers these parts would use, **not as a claim
 that any image here has built them**. The record is
-`projects/e05-adxl345-events/evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
+`projects/e05-adxl345-events/evidence/2026-11-19_1614_no-st-driver-anywhere_pi3bplus-rpi3-64.md`.
 
 | Address | Part | Driver | Device | Read by e07 |
 |---|---|---|---|---|

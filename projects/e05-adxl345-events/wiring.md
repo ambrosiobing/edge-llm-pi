@@ -76,7 +76,7 @@ card**, the ADXL345 and both shields alike, so the substitution cannot be comple
 choosing a different part. It needs either an out-of-tree module build against the running
 kernel's headers or a user-space I2C reader, and the second changes what `--live iio` means
 and touches the shared `io.h` backend. The record is
-`evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
+`evidence/2026-11-19_1614_no-st-driver-anywhere_pi3bplus-rpi3-64.md`.
 
 ## Pre-flight, on the Pi 3 over SSH
 

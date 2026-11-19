@@ -72,7 +72,7 @@ every sensor shield in this volume.
 The first row is from Tuesday 27 October 2026 and is in
 `projects/e05-adxl345-events/evidence/2026-10-27_2110_iks5a1-substitution-survey_pi3bplus.md`.
 The second row is from Thursday 19 November 2026 and is in
-`projects/e05-adxl345-events/evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
+`projects/e05-adxl345-events/evidence/2026-11-19_1614_no-st-driver-anywhere_pi3bplus-rpi3-64.md`.
 The trixie row was measured on Friday 13 November 2026 and is in the one record under
 `projects/e07-iks4a1-narrator/evidence/`, stamped that date at 19:00.
 
