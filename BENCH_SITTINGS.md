@@ -54,18 +54,42 @@ every part present, and three of the four drivers e07 reads absent from the imag
 sheet names. The two cards differ completely and the difference is the whole story for
 every sensor shield in this volume.
 
-    Yocto 6.6.63-v8, raspberrypi3-64      st_lsm6dsx_i2c, st-magn-i2c, st-press-i2c and
-                                          sht4x all registered; no ADXL345 symbol
+    Yocto 6.6.63-v8, raspberrypi3-64      Tuesday 27 October 2026: st_lsm6dsx_i2c,
+                                          st-magn-i2c, st-press-i2c and sht4x all
+                                          registered; no ADXL345 symbol
+    Yocto 6.6.63-v8, raspberrypi3-64      Thursday 19 November 2026, the same version
+                                          string and the same hostname: NO ST IIO
+                                          driver. The running kernel's own config reads
+                                          # CONFIG_IIO_ST_LSM6DSX is not set, with
+                                          IIO_ST_MAGN_3AXIS and IIO_ST_PRESS unset too,
+                                          modprobe returns 1, and no module exists
     Pi OS trixie 6.18.50+rpt-rpi-v8       NO ST IIO driver of any kind. iio/magnetometer
                                           does not exist as a directory; iio/pressure holds
                                           only bmp280 and ms5637; iio/imu holds only bno055
                                           and inv_mpu6050; iio/accel holds the ADXL355 and
                                           not the ADXL345
 
-The first two lines were measured on Tuesday 27 October 2026 and are in
+The first row is from Tuesday 27 October 2026 and is in
 `projects/e05-adxl345-events/evidence/2026-10-27_2110_iks5a1-substitution-survey_pi3bplus.md`.
-The rest was measured on Friday 13 November 2026 and is in the one record under
+The second row is from Thursday 19 November 2026 and is in
+`projects/e05-adxl345-events/evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
+The trixie row was measured on Friday 13 November 2026 and is in the one record under
 `projects/e07-iks4a1-narrator/evidence/`, stamped that date at 19:00.
+
+**The two Yocto rows carry the same `uname -r` and the same hostname and contradict each
+other, so a kernel version string plus a hostname does not identify an image.** A driver
+claim in this volume needs the configuration excerpt beside the date and the card name, and
+`/sys/bus/i2c/drivers` is not that excerpt: it lists drivers that are **loaded**, and a
+module loads only when a device claims it, so a short list on a bus with no ST part on it is
+not an absence proof. `zcat /proc/config.gz` and the return code of `modprobe` are the two
+readings that carry the claim.
+
+**As of Thursday 19 November 2026 no card on this bench carries an ST IIO driver and none
+carries an IIO driver for the ADXL345 either.** Every sitting that reads an accelerometer, a
+magnetometer or a pressure part through IIO is blocked on an image and not on a shield, so
+choosing a different shield does not unblock it. The two routes left are an out-of-tree
+module build against the running kernel's headers, or a user-space I2C reader, which changes
+what `--live iio` means in e05, e07, e09 and e14 and touches the shared `io.h` backend.
 
 **Two traps live in that last line.** `iio/accel` holds `adxl355_core` and `adxl355_i2c`,
 one digit away from the part three of these projects read, so the directory listing looks

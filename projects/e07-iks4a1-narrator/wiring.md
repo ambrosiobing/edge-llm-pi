@@ -30,6 +30,18 @@ directory, `iio/pressure` holds only bmp280 and ms5637, and `bench-iks4a1.dtbo` 
 card eplepi. Only `sht4x` is present. The address column was measured; the driver column
 was assumed, which is the same defect e05's sheet carries about the ADXL345.
 
+**AND THE DRIVER COLUMN DESCRIBES NO CARD ON THIS BENCH.** The sentence above said the
+columns belong to the Yocto 6.6.63-v8 image. On **Thursday 19 November 2026** that card was
+read again and its running kernel's own configuration says
+`# CONFIG_IIO_ST_LSM6DSX is not set`, with `IIO_ST_MAGN_3AXIS` and `IIO_ST_PRESS` unset
+beside it, `modprobe st_lsm6dsx_i2c` returning 1, and not one of the four modules present
+under `/lib/modules`. The October reading and this one both report `6.6.63-v8` on host
+`raspberrypi3-64` and contradict each other, so **a kernel version string plus a hostname
+does not identify an image**. Until that is resolved on the bench, read the Driver and Device
+columns below as the mainline names of the drivers these parts would use, **not as a claim
+that any image here has built them**. The record is
+`projects/e05-adxl345-events/evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
+
 | Address | Part | Driver | Device | Read by e07 |
 |---|---|---|---|---|
 | 0x19 | LIS2DUXS12 | st_lis2duxs12 not in the image | none | no; answers `i2cdetect -r` only |

@@ -30,7 +30,7 @@ bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Carg
 # card and not on trixie. The CAN half is clear: mcp251x and mcp251xfd are both in the
 # trixie kernel package, measured Friday 13 November 2026. See "The image decides" in
 # BENCH_SITTINGS.md.
-blocked_on = "the rule's vibration half reads the retired ADXL345; the CAN half is clear and its drivers are present"
+blocked_on = "the rule's vibration half reads the retired ADXL345, and the replacement shield has no driver either: on Thursday 19 November 2026 the Yocto card was measured with IIO_ST_LSM6DSX unset, so no card here binds any accelerometer through IIO; the CAN half is clear and its drivers are present"
 
 [run]
 # Two processes. The daemon first, then the service; the service reconnects by itself if

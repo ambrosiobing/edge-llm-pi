@@ -20,7 +20,7 @@ binary   = "edgellm-e07"
 # and this is not a question about what the model adds. Unblocking means the Yocto
 # 6.6.63 image where all four are registered, or four out-of-tree modules, or dropping
 # the IIO path for user-space I2C, which would touch the shared io.h and not only e07.
-blocked_on = "three of four drivers are absent from Pi OS trixie, the pressure one included; needs the Yocto image or an out-of-tree build"
+blocked_on = "three of four drivers are absent from Pi OS trixie, the pressure one included, and on Thursday 19 November 2026 the Yocto card was measured to have IIO_ST_LSM6DSX, IIO_ST_MAGN_3AXIS and IIO_ST_PRESS all unset as well; no card on this bench carries an ST IIO driver, so it needs an out-of-tree module build or a user-space I2C reader"
 
 [build]
 # From the repository root, after cmake -S . -B build [-DEDGELLM_STUB_MODEL=ON]. The

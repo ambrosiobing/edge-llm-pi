@@ -59,10 +59,24 @@ than a missing driver because every obvious check passes.
 
 Before this project is next built, the overlay file name and the bound driver are to be read
 off the running image with `ls /boot/firmware/overlays | grep -i adxl` and
-`ls /sys/bus/i2c/drivers/`, and the part replaced if nothing binds. The substitution directed
-on Tuesday 27 October 2026 is tracked in the same evidence file: the target image does carry
-`st_lsm6dsx_i2c`, whose table includes `lsm6dso16is`, which is the part the X-NUCLEO-IKS5A1
-answers with at 0x6b.
+`ls /sys/bus/i2c/drivers/`, and the part replaced if nothing binds.
+
+**AND THE REPLACEMENT HAS NO DRIVER EITHER, ON ANY CARD HERE.** The substitution directed on
+Tuesday 27 October 2026 was recorded with the sentence "the target image does carry
+`st_lsm6dsx_i2c`, whose table includes `lsm6dso16is`". **That was measured on Tuesday
+27 October 2026 and does not hold on the card in the board on Thursday 19 November 2026.** The
+running Yocto kernel's own configuration reads `# CONFIG_IIO_ST_LSM6DSX is not set`,
+`modprobe st_lsm6dsx_i2c` returns 1, and no such module exists under `/lib/modules`. Both
+readings report `uname -r` as `6.6.63-v8` and the hostname as `raspberrypi3-64`, so **a
+kernel version string plus a hostname does not identify an image** and whether these are two
+cards or one card written twice is an open question for the bench.
+
+What follows for this project: **the IIO path is unavailable for any accelerometer on either
+card**, the ADXL345 and both shields alike, so the substitution cannot be completed by
+choosing a different part. It needs either an out-of-tree module build against the running
+kernel's headers or a user-space I2C reader, and the second changes what `--live iio` means
+and touches the shared `io.h` backend. The record is
+`evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
 
 ## Pre-flight, on the Pi 3 over SSH
 

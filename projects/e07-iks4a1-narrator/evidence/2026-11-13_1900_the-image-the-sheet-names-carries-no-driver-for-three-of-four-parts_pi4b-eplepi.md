@@ -57,6 +57,13 @@ Three routes, none of them cheap, and none taken here:
 
 1. **The Yocto image**, where the four drivers are registered. A different card and a
    different volume's build.
+   **REFUTED on Thursday 19 November 2026.** The Yocto card was read again and its running
+   kernel's own configuration says `# CONFIG_IIO_ST_LSM6DSX is not set`, with
+   `IIO_ST_MAGN_3AXIS` and `IIO_ST_PRESS` unset beside it, `modprobe st_lsm6dsx_i2c`
+   returning 1 and no such module under `/lib/modules`. That reading and the October one
+   both report `6.6.63-v8` on host `raspberrypi3-64`. **This route is not available**, and
+   whether the bench holds two Yocto cards or one card written twice is open. See
+   `projects/e05-adxl345-events/evidence/2026-11-19_1614_the-yocto-card-has-no-st-driver-either-and-one-kernel-string-names-two-images_pi3bplus-raspberrypi3-64.md`.
 2. **Build the four modules for trixie** out of tree, against the running kernel's
    headers.
 3. **Read the parts from user space over I2C** and drop the IIO path, which changes what

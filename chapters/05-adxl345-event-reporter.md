@@ -36,7 +36,7 @@ Draft idea 1, split. The draft paired the accelerometer with the time-of-flight 
 | --- | --- | --- | --- |
 | Raspberry Pi 3 Model B Rev 1.2 | runs the service, the model and the comparison; 1 GB, card `eplepi` seated for this chapter; SmolLM2-360M needs 450 MB available | SSH | header pins 1, 3, 5, 6, 9, 16, 17 |
 | DFRobot SEN0032 ADXL345 | the three-axis accelerometer, full resolution, read through IIO; header not soldered | I2C1 at 100 kHz, CS strapped high, SDO strapped low | 0x53 |
-| The adxl345 IIO driver | bound by the Linux volume's project 5 overlay; exposes `in_accel_x_raw`, `y`, `z`, `in_accel_scale`, `sampling_frequency` | sysfs reads | `iio:device0` |
+| The adxl345 IIO driver | **built on neither bench card**, measured Tuesday 27 October 2026: Pi OS trixie has no `adxl345_i2c` module and carries `CONFIG_INPUT_ADXL34X_I2C=m`, which is the **evdev** driver and appears under `/dev/input/` rather than under IIO, and the Yocto card has no `CONFIG_ADXL345` symbol at all. The attributes this chapter reads, `in_accel_x_raw`, `y`, `z`, `in_accel_scale` and `sampling_frequency`, are therefore not produced on either image, and a project polling IIO sysfs would see nothing while a driver had loaded and the part worked | sysfs reads | `iio:device0`, not created |
 | A sheet of foam | the drop target: a fall of a hand's height gives a freefall below 0.3 g and an impact above 2 g without harm to the leads | none |  |
 | `replay/adxl345_events.csv` | the stand-in: 2000 rows of `t_s,tag,v0,v1,v2` at 50 per second written by `tools/make_replay.py`, thirty scripted events | `io::Replay` |  |
 | `grammars/e05_event.gbnf` | the four literals and one sentence, in the house shape | the engine's grammar sampler | root symbol `root` |

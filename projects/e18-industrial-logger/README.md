@@ -317,8 +317,8 @@ cd ~/src/edge-llm-pi; cargo test --manifest-path projects/e18-industrial-logger/
 
 ```bash
 # Raspberry Pi 4 Model B, card B
-cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 --echo 1000 --rs485-a /dev/ttySC0 \
-  --rs485-b /dev/ttySC1 --baud 115200 \
+cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
+  --echo 1000 --rs485-a /dev/ttySC0 --rs485-b /dev/ttySC1 --baud 115200 \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
 ```
@@ -368,8 +368,8 @@ cd ~/edge-llm-pi; build-e18c/e18_abi_test \
 
 ```bash
 # Raspberry Pi 4 Model B, card B
-cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 --bench 200 --engine socket \
-  --socket /run/edgellm/e18-daemon.sock \
+cd ~/edge-llm-pi; projects/e18-industrial-logger/rust/target/release/edgellm-e18 \
+  --bench 200 --engine socket --socket /run/edgellm/e18-daemon.sock \
   --grammar projects/e18-industrial-logger/grammar.gbnf \
   --prompt projects/e18-industrial-logger/prompt.txt
 ```
