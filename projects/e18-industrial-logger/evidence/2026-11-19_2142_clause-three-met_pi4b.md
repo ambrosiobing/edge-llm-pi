@@ -103,13 +103,30 @@ against 955 MB a minute after the reboot. The cause is not this project:
     RSS    77 388 kB   PID 841   node
 
 **A Freqtrade bot with a 2.32 GB resident set runs on this board and ran through both latency
-sittings**, this one and that of Friday 13 November 2026. It read 955 MB used one minute after
-the reboot because it had just started, and grew to 2.3 GB over the three and a half hours.
-`/run` holds 101 MB, so the daemon's state file is not the cause.
+sittings**, this one and that of Friday 13 November 2026. `ps -o lstart,etime` puts its start at
+18:10:59, twenty-one seconds after the boot at 18:10:38, so it was running before the first
+repetition and through all three. `/run` holds 101 MB, so the daemon's state file is not the
+cause.
 
-**This does not invalidate the four rows**: all four arms ran under the same conditions within
-each repetition, the within-run spread was 0.088 to 0.803 s, and the model loaded without
-pressure, 5142 MB still available at the end. **What it does is name a confounder that no
+**A first version of this paragraph said the bot grew to 2.3 GB over the three and a half
+hours. That was not measured and is withdrawn.** What is measured:
+
+    18:12, one minute after boot    955 MB used, system wide
+    00:10, daemon stopped          2677 MB used; freqtrade RSS 2 433 916 kB
+    00:1x and 04:53                freqtrade RSS 2 433 916 kB, identical to the kilobyte
+
+Two endpoints and a flat tail. The footprint is **stable to the kilobyte over four and a half
+hours once warm**, which makes it a steady competitor rather than a drifting one; but **when
+between 18:12 and 00:10 it reached that footprint is unknown**, and that is the part that
+decides whether r1, r2 and r3 met the same conditions. `free -m` was read once, at the start,
+and never again. Reading it at every repetition costs nothing and would have answered this,
+which is now what `BENCH_SITTINGS.md` asks for.
+
+**This does not invalidate the four rows**, and the reason needs stating carefully, because
+"the same conditions within a repetition" is the same unmeasured assumption one level down:
+the four arms run one after another across about six minutes. What holds is weaker: the arms of
+one repetition sit closer in time to each other than to those of another, the within-run spread
+was 0.088 to 0.803 s, and the model loaded without pressure, 5142 MB still available. **What it does is name a confounder that no
 record of this volume had named.** The bot competes for CPU and for page cache with every
 measurement taken on board A, its share during the sitting was not measured, and its footprint
 differed between the two sittings, so it is a candidate for the unexplained part of the

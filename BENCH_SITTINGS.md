@@ -66,6 +66,14 @@ and the temperature:
 
     ps -eo rss,pid,comm --sort=-rss | head -8
     free -m | head -2
+    ps -o lstart=,etime=,rss= -p <pid of the bot>
+
+**And `free -m` belongs in the per-repetition reading, beside the throttle bits.** On Thursday
+19 November 2026 it was read once at the start and never again, so the sitting can say the bot
+ran throughout, having started twenty-one seconds after the boot, and cannot say whether it was
+already at its full footprint during the first repetition. Its resident set is stable to the
+kilobyte once warm, over four and a half hours of readings, so the question is only when it
+warmed. One extra line per repetition answers it.
 
 Whether the bot is stopped for a measurement is a decision, not a default. The 8 GB board has
 room for both; the shared CPU is the part that cannot be shared without cost.
