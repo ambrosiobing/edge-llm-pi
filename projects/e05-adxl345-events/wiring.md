@@ -1,10 +1,26 @@
-# e05 wiring: the DFRobot SEN0032 ADXL345 on the Pi 3 Model B
+# e05 wiring: the accelerometer on the Pi 3 Model B Plus, the IKS5A1 since Friday
+# 20 November 2026 and the retired ADXL345 before it
 
-Project e05 reads the ADXL345 through the kernel's IIO driver on the Raspberry Pi 3 Model B
-Rev 1.2 (1 GB) with the card `eplepi` (Raspberry Pi OS, Debian 13 trixie, user `bing`), over
-SSH. No HAT is seated; the part hangs on seven flying leads. The header of the SEN0032 is
-NOT soldered: every contact is friction, and a part that answers nothing is a contact
-question before it is anything else.
+Project e05 reads its accelerometer on the **Raspberry Pi 3 Model B Plus Rev 1.3** (1 GB)
+with the card `rpi3BV1p2` (Raspberry Pi OS, Debian 13 trixie, kernel 6.18.50+rpt-rpi-v8, user
+`bing`), over SSH.
+
+**The board and the card of this line were corrected on Friday 20 November 2026, both from a
+measurement.** It read "Raspberry Pi 3 Model B Rev 1.2 (1 GB) with the card `eplepi`", and
+neither half held: `cat /proc/device-tree/model` on the board available as board B answers
+`Raspberry Pi 3 Model B Plus Rev 1.3`, and no Pi 3 Model B without the Plus appeared in any
+measurement of this week; `eplepi` is the card of the Pi 4 Model B, measured Thursday
+19 November 2026 and again on Friday the 20th. Both were written from the plan and not from a
+board. **A card name does not identify a board and a model name on a sheet is not a model on a
+bench**: `/proc/device-tree/model` is the authority and it is the first line of any sitting
+here.
+
+No HAT is seated; the shield hangs on four flying leads, where the ADXL345 needed seven.
+
+The paragraphs below about the SEN0032 describe the **retired** part and are kept because the
+chapter still describes it: its header was NOT soldered, so every contact was friction, and a
+part that answers nothing is a contact question before it is anything else. That last sentence
+outlived the part and is worth keeping for the shield too.
 
 ## Pin table
 

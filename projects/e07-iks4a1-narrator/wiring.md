@@ -1,7 +1,10 @@
 # e07 wiring: the X-NUCLEO-IKS4A1 on five flying leads to the Pi 3 Model B Plus
 
-Board: Raspberry Pi 3 Model B Plus, 1 GB, card `eplepi` (Raspberry Pi OS, Debian 13
-trixie, kernel 6.18.50+rpt-rpi-v8, user `bing`), over SSH only; the serial console of
+Board: Raspberry Pi 3 Model B Plus Rev 1.3, 1 GB, card `rpi3BV1p2` (Raspberry Pi OS,
+Debian 13 trixie, kernel 6.18.50+rpt-rpi-v8, user `bing`), over SSH only. **The card was
+written as `eplepi` here and corrected on Friday 20 November 2026**: that card is the Pi 4
+Model B's, measured Thursday 19 November 2026, and the card on board B is `rpi3BV1p2`. The
+board model was right; the serial console of
 this board is dead (pinmux). No HAT is seated. The shield hangs off the header on five
 leads to its Arduino R3 connectors, which is the wiring measured on Wednesday
 30 September 2026 in the Linux volume's project 10.

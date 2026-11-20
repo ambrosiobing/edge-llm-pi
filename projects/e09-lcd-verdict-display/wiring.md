@@ -1,7 +1,18 @@
 # e09 wiring: the 3.5 inch panel on jumpers, the ADXL345 and three LEDs on pins 1 to 26
 
-Board: Raspberry Pi 3 Model B Rev 1.2 (1 GB) with the card `eplepi` (Raspberry Pi OS,
-Debian 13 trixie, user `bing`), reached over SSH. Model: SmolLM2-360M-Instruct Q4_K_M.
+Board: **Raspberry Pi 3 Model B Plus Rev 1.3** (1 GB) with the card `rpi3BV1p2` (Raspberry
+Pi OS, Debian 13 trixie, kernel 6.18.50+rpt-rpi-v8, user `bing`), reached over SSH.
+
+**The board and the card of this line were corrected on Friday 20 November 2026, both from a
+measurement.** It read "Raspberry Pi 3 Model B Rev 1.2 (1 GB) with the card `eplepi`", and
+neither half held: `cat /proc/device-tree/model` on the board available as board B answers
+`Raspberry Pi 3 Model B Plus Rev 1.3`, and no Pi 3 Model B without the Plus appeared in any
+measurement of this week; `eplepi` is the card of the Pi 4 Model B, measured Thursday
+19 November 2026 and again on Friday the 20th. Both were written from the plan and not from a
+board. **A card name does not identify a board and a model name on a sheet is not a model on a
+bench**: `/proc/device-tree/model` is the authority and it is the first line of any sitting
+here.
+ Model: SmolLM2-360M-Instruct Q4_K_M.
 Parts: the Waveshare 3.5 inch RPi LCD (A), the DFRobot SEN0032 ADXL345, three Joy-it
 LK-LED10 modules (green, yellow, red), fourteen female-to-male jumper wires for the
 panel, six female-to-female for the sensor, six for the LEDs.

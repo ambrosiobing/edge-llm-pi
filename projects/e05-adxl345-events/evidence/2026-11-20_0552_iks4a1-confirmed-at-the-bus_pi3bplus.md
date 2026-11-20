@@ -125,5 +125,9 @@ The card was then replaced with rpi3BV1p2 and the bus appeared as `/dev/i2c-1` a
     NOT CHECKED   the rule thresholds. e05 decides in g, below 0.3 and above 2, against
                   the ADXL345's 0.0383 m/s2 per count; the LSM6DSV16X's full scale is
                   selectable and the thresholds have to be read against it
-    NOT RESOLVED  which board e05 and e09 belong to. Their sheets name a Raspberry Pi 3
-                  Model B Rev 1.2; the shield is on a 3 Model B PLUS Rev 1.3
+    RESOLVED      which board e05 and e09 belong to, on Friday 20 November 2026: the
+                  board available as board B answers Raspberry Pi 3 Model B PLUS Rev 1.3
+                  from /proc/device-tree/model, and no Pi 3 Model B without the Plus
+                  appeared in any measurement of this week. Their sheets named a
+                  Rev 1.2 and the card eplepi, which is the Pi 4B's; both were written
+                  from the plan and both are corrected with the measurement beside them
