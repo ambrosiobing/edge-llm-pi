@@ -46,6 +46,30 @@ A seated panel is not an option in either sitting. Its 26-pin socket mates with 
 pins 1 to 26 and its carrier runs over pins 27 to 40 without contacts, so a seated panel
 leaves nothing reachable at all. That fact is in `PITFALLS.md`.
 
+## Board A is not an idle host
+
+**A Freqtrade bot runs on card `eplepi` with a 2.32 GB resident set**, found on Friday
+20 November 2026 at 00:10 by `ps -eo rss,pid,comm --sort=-rss` after e18's latency sitting,
+beside a 132 MB python and a 77 MB node. It had grown from a few hundred megabytes one minute
+after the reboot to 2.3 GB over three and a half hours.
+
+    RSS 2 433 916 kB   PID 842   freqtrade
+
+**Every figure measured on board A shares its CPU and its page cache with that process**, and
+no record of this volume had said so. It does not invalidate e18's clause three, whose four
+arms each ran under the same conditions within a repetition, but it belongs in the conditions
+of any timing figure taken here, and it is a candidate for the part of a run-to-run difference
+that the thermal state does not explain.
+
+**So a sitting on board A begins by reading what else is running**, not only the throttle bits
+and the temperature:
+
+    ps -eo rss,pid,comm --sort=-rss | head -8
+    free -m | head -2
+
+Whether the bot is stopped for a measurement is a decision, not a default. The 8 GB board has
+room for both; the shared CPU is the part that cannot be shared without cost.
+
 ## The image decides, not only the parts
 
 **The "reachable today" column above was written from the parts box and was never checked

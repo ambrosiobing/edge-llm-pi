@@ -93,6 +93,29 @@ they are removed with this record. **A record is
 true at its timestamp and the next record is the one that supersedes it; reading the earlier
 of two records from one day is reading the stale one.**
 
+## AN UNCONTROLLED PROCESS ON THE MEASUREMENT HOST, FOUND AFTER THE SITTING
+
+At 00:10 on Friday 20 November 2026, with the daemon stopped, `free` still read 2677 MB used
+against 955 MB a minute after the reboot. The cause is not this project:
+
+    RSS 2 433 916 kB   PID 842   freqtrade
+    RSS   131 844 kB   PID 885   python
+    RSS    77 388 kB   PID 841   node
+
+**A Freqtrade bot with a 2.32 GB resident set runs on this board and ran through both latency
+sittings**, this one and that of Friday 13 November 2026. It read 955 MB used one minute after
+the reboot because it had just started, and grew to 2.3 GB over the three and a half hours.
+`/run` holds 101 MB, so the daemon's state file is not the cause.
+
+**This does not invalidate the four rows**: all four arms ran under the same conditions within
+each repetition, the within-run spread was 0.088 to 0.803 s, and the model loaded without
+pressure, 5142 MB still available at the end. **What it does is name a confounder that no
+record of this volume had named.** The bot competes for CPU and for page cache with every
+measurement taken on board A, its share during the sitting was not measured, and its footprint
+differed between the two sittings, so it is a candidate for the unexplained part of the
+fifteen per cent above. Whether it is stopped for future sittings is Joseph's decision; what is
+not optional is that it appears in the conditions of any figure measured on this board.
+
 ## WHAT THIS DOES NOT ESTABLISH
 
     established   clause three is MET: four rows, one sitting, begun at a reboot, 0x0 before
@@ -106,5 +129,7 @@ of two records from one day is reading the stale one.**
     NOT SHOWN     that any of the four paths is faster than any other
     NOT EXPLAINED the 2.3 s between this sitting and that of Friday 13 November 2026;
                   throttling covers 4 to 5 points of the fifteen
+    NOT CONTROLLED  a Freqtrade bot with a 2.32 GB resident set on the same board,
+                  through both sittings; its CPU share was never measured
     NOT MEASURED  whether twenty calls per arm fits when the repetitions are spaced
     NOT CLOSED    clause one, the echo, which needs the WS-28164 on card B
