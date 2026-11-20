@@ -68,6 +68,20 @@ Measured on board B, a Raspberry Pi 3 Model B Plus Rev 1.3 with card `rpi3BV1p2`
 **No card of this bench carries an ST IIO driver**, so the reading path is a user-space I2C
 reader or an out-of-tree module build.
 
+
+**And the pre-flight is TWO scans, not one.** Measured Friday 20 November 2026 at 06:05:
+no single mode of `i2cdetect` shows all seven parts of this shield, because two of them answer
+different probes.
+
+    i2cdetect -y 1       expect 1e 38 44 5d 6a 6b and 0x19 only sometimes
+    i2cdetect -y -r 1    expect 19 1e 38 5d 6a 6b and 0x44 never
+
+0x44 is the SHT40AD1B, which takes commands and has no registers: it answers a write probe and
+refuses a read one. 0x19 is the LIS2DUXS12, which answers a read probe and is unreliable on the
+write probe the default mode uses for that address. **Six addresses in either scan is the
+expected result; the positive control is the union of the two.** A sheet that asks for seven in
+one scan sends the reader looking for a contact fault that is not there.
+
 ## Pre-flight, on the Pi 3B+ over SSH
 
 The Pi 3B+ serial console is dead on this bench (the pinmux leaves GPIO14 unmuxed), so SSH is

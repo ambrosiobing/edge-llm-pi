@@ -91,6 +91,20 @@ full scale is selectable, so they have to be read against the new part. And **th
 be named from `/proc/device-tree/model` and not from the card**, because the card name
 `eplepi` appears in four sheets of this volume for four different boards.
 
+
+**And the pre-flight is TWO scans, not one.** Measured Friday 20 November 2026 at 06:05:
+no single mode of `i2cdetect` shows all seven parts of this shield, because two of them answer
+different probes.
+
+    i2cdetect -y 1       expect 1e 38 44 5d 6a 6b and 0x19 only sometimes
+    i2cdetect -y -r 1    expect 19 1e 38 5d 6a 6b and 0x44 never
+
+0x44 is the SHT40AD1B, which takes commands and has no registers: it answers a write probe and
+refuses a read one. 0x19 is the LIS2DUXS12, which answers a read probe and is unreliable on the
+write probe the default mode uses for that address. **Six addresses in either scan is the
+expected result; the positive control is the union of the two.** A sheet that asks for seven in
+one scan sends the reader looking for a contact fault that is not there.
+
 ## The one-HAT rule for this Pi
 
 The panel is this project's HAT, on jumpers rather than seated, and it owns SPI0 CE0 and
