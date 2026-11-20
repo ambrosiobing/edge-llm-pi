@@ -44,6 +44,40 @@ on this board GPIO23 is the MCP2515's interrupt line. So e14 polls the IIO attri
 axes of two bytes each with their register writes is about 1.8 ms of bus time per sample,
 so 50 Hz is about nine percent of the I2C bus and nothing else needs it.
 
+## The IKS4A1 in place of the ADXL345, wired Friday 20 November 2026
+
+Joseph decided on Thursday 19 November 2026 that this project takes the X-NUCLEO-IKS4A1. The
+part that replaces the ADXL345 is **the LSM6DSV16X at 0x6B**, accelerometer and gyroscope,
+identified by `WHO_AM_I` at register `0x0F` reading `0x70` and not by its address, because the
+IKS5A1 puts a different part at that same address.
+
+**Four flying leads, not the five e07's sheet carries.** The fifth is INT1 on header 18 and
+this project polls, so it is not wired.
+
+| Header pin | BCM | Shield pin | Wire colour |
+|---|---|---|---|
+| 1 | 3V3 | CN6 pin 4 (3.3 V) | not recorded |
+| 3 | GPIO2, SDA1 | CN5 pin 9 (D14, SDA) | not recorded |
+| 5 | GPIO3, SCL1 | CN5 pin 10 (D15, SCL) | not recorded |
+| 6 | GND | CN6 pin 6 (GND) | not recorded |
+
+**No collision with the WS-28164**, for the reason this sheet already gives: the HAT claims
+SPI0 and GPIO23 and GPIO24, and leaves GPIO2 and GPIO3 untouched. INT1 on header 18 would be
+the MCP2518FD's interrupt and is excluded, and it is not needed since this project polls.
+
+Measured on board B, a Raspberry Pi 3 Model B Plus Rev 1.3 with card `rpi3BV1p2`, on
+Friday 20 November 2026 at 05:52: `i2cdetect -y 1` answers on exactly seven addresses,
+`19 1e 38 44 5d 6a 6b`, and `i2cget -y 1 0x6b 0x0f` reads `0x70`. The record is
+`projects/e05-adxl345-events/evidence/2026-11-20_0552_iks4a1-confirmed-at-the-bus_pi3bplus.md`.
+
+**Three things this wiring does not settle.** There is **no ST IIO driver on any card of this
+bench**, measured Friday 13 and Thursday 19 November 2026, so the reading path is a user-space
+I2C reader or an out-of-tree module build and not the `--live iio` this project names today.
+The rule thresholds are in g against the ADXL345's 0.0383 m/s2 per count and the LSM6DSV16X's
+full scale is selectable, so they have to be read against the new part. And **the board is to
+be named from `/proc/device-tree/model` and not from the card**, because the card name
+`eplepi` appears in four sheets of this volume for four different boards.
+
 ## What the HAT leaves free, and the one HAT rule for this Pi
 
 With only the two CAN overlays loaded (not the wiki's full block, which adds SPI1 and the

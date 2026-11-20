@@ -13,8 +13,8 @@ recorded in `PITFALLS.md`.
 
 | sitting | host and wiring | projects | reachable today |
 |---|---|---|---|
-| A | Pi 3B, bare header: ADXL345, VL53L4CD, three LED modules | e03, e05 | e03 is done; **e05 no**, it reads a retired part and its replacement needs the other card, see "The image decides" below; **e06 needs the ULD first** |
-| B | Pi 3B, the 3.5 inch panel on eleven jumpers, ADXL345 and LEDs re-pinned | e09 | **no**, e09 runs e05's rule and reads the same retired part, see "The image decides" below |
+| A | Pi 3B, bare header: **the IKS4A1 on four leads** (was the ADXL345), VL53L4CD, three LED modules | e03, e05 | e03 is done; **e05 part yes, driver no**: the IKS4A1 is wired and identified at the bus on Friday 20 November 2026, and no card here carries an ST IIO driver, so what is missing is the reading path and not the part; **e06 needs the ULD first** |
+| B | Pi 3B, the 3.5 inch panel on eleven jumpers, **the IKS4A1 on 17, 3, 5, 9** and LEDs re-pinned | e09 | **part yes, driver no**: the same four leads as sitting A, with 3V3 on 17 and GND on 9 because the panel takes 1 and 6, which this sheet already did for the ADXL345 |
 | C | Pi 4B, no HAT | e04 | needs a second card |
 | D | Pi 4B card B, WS-28164 | e13, e14, e18 | yes |
 | E | Pi 3B+, bare header, IKS4A1 on flying leads | e07 | **no**, three of four drivers are absent on Pi OS trixie, the pressure one the rule reads included; the parts are present and the measurement is not reachable, see e07 evidence of Friday 13 November 2026 |

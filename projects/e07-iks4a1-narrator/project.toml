@@ -17,9 +17,14 @@ binary   = "edgellm-e07"
 # st_magn, st_pressure and st_lsm6dsx are absent from the kernel package and the
 # iio/magnetometer directory does not exist at all; only sht4x is present. The missing
 # pressure part is the one number the rule reads, so the control rule cannot run either,
-# and this is not a question about what the model adds. Unblocking means the Yocto
-# 6.6.63 image where all four are registered, or four out-of-tree modules, or dropping
-# the IIO path for user-space I2C, which would touch the shared io.h and not only e07.
+# and this is not a question about what the model adds. The sentence that stood here, that
+# unblocking means the Yocto 6.6.63 image where all four are registered, was REFUTED on
+# Thursday 19 November 2026: that card's own running kernel has IIO_ST_LSM6DSX,
+# IIO_ST_MAGN_3AXIS and IIO_ST_PRESS all unset, and two readings of 6.6.63-v8 on host
+# raspberrypi3-64 contradict each other, so a kernel version string plus a hostname does
+# not identify an image. What is left is four out-of-tree modules, or dropping the IIO path
+# for user-space I2C, which would touch the shared io.h and not only e07. The shield itself
+# is fine: the IKS4A1 answered on all seven addresses on Friday 20 November 2026.
 blocked_on = "three of four drivers are absent from Pi OS trixie, the pressure one included, and on Thursday 19 November 2026 the Yocto card was measured to have IIO_ST_LSM6DSX, IIO_ST_MAGN_3AXIS and IIO_ST_PRESS all unset as well; no card on this bench carries an ST IIO driver, so it needs an out-of-tree module build or a user-space I2C reader"
 
 [build]
