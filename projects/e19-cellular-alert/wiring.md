@@ -42,45 +42,84 @@ position makes the HAT's logic 5 V on a header whose every pin is a 3.3 V input.
 The SEN0032's header is not soldered, so every contact on the four sensor wires is friction. A
 reading that stops for no reason is a contact, not a driver.
 
-## The IKS4A1 in place of the ADXL345, from Friday 20 November 2026
+## The IKS5A1 in place of the ADXL345, decided Friday 20 November 2026
 
-The part this project reads is **the LSM6DSV16X at 0x6B** on the X-NUCLEO-IKS4A1, identified
-by `WHO_AM_I` at register `0x0F` reading `0x70` and not by its address. **The ADXL345 was
-retired on Saturday 24 October 2026** by decision 138 and this sheet went on naming it for
-four weeks; the substitution was decided for e05, e09 and e14 on Thursday 19 November 2026 and
-this project was not in the list, which was an omission and not a decision.
+Joseph decided on Friday 20 November 2026 that this project takes the **X-NUCLEO-IKS5A1**. The
+decision of Thursday 19 November 2026 named the IKS4A1 and that shield was wired and identified
+at the bus on the morning of the 20th; the allocation changed the same day, and the record of
+both is
+`projects/e05-adxl345-events/evidence/2026-11-20_1012_the-shield-is-the-iks5a1_pi.md`.
 
-    header 1    3V3           shield CN6 pin 4
-    header 3    GPIO2, SDA1   shield CN5 pin 9  (D14)
-    header 5    GPIO3, SCL1   shield CN5 pin 10 (D15)
-    header 6    GND           shield CN6 pin 6
+**The part that replaces the ADXL345 is the LSM6DSO16IS at 0x6B**, accelerometer and gyroscope,
+identified by `WHO_AM_I` at register `0x0F` reading **`0x22`** and not by its address, because
+the IKS4A1 puts a different part at that same address and reads `0x70` there. The two shields
+hold a shared part at swapped addresses, measured Monday 9 November 2026, so **the value is the
+identification and the address is not**.
+
+The shield's other IMU, at 0x6A, reads `0x73`, which is in no driver's table on this bench. It
+is not used. One accelerometer is what this project needs and 0x6B is it.
+
+**Four flying leads, not the five e07's sheet carries.** The fifth is INT1 on header 18 and
+this project polls, so it is not wired.
+
+| Header pin | BCM | Shield pin | Wire colour |
+|---|---|---|---|
+| 1 | 3V3 | CN6 pin 4 (3.3 V) | not recorded |
+| 3 | GPIO2, SDA1 | CN5 pin 9 (D14, SDA) | not recorded |
+| 5 | GPIO3, SCL1 | CN5 pin 10 (D15, SCL) | not recorded |
+| 6 | GND | CN6 pin 6 (GND) | not recorded |
 
 Four leads where the ADXL345 needed seven, because the two straps on pins 17 and 6 that fixed
 0x53 do not exist on a shield. **The HAT question above is unchanged and still decides this**:
 the SIM7070G claims none of GPIO2, GPIO3, pin 1 or pin 6 by its vendor's net list, and whether
 the board in hand carries a pass-through that makes them mechanically reachable is to verify.
 If it does not, the fallback in the paragraph above holds unchanged, with the shield on e05's
-board and the events over the LAN.
+board and the events over the LAN. **This project was not in the substitution list of
+Thursday 19 November 2026** and was found on Friday 20 November 2026 to read the retired part
+with nothing in its manifest saying so.
 
-Measured on board B, a Raspberry Pi 3 Model B Plus Rev 1.3 with card `rpi3BV1p2`, on Friday
-20 November 2026: seven addresses answer and 0x6B reads 0x70. The record is
-`projects/e05-adxl345-events/evidence/2026-11-20_0552_iks4a1-confirmed-at-the-bus_pi3bplus.md`.
-**No card of this bench carries an ST IIO driver**, so the reading path is a user-space I2C
-reader or an out-of-tree module build.
+**The five addresses of this shield**, measured Tuesday 27 October 2026 on a Raspberry Pi 3
+Model B Plus with this same lead plan, by command set and not by address:
 
+    0x19   reg 0x0F = 0x47   LIS2DUXS12; answers i2cdetect -r only
+    0x1e   reg 0x4F = 0x40   LIS2MDL; its WHO_AM_I is at 0x4F and not 0x0F
+    0x5c   reg 0x0F = 0xb4   LPS22DF or LPS28DFW
+    0x6a   reg 0x0F = 0x73   an IMU no kernel here knows; unused
+    0x6b   reg 0x0F = 0x22   LSM6DSO16IS, the part this project reads
 
-**And the pre-flight is TWO scans, not one.** Measured Friday 20 November 2026 at 06:05:
-no single mode of `i2cdetect` shows all seven parts of this shield, because two of them answer
-different probes.
+**Five, not the IKS4A1's seven**: there is nothing at 0x38 or 0x44, and the pressure part sits
+at 0x5C rather than 0x5D. The two shields share only the LIS2MDL at 0x1E.
 
-    i2cdetect -y 1       expect 1e 38 44 5d 6a 6b and 0x19 only sometimes
-    i2cdetect -y -r 1    expect 19 1e 38 5d 6a 6b and 0x44 never
+**The pre-flight is two scans, and 0x19 is why.** Measured on this shield on Friday
+20 November 2026 at 11:23:
 
-0x44 is the SHT40AD1B, which takes commands and has no registers: it answers a write probe and
-refuses a read one. 0x19 is the LIS2DUXS12, which answers a read probe and is unreliable on the
-write probe the default mode uses for that address. **Six addresses in either scan is the
-expected result; the positive control is the union of the two.** A sheet that asks for seven in
-one scan sends the reader looking for a contact fault that is not there.
+    i2cdetect -y 1       19 1e 5c 6a 6b    five
+    i2cdetect -y -r 1       1e 5c 6a 6b    four, no 0x19
+
+**That is the reverse of what the same two modes did on the IKS4A1 five hours earlier**, where
+`-r` showed 0x19 in 2 of 2 scans and the default missed it in 1 of 2, and the reverse of e07's
+table, which records 0x19 as answering `i2cdetect -r` only. Three readings, three different
+behaviours, and one scan per mode cannot settle a responder like that. **So no single mode is
+promised and the control is the union of the two:** five addresses across the pair,
+`19 1e 5c 6a 6b`, which is exactly the survey of Tuesday 27 October 2026.
+
+0x19 is the LIS2DUXS12 and **no project here reads it**, so this is a note on the pre-flight
+and not a blocker. The address that matters is 0x6B.
+
+    i2cget -y 1 0x6b 0x0f    must read 0x22
+
+**Three things this wiring does not settle.** There is **no ST IIO driver on any card of this
+bench**, measured Friday 13 and Thursday 19 November 2026, so the reading path is a user-space
+I2C reader or an out-of-tree module build and not the `--live iio` this project names today.
+The rule thresholds are in g against the ADXL345's 0.0383 m/s2 per count and the LSM6DSO16IS's
+full scale is selectable, so they have to be read against the new part. And **the board is to
+be named from `/proc/device-tree/model` and not from the card**, because the card name
+`eplepi` appears in four sheets of this volume for four different boards.
+
+**One point in this shield's favour and still unverified.** `st_lsm6dsx`'s device table includes
+`lsm6dso16is`, measured Tuesday 27 October 2026, which is this part. Whether it includes the
+IKS4A1's `lsm6dsv16x` is unknown, because the module exists on no card here and `modinfo` could
+not be asked. If the out-of-tree route is ever taken, that is the first thing to measure.
 
 ## Pre-flight, on the Pi 3B+ over SSH
 

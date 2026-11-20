@@ -26,14 +26,15 @@ bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Carg
 # error counter rose and the vibration peak was above 2.00 g in the same minute", and the
 # vibration half reads the ADXL345, retired from the bench plan on Saturday 24 October 2026
 # by decision 138: it scanned empty six times against a positive control and is reachable
-# only by soldering, which this bench rules out. Its replacement is the X-NUCLEO-IKS4A1,
-# wired and identified at the bus on Friday 20 November 2026. The sentence that stood here,
+# only by soldering, which this bench rules out. Its replacement is the X-NUCLEO-IKS5A1,
+# decided Friday 20 November 2026; the IKS4A1 was wired and identified at the bus earlier
+# that same morning and the allocation changed later in the day. The sentence that stood here,
 # that the replacement is readable on the Yocto card and not on trixie, was WITHDRAWN on
 # Thursday 19 November 2026: no card of this bench carries an ST IIO driver at all.
 # The CAN half is clear: mcp251x and mcp251xfd are both in the
 # trixie kernel package, measured Friday 13 November 2026. See "The image decides" in
 # BENCH_SITTINGS.md.
-blocked_on = "the IKS4A1 is wired and identified at the bus on Friday 20 November 2026, four leads, seven addresses, 0x6B reading WHO_AM_I 0x70; what remains is the reading path, because no card of this bench carries an ST IIO driver, measured Friday 13 and Thursday 19 November 2026, so the vibration half needs an out-of-tree module build or a user-space I2C reader; the CAN half is clear and its drivers are present"
+blocked_on = "the shield is the IKS5A1 from Friday 20 November 2026 and the part is its LSM6DSO16IS at 0x6B, WHO_AM_I 0x22; four leads, the same wiring the IKS4A1 was proven on that morning before the allocation changed, and this shield has not been on a bus since Tuesday 27 October 2026; the reading path is the larger gap, because no card of this bench carries an ST IIO driver, measured Friday 13 and Thursday 19 November 2026, so the vibration half needs an out-of-tree module build or a user-space I2C reader; the CAN half is clear and its drivers are present"
 
 [run]
 # Two processes. The daemon first, then the service; the service reconnects by itself if

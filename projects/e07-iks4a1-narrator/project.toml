@@ -25,6 +25,13 @@ binary   = "edgellm-e07"
 # not identify an image. What is left is four out-of-tree modules, or dropping the IIO path
 # for user-space I2C, which would touch the shared io.h and not only e07. The shield itself
 # is fine: the IKS4A1 answered on all seven addresses on Friday 20 November 2026.
+# And from that day the IKS4A1 is THIS project's shield alone. Joseph moved the four
+# accelerometer projects e05, e09, e14 and e19 to the IKS5A1 on Friday 20 November 2026,
+# which frees this one, and this is the only project that needs the two parts the IKS5A1
+# does not carry, the STTS22H at 0x38 and the SHT40AD1B at 0x44. So the allocation leaves
+# no project without a shield, and its cost falls on e11, which reads the IKS5A1 on the
+# Nucleo and now shares it. The record is
+# projects/e05-adxl345-events/evidence/2026-11-20_1012_the-shield-is-the-iks5a1_pi.md.
 blocked_on = "three of four drivers are absent from Pi OS trixie, the pressure one included, and on Thursday 19 November 2026 the Yocto card was measured to have IIO_ST_LSM6DSX, IIO_ST_MAGN_3AXIS and IIO_ST_PRESS all unset as well; no card on this bench carries an ST IIO driver, so it needs an out-of-tree module build or a user-space I2C reader"
 
 [build]

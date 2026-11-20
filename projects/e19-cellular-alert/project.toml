@@ -5,7 +5,7 @@ title    = "Event-driven cellular alert composer"
 language = "C"
 variant  = "C"
 board    = "Raspberry Pi 3 Model B Plus, card eplepi"
-hat      = "Waveshare SIM7070G Cat-M, NB-IoT and GPRS HAT. The DFRobot SEN0032 ADXL345 it named on header pins 3 and 5 is RETIRED, decision 138 of Saturday 24 October 2026; from Friday 20 November 2026 the part is the X-NUCLEO-IKS4A1 on four flying leads, reading its LSM6DSV16X at 0x6B. See wiring.md"
+hat      = "Waveshare SIM7070G Cat-M, NB-IoT and GPRS HAT. The DFRobot SEN0032 ADXL345 it named on header pins 3 and 5 is RETIRED, decision 138 of Saturday 24 October 2026; from Friday 20 November 2026 the part is the X-NUCLEO-IKS5A1 on four flying leads, reading its LSM6DSO16IS at 0x6B whose WHO_AM_I is 0x22. See wiring.md"
 # BLOCKED on two things, and the second was unrecorded until Friday 20 November 2026.
 # First the SIM card, which sitting I in BENCH_SITTINGS.md has wanted since it was written.
 # Second the accelerometer: this project read the ADXL345, retired on Saturday 24 October
@@ -16,7 +16,7 @@ hat      = "Waveshare SIM7070G Cat-M, NB-IoT and GPRS HAT. The DFRobot SEN0032 A
 # projects and not three. The shield answers on all seven addresses, measured Friday
 # 20 November 2026, and the reading path is the open part for all four, because no card of
 # this bench carries an ST IIO driver.
-blocked_on = "a SIM card, and the accelerometer: the ADXL345 is retired and its replacement, the IKS4A1, has no driver on any card of this bench; the shield is wired and identified at the bus on Friday 20 November 2026 and the reading path is what is missing"
+blocked_on = "a SIM card, and the accelerometer: the ADXL345 is retired and its replacement is the IKS5A1 from Friday 20 November 2026, reading its LSM6DSO16IS at 0x6B; that shield has not been on a bus since Tuesday 27 October 2026, and no card of this bench carries an ST IIO driver, so the reading path is the larger gap"
 model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
 grammar  = "grammars/e19_message.gbnf"
 prompt   = "projects/e19-cellular-alert/prompt.txt"

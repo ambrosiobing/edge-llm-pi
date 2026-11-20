@@ -184,7 +184,7 @@ Joseph's catalogue of Wednesday 14 October 2026 lists the ways of putting an inf
 | R4 | Rust | ONNX Runtime or TensorFlow Lite | Rust over those runtimes | not evaluated; depends on F or H being reopened first |
 | R5 | Rust and C | llama.cpp | a C ABI boundary, `edgellm_decide()` | built in e18, the boundary either side can replace |
 | R6 | Rust | custom kernels | own quantised kernels | not evaluated; justified only by a measured gap on the Allwinner H3's NEON that llama.cpp's kernels leave in e01 |
-| R7 | Rust | llama.cpp | one static executable | built in e05, with `industrial-io` for the ADXL345 |
+| R7 | Rust | llama.cpp | one static executable | built in e05, with `industrial-io` for the accelerometer; the ADXL345 is RETIRED by decision 138 of Saturday 24 October 2026 and the part is the IKS5A1's LSM6DSO16IS at 0x6B from Friday 20 November 2026, and no card of this bench carries an ST IIO driver, so the reader is to be written |
 | R8 | Rust or Python | llama.cpp elsewhere | remote client | built in e15 (R8-shaped in Python, against a local server) and e20 |
 | candle | Rust | candle, a Rust-native engine | no C toolchain in the image | not evaluated; named in e05's Future and extra exercises, justified by a Rust project whose image must carry no C toolchain |
 
@@ -278,14 +278,15 @@ A 40-pin HAT owns the header it sits on. The 3.5 inch LCD owns it twice over, an
 | Pi 3B+ | Explorer700 | e08 |
 | Pi 3B+ | SIM7070G | e17, e19 |
 | Pi 3B+ | bare header, IKS4A1 on flying leads at pins 3 and 5, INT1 on pin 18 | e07 |
-| Pi 3B | bare header: ADXL345 at 0x53 and 100 kHz, VL53L4CD, LEDs on BCM 17, 27, 22 | e03, e05, e06 |
-| Pi 3B | 3.5 inch LCD on eleven jumpers, never seated; the panel, the ADXL345 and the three LED modules share pins 1 to 26 | e09 |
+| Pi 3B | bare header: **the IKS5A1 on four leads at pins 1, 3, 5, 6** (the ADXL345 is RETIRED by decision 138 of Saturday 24 October 2026 and the part is the IKS5A1's LSM6DSO16IS at 0x6B from Friday 20 November 2026), VL53L4CD, LEDs on BCM 17, 27, 22 | e03, e05, e06 |
+| Pi 3B | 3.5 inch LCD on eleven jumpers, never seated; the panel, **the IKS5A1 on 17, 3, 5, 9** and the three LED modules share pins 1 to 26 | e09 |
 | Pi 3B | SIM7020E, with the PPK2 metering the module | e16 |
 | NanoPi NEO Air | 24-pin header, SmolLM2-135M only | e01 benchmark, e03 variant |
 
 ### Sensors, sidecars and instruments
 
-- **have:** DFRobot SEN0032 ADXL345 at 0x53: CS strapped to 3V3, SDO to GND, the bus at 100 kHz on the current leads (400 kHz answered nothing on Friday 9 October 2026), the header unsoldered so every contact is friction, the part known good; VCC pin 1, GND pin 9, SDA pin 3, SCL pin 5, CS pin 17, SDO pin 6, INT1 pin 16 (GPIO23). Header pins 3 and 5 carry the Pi's fitted 1.8 kOhm pull-ups, so no resistor is bought.
+- **absent:** DFRobot SEN0032 ADXL345 at 0x53: RETIRED, by decision 138 of Saturday 24 October 2026. It scanned completely empty six times against a positive control taken twenty minutes earlier, and the only route to it is a soldering iron and an 8-pin header, which this bench rules out. The sentence that stood here, "the part known good", was true on Friday 9 October 2026 and false from that decision on, and it stood for four weeks. Its wiring is kept because four chapters still describe it: CS strapped to 3V3, SDO to GND, the bus at 100 kHz on the current leads (400 kHz answered nothing on Friday 9 October 2026), the header unsoldered so every contact is friction; VCC pin 1, GND pin 9, SDA pin 3, SCL pin 5, CS pin 17, SDO pin 6, INT1 pin 16 (GPIO23).
+- **have:** X-NUCLEO-IKS5A1, the replacement for the four, on four flying leads: decided on Friday 20 November 2026 for e05, e09, e14 and e19, reading its LSM6DSO16IS at 0x6B whose `WHO_AM_I` is `0x22`. Its five parts were measured Tuesday 27 October 2026 and it carries nothing at 0x38 or 0x44. **The allocation leaves the IKS4A1 to [Project 7](07-iks4a1-climate-and-motion-narrator.md) alone**, which is the only project needing those two parts, and makes [Project 11](11-nucleo-cdc-sensor-hub-narrator.md) share this one with the four. Four leads, not the five e07 names, because none of the four reads INT1: 3V3 to CN6 pin 4, SDA to CN5 pin 9, SCL to CN5 pin 10, GND to CN6 pin 6, from header 1, 3, 5, 6 or from 17, 3, 5, 9 where a panel takes pins 1 and 6. The part read is the LSM6DSV16X at 0x6B, named by `WHO_AM_I` reading `0x70`. Header pins 3 and 5 carry the Pi's fitted 1.8 kOhm pull-ups, so no resistor is bought. **No single `i2cdetect` mode shows all seven of its parts**: the default misses 0x19 intermittently and `-r` misses 0x44 always, so the control is the union of the two scans.
 - **have:** Adafruit VL53L4CD, single-zone time of flight, 1 to 1300 mm, I2C, arrived Tuesday 6 October 2026; its ST ULD licence is to verify in e06.
 - **have:** X-NUCLEO-IKS4A1 on the Pi I2C bus via flying leads, measured Wednesday 30 September 2026: 0x1E LIS2MDL, 0x38 STTS22H, 0x44 SHT40, 0x5d LPS22DF, 0x6a LSM6DSO16IS, 0x6b LSM6DSV16X; mainline IIO drivers bind through the Linux volume's project 10 overlay.
 - **have:** X-NUCLEO-IKS5A1, read through the NUCLEO-H7A3ZI-Q over USB CDC as in the kit labs; its ISM6HG256X supplies the high-g events of e11.
@@ -318,21 +319,21 @@ In reading order, which is also the building order. e01 and e02 define the instr
 | e02 | The decision loop: grammar, state reuse, control harness | C | C, plain C over llama.h; A and B priced beside it | Pi 4B, no HAT | Qwen2.5-0.5B |
 | e03 | LED status explainer | C | C, libgpiod 2 | Pi 3B, LEDs on BCM 17, 27, 22; NanoPi variant | SmolLM2-360M; 135M on the NanoPi |
 | e04 | Pi thermal and throttle narrator | C client | D, llama-server over HTTP, libcurl | Pi 4B, no HAT | SmolLM2-360M |
-| e05 | ADXL345 event reporter | Rust | R7, one static executable over llama-cpp-2 and industrial-io | Pi 3B, ADXL345 on pins 3 and 5, INT1 on pin 16 | SmolLM2-360M |
-| e06 | VL53L4CD "too close" explainer | C | C, with the ST ULD in C | Pi 3B, VL53L4CD beside the ADXL345 | SmolLM2-360M or Qwen2.5-0.5B |
+| e05 | ADXL345 event reporter | Rust | R7, one static executable over llama-cpp-2 and industrial-io | Pi 3B, IKS5A1 on pins 1, 3, 5, 6 | SmolLM2-360M |
+| e06 | VL53L4CD "too close" explainer | C | C, with the ST ULD in C | Pi 3B, VL53L4CD beside the IKS5A1 | SmolLM2-360M or Qwen2.5-0.5B |
 | e07 | IKS4A1 climate and motion narrator | C++ | B, C++17 over the C API | Pi 3B+, IKS4A1 on flying leads | Qwen2.5-0.5B |
 | e08 | Explorer700 console with a model | C | O, console plus a separate inference daemon over a Unix socket | Pi 3B+, Explorer700 | SmolLM2-360M |
-| e09 | LCD prompt and verdict display | C++ | A, linked directly, DRM dumb buffer | Pi 3B, 3.5 inch LCD, ADXL345 and LEDs on pins 1 to 26 | SmolLM2-360M |
+| e09 | LCD prompt and verdict display | C++ | A, linked directly, DRM dumb buffer | Pi 3B, 3.5 inch LCD, IKS5A1 and LEDs on pins 1 to 26 | SmolLM2-360M |
 | e10 | MCC 118 voltage event labeller | C | C, daqhats C library | Pi 4B card A, MCC 118, Nucleo DAC on CH0 | Qwen2.5-0.5B |
 | e11 | Nucleo CDC sensor hub narrator | C | C, tinycbor, the Linux volume's project 12 hub | Pi 4B, Nucleo plus IKS5A1 over USB CDC | Qwen2.5-0.5B |
 | e12 | STWIN.box vibration band reporter | C++ | A, with a C++ FFT | Pi 4B, STWIN.box over USB-C, DSI 7 inch | Qwen2.5-0.5B or 1.5B |
 | e13 | CAN honesty agent | Rust | R1, Rust main over llama-cpp-2 and socketcan | Pi 4B card B, WS-28164, two jumper wires | Qwen2.5-0.5B |
-| e14 | Joint monitor: CAN plus accelerometer | Rust | R2, the e13 service with llama.cpp in a separate process | Pi 4B card B, WS-28164 plus ADXL345 | Qwen2.5-0.5B |
+| e14 | Joint monitor: CAN plus accelerometer | Rust | R2, the e13 service with llama.cpp in a separate process | Pi 4B card B, WS-28164 plus IKS5A1 | Qwen2.5-0.5B |
 | e15 | ESP32 sidecar with a bounded pattern proposal | Python | R8-shaped: llama-cpp-python, ppk2-api, pyserial | Pi 4B or 3B, ESP32 over USB, PPK2 in series at 3.3 V | Qwen2.5-0.5B |
 | e16 | NB-IoT sleep interval from measured microamps | C | C on the logged PPK2 profile; the capture is a Python tool | Pi 3B, SIM7020E, PPK2 metering the module | SmolLM2-360M |
 | e17 | Cellular status summariser | C | C, termios AT parser | Pi 3B+, SIM7070G | Qwen2.5-0.5B |
 | e18 | Mini industrial serial logger | Rust service, C daemon | R3 and R5, a C ABI, `edgellm_decide` | Pi 4B card B, WS-28164 RS485 loopback and RS232 | Qwen2.5-0.5B |
-| e19 | Event-driven cellular alert composer | C | C, reusing e17's parser and the ADXL345 driver | Pi 3B+, SIM7070G plus ADXL345 | Qwen2.5-0.5B |
+| e19 | Event-driven cellular alert composer | C | C, reusing e17's parser and the accelerometer reader | Pi 3B+, SIM7070G plus IKS5A1 | Qwen2.5-0.5B |
 | e20 | "What should I measure next" and the scorecard | Python | P and R8, a Python client to llama-server on skyhorizon's WSL | Pi 4B, no HAT, network | Qwen2.5-1.5B, remote |
 
 ### What each model decides, what each rule says, and what can fail

@@ -23,14 +23,15 @@ test    = "ctest --test-dir build -R 'rules_test|edgellm-e09-oracle' --output-on
 # BLOCKED, recorded Friday 13 November 2026. This project's control rule is e05's and
 # reads the ADXL345, a part retired from the bench plan on Saturday 24 October 2026 by
 # decision 138 after it scanned empty six times against a positive control, and reachable
-# only by soldering, which this bench rules out. The replacement is the X-NUCLEO-IKS4A1,
-# wired and identified at the bus on Friday 20 November 2026. The sentence that stood here,
+# only by soldering, which this bench rules out. The replacement is the X-NUCLEO-IKS5A1,
+# decided Friday 20 November 2026; the IKS4A1 was wired and identified at the bus earlier
+# that same morning and the allocation changed later in the day. The sentence that stood here,
 # that the shield is readable on the Yocto 6.6.63 card and not on trixie, was WITHDRAWN on
 # Thursday 19 November 2026: the Yocto card has IIO_ST_LSM6DSX unset as well, so NO card of
 # this bench binds any accelerometer through IIO. See "The image decides" and "Board A is not
 # an idle host" in BENCH_SITTINGS.md. The panel and touch half of this project is unaffected
 # and its drivers were not surveyed.
-blocked_on = "the IKS4A1 is wired and identified at the bus on Friday 20 November 2026, four leads, seven addresses, 0x6B reading WHO_AM_I 0x70; what remains is the reading path, because no card of this bench carries an ST IIO driver, measured Friday 13 and Thursday 19 November 2026, so this project needs an out-of-tree module build or a user-space I2C reader in place of its --live iio"
+blocked_on = "the shield is the IKS5A1 from Friday 20 November 2026 and the part is its LSM6DSO16IS at 0x6B, WHO_AM_I 0x22; four leads, the same wiring the IKS4A1 was proven on that morning before the allocation changed, and this shield has not been on a bus since Tuesday 27 October 2026; the reading path is the larger gap, because no card of this bench carries an ST IIO driver, measured Friday 13 and Thursday 19 November 2026, so this project needs an out-of-tree module build or a user-space I2C reader in place of its --live iio"
 
 [run]
 replay = "build/projects/e09-lcd-verdict-display/edgellm-e09 --project e09 --replay projects/e09-lcd-verdict-display/replay/adxl345_200.csv --grammar projects/e09-lcd-verdict-display/grammar.gbnf --prompt projects/e09-lcd-verdict-display/prompt.txt --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --state /tmp/e09.state --log projects/e09-lcd-verdict-display/evidence/e09_replay.csv --panel-log projects/e09-lcd-verdict-display/evidence/e09_replay_panel.csv"
