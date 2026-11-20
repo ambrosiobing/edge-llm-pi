@@ -151,6 +151,21 @@ be named from `/proc/device-tree/model` and not from the card**, because the car
 IKS4A1's `lsm6dsv16x` is unknown, because the module exists on no card here and `modinfo` could
 not be asked. If the out-of-tree route is ever taken, that is the first thing to measure.
 
+
+**And the IKS4A1 is not deleted from this bench.** It hung on the same four leads, on the same
+board and card, at 05:52 on Friday 20 November 2026, five hours before this shield, and it
+answered on seven addresses:
+
+    0x19 LIS2DUXS12    0x1E LIS2MDL    0x38 STTS22H    0x44 SHT40AD1B
+    0x5D LPS22DF       0x6A LSM6DSO16IS                0x6B LSM6DSV16X, WHO_AM_I 0x70
+
+That measurement stands in its own record,
+`projects/e05-adxl345-events/evidence/2026-11-20_0552_iks4a1-confirmed-at-the-bus_pi3bplus.md`,
+and from that day the shield is e07's, the one project needing the STTS22H and the SHT40AD1B.
+**If the module question goes the other way** and `st_lsm6dsx` turns out to know `lsm6dsv16x`
+rather than only `lsm6dso16is`, this sheet comes back to the IKS4A1 and the four leads do not
+change: only the address to read from and the value to expect.
+
 ## Pre-flight, on the Pi 3 over SSH
 
 Contacts first, then the driver, then the attributes the loop will read.
