@@ -42,6 +42,32 @@ position makes the HAT's logic 5 V on a header whose every pin is a 3.3 V input.
 The SEN0032's header is not soldered, so every contact on the four sensor wires is friction. A
 reading that stops for no reason is a contact, not a driver.
 
+## The IKS4A1 in place of the ADXL345, from Friday 20 November 2026
+
+The part this project reads is **the LSM6DSV16X at 0x6B** on the X-NUCLEO-IKS4A1, identified
+by `WHO_AM_I` at register `0x0F` reading `0x70` and not by its address. **The ADXL345 was
+retired on Saturday 24 October 2026** by decision 138 and this sheet went on naming it for
+four weeks; the substitution was decided for e05, e09 and e14 on Thursday 19 November 2026 and
+this project was not in the list, which was an omission and not a decision.
+
+    header 1    3V3           shield CN6 pin 4
+    header 3    GPIO2, SDA1   shield CN5 pin 9  (D14)
+    header 5    GPIO3, SCL1   shield CN5 pin 10 (D15)
+    header 6    GND           shield CN6 pin 6
+
+Four leads where the ADXL345 needed seven, because the two straps on pins 17 and 6 that fixed
+0x53 do not exist on a shield. **The HAT question above is unchanged and still decides this**:
+the SIM7070G claims none of GPIO2, GPIO3, pin 1 or pin 6 by its vendor's net list, and whether
+the board in hand carries a pass-through that makes them mechanically reachable is to verify.
+If it does not, the fallback in the paragraph above holds unchanged, with the shield on e05's
+board and the events over the LAN.
+
+Measured on board B, a Raspberry Pi 3 Model B Plus Rev 1.3 with card `rpi3BV1p2`, on Friday
+20 November 2026: seven addresses answer and 0x6B reads 0x70. The record is
+`projects/e05-adxl345-events/evidence/2026-11-20_0552_iks4a1-confirmed-at-the-bus_pi3bplus.md`.
+**No card of this bench carries an ST IIO driver**, so the reading path is a user-space I2C
+reader or an out-of-tree module build.
+
 ## Pre-flight, on the Pi 3B+ over SSH
 
 The Pi 3B+ serial console is dead on this bench (the pinmux leaves GPIO14 unmuxed), so SSH is
