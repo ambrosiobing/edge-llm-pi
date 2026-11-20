@@ -16,7 +16,7 @@ hat      = "Waveshare SIM7070G Cat-M, NB-IoT and GPRS HAT. The DFRobot SEN0032 A
 # projects and not three. The shield answers on all seven addresses, measured Friday
 # 20 November 2026, and the reading path is the open part for all four, because no card of
 # this bench carries an ST IIO driver.
-blocked_on = "a SIM card, and the accelerometer: the ADXL345 is retired and its replacement is the IKS5A1 from Friday 20 November 2026, reading its LSM6DSO16IS at 0x6B; that shield has not been on a bus since Tuesday 27 October 2026, and no card of this bench carries an ST IIO driver, so the reading path is the larger gap"
+blocked_on = "a SIM card, and the accelerometer: the ADXL345 is retired and its replacement is the IKS5A1 from Friday 20 November 2026, reading its LSM6DSO16IS at 0x6B; the shield was on a bus and read gravity on Friday 20 November 2026, and st_lsm6dsx builds out of tree and binds, so the reading path works and the SIM card is what is left"
 model    = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
 grammar  = "grammars/e19_message.gbnf"
 prompt   = "projects/e19-cellular-alert/prompt.txt"
@@ -43,7 +43,19 @@ stub   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --replay p
 # The live run needs the IIO device of the Linux volume's project 5 overlay and, for a
 # send, the modem's AT device and a destination number. Without --modem the loop
 # composes and checks and sends nothing, which is the state until a SIM is fitted.
-live   = "build/projects/e19-cellular-alert/edgellm-e19 --project e19 --live iio /sys/bus/iio/devices/iio:device0:0.1 --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --modem /dev/ttyUSB2:115200 --sms-to +4300000000000 --log projects/e19-cellular-alert/evidence/e19_live.csv --alerts projects/e19-cellular-alert/evidence/e19_live_alerts.csv"
+# The live line resolves the IIO device by its NAME and not by its number, which is
+# what e07's chapter has said since it was written and what the other sheets had not done.
+# Measured Friday 20 November 2026 on board B: st_lsm6dsx creates TWO devices for this part
+# and the accelerometer was iio:device1 while iio:device0 was the gyroscope, so the number
+# that stood here would have handed this project degrees per second where its rule decides
+# on g. The number depends on probe order and is not an identity.
+# TWO SETTINGS MUST BE MADE BEFORE A RUN, and wiring.md's pre-flight makes them:
+#   the range to +-4 g, because at the default +-2 g a 2 g threshold sits on the 16-bit
+#   rail and cannot be exceeded; and the output rate at or above the reader's poll
+#   interval, for which there is no exact 50 Hz or 10 Hz and 52 and 12.5 are the nearest
+#   above. The record is
+#   evidence/2026-11-20_1223_the-first-reading-and-the-rail_pi3bplus.md
+live   = "ACC=$(for d in /sys/bus/iio/devices/iio:device*; do grep -qx lsm6dso16is_accel $d/name && echo $d; done); build/projects/e19-cellular-alert/edgellm-e19 --project e19 --live iio $ACC:0.1 --grammar projects/e19-cellular-alert/grammar.gbnf --prompt projects/e19-cellular-alert/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --modem /dev/ttyUSB2:115200 --sms-to +4300000000000 --log projects/e19-cellular-alert/evidence/e19_live.csv --alerts projects/e19-cellular-alert/evidence/e19_live_alerts.csv"
 
 [oracle]
 expected = "tests/oracle/e19.expected.csv"

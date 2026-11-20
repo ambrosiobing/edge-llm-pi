@@ -34,7 +34,7 @@ bench   = "cargo build --release --manifest-path projects/e14-joint-monitor/Carg
 # The CAN half is clear: mcp251x and mcp251xfd are both in the
 # trixie kernel package, measured Friday 13 November 2026. See "The image decides" in
 # BENCH_SITTINGS.md.
-blocked_on = "the shield is the IKS5A1 from Friday 20 November 2026 and the part is its LSM6DSO16IS at 0x6B, WHO_AM_I 0x22; four leads, the same wiring the IKS4A1 was proven on that morning before the allocation changed, and this shield has not been on a bus since Tuesday 27 October 2026; the reading path is the larger gap, because no card of this bench carries an ST IIO driver, measured Friday 13 and Thursday 19 November 2026, so the vibration half needs an out-of-tree module build or a user-space I2C reader; the CAN half is clear and its drivers are present"
+blocked_on = "the shield is the IKS5A1 from Friday 20 November 2026 and the part is its LSM6DSO16IS at 0x6B, WHO_AM_I 0x22; four leads, the same wiring the IKS4A1 was proven on that morning before the allocation changed, and this shield has not been on a bus since Tuesday 27 October 2026; the reading path WORKS as of Friday 20 November 2026: no card of this bench carries an ST IIO driver in its package, and st_lsm6dsx builds out of tree against the installed headers in one make, binds to 0x6B and produces an IIO accelerometer, so --live iio stays as written and what remains is card B, whose CAN overlays this card lacks, and a run; the CAN half is clear and its drivers are present"
 
 [run]
 # Two processes. The daemon first, then the service; the service reconnects by itself if
@@ -42,7 +42,19 @@ blocked_on = "the shield is the IKS5A1 from Friday 20 November 2026 and the part
 daemon = "target/release/edgellm-e14-engine-daemon --socket /run/edgellm/e14-engine.sock --grammar projects/e14-joint-monitor/grammar.gbnf --prompt projects/e14-joint-monitor/prompt.txt --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --n-predict 64 --n-ctx 512 --threads 4"
 replay = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /run/edgellm/e14-engine.sock --log projects/e14-joint-monitor/evidence/e14_run.csv"
 stub   = "target/debug/edgellm-e14 --project e14 --replay projects/e14-joint-monitor/replay/joint_100min.csv --socket /tmp/e14-engine.sock --log /tmp/e14_stub.csv --timeout-ms 2000"
-live   = "target/release/edgellm-e14 --project e14 --live can0 --iio /sys/bus/iio/devices/iio:device0 --socket /run/edgellm/e14-engine.sock --minute-s 60 --sample-hz 50 --log projects/e14-joint-monitor/evidence/e14_run.csv"
+# The live line resolves the IIO device by its NAME and not by its number, which is
+# what e07's chapter has said since it was written and what the other sheets had not done.
+# Measured Friday 20 November 2026 on board B: st_lsm6dsx creates TWO devices for this part
+# and the accelerometer was iio:device1 while iio:device0 was the gyroscope, so the number
+# that stood here would have handed this project degrees per second where its rule decides
+# on g. The number depends on probe order and is not an identity.
+# TWO SETTINGS MUST BE MADE BEFORE A RUN, and wiring.md's pre-flight makes them:
+#   the range to +-4 g, because at the default +-2 g a 2 g threshold sits on the 16-bit
+#   rail and cannot be exceeded; and the output rate at or above the reader's poll
+#   interval, for which there is no exact 50 Hz or 10 Hz and 52 and 12.5 are the nearest
+#   above. The record is
+#   evidence/2026-11-20_1223_the-first-reading-and-the-rail_pi3bplus.md
+live   = "ACC=$(for d in /sys/bus/iio/devices/iio:device*; do grep -qx lsm6dso16is_accel $d/name && echo $d; done); target/release/edgellm-e14 --project e14 --live can0 --iio $ACC --socket /run/edgellm/e14-engine.sock --minute-s 60 --sample-hz 50 --log projects/e14-joint-monitor/evidence/e14_run.csv"
 
 [oracle]
 expected = "tests/oracle/e14.expected.csv"

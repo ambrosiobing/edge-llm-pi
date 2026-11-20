@@ -87,12 +87,14 @@ readings report `uname -r` as `6.6.63-v8` and the hostname as `raspberrypi3-64`,
 kernel version string plus a hostname does not identify an image** and whether these are two
 cards or one card written twice is an open question for the bench.
 
-What follows for this project: **the IIO path is unavailable for any accelerometer on either
-card**, the ADXL345 and both shields alike, so the substitution cannot be completed by
-choosing a different part. It needs either an out-of-tree module build against the running
-kernel's headers or a user-space I2C reader, and the second changes what `--live iio` means
-and touches the shared `io.h` backend. The record is
-`evidence/2026-11-19_1614_no-st-driver-anywhere_pi3bplus-rpi3-64.md`.
+What follows for this project: **no kernel package on this bench carries an IIO driver for any
+accelerometer**, the ADXL345 and both shields alike, so the substitution could not be completed
+by choosing a different part. **The out-of-tree build settled it on Friday 20 November 2026**:
+`st_lsm6dsx` built in one `make` against the installed headers, bound to 0x6B and produced an
+IIO accelerometer, so `--live iio` stays as written and the shared `io.h` is untouched. See
+"The reading path" below. The records are
+`evidence/2026-11-19_1614_no-st-driver-anywhere_pi3bplus-rpi3-64.md` and the two of
+Friday 20 November 2026 stamped 1214 and 1223.
 
 ## The IKS5A1 in place of the ADXL345, decided Friday 20 November 2026
 
@@ -181,6 +183,60 @@ and from that day the shield is e07's, the one project needing the STTS22H and t
 **If the module question goes the other way** and `st_lsm6dsx` turns out to know `lsm6dsv16x`
 rather than only `lsm6dso16is`, this sheet comes back to the IKS4A1 and the four leads do not
 change: only the address to read from and the value to expect.
+
+
+## The reading path, measured Friday 20 November 2026
+
+**The driver is not in the kernel package and is built out of tree.** Every prerequisite was
+already on both cards: `linux-headers-rpi-v8` matching the running kernel, and `CONFIG_IIO=m`,
+`IIO_BUFFER=y`, `IIO_KFIFO_BUF=m`, `IIO_TRIGGER=y`, `REGMAP_I2C=m`. The absence of the driver
+was one line of a kernel package's configuration and nothing about this bench. The record is
+`projects/e05-adxl345-events/evidence/2026-11-20_1214_the-driver-builds-out-of-tree_pi4b.md`.
+
+    U=https://raw.githubusercontent.com/raspberrypi/linux/rpi-6.18.y/drivers/iio/imu
+    mkdir -p /tmp/stlsm; cd /tmp/stlsm
+    for f in st_lsm6dsx.h st_lsm6dsx_core.c st_lsm6dsx_buffer.c \
+             st_lsm6dsx_shub.c st_lsm6dsx_i2c.c st_lsm6dsx_spi.c; do
+      curl -fsSL -O $U/st_lsm6dsx/$f
+    done
+    printf '%s\n' \
+      'st_lsm6dsx-y := st_lsm6dsx_core.o st_lsm6dsx_buffer.o st_lsm6dsx_shub.o' \
+      'obj-m += st_lsm6dsx.o' 'obj-m += st_lsm6dsx_i2c.o' \
+      'obj-m += st_lsm6dsx_spi.o' > Makefile
+    make -C /lib/modules/$(uname -r)/build M=/tmp/stlsm modules
+
+Then load, instantiate and configure. **`insmod` and not `modprobe`**, because the modules are
+not under `/lib/modules` and have no dependency file; the core first and the bus second:
+
+    insmod ./st_lsm6dsx.ko; insmod ./st_lsm6dsx_i2c.ko
+    echo lsm6dso16is 0x6b > /sys/bus/i2c/devices/i2c-1/new_device
+    ACC=$(for d in /sys/bus/iio/devices/iio:device*; do \
+            grep -qx lsm6dso16is_accel $d/name && echo $d; done)
+    echo 0.001196411 > $ACC/in_accel_scale
+    echo 52 > $ACC/sampling_frequency
+    for a in x y z; do cat $ACC/in_accel_${a}_raw; done
+
+**Resolve the device by its `name` and never by its number.** The driver creates TWO devices
+for this part, and on board B the accelerometer was `iio:device1` while `iio:device0` was the
+gyroscope. The number follows probe order. e07's chapter has said this since it was written;
+four sheets had fixed the number and would have read degrees per second into a rule that
+decides on g.
+
+**The two writes are not optional.** At the default range of +-2 g a 2 g threshold sits at
+32786 counts against a 16-bit rail of 32768, so it **cannot be exceeded and a TAP rule can
+never fire**. At +-4 g it sits at 16393 of 32768 and the 0.3 g threshold still has 2459 counts
+beneath it. And the output rate must exceed the reader's poll interval: the part offers
+12.5, 26, 52, 104, 208, 416 and 833 Hz, so there is no exact 50 or 10, and 52 and 12.5 are the
+nearest above.
+
+**At rest one axis reads about 1 g and the other two near zero.** Measured with the shield flat:
+8387, 67, -164 counts at +-4 g, which is 1.0235 g by magnitude against 9.80665, and gravity read
+1.0215 g at the other range, so the conversion holds across ranges to two parts in a thousand.
+Noise over three reads was 11 counts on the loaded axis, 1.3 mg, against a 0.3 g threshold.
+**A value that does not change while the shield is moved is a contact and not a sensor.**
+
+Everything above lives in `/tmp` and in sysfs, and a reboot clears all of it. What a card keeps
+is a change to that card's state and is recorded in `BENCH_SITTINGS.md` when it is made.
 
 ## Pre-flight, on the Pi 3 over SSH
 

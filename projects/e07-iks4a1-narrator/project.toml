@@ -22,8 +22,11 @@ binary   = "edgellm-e07"
 # Thursday 19 November 2026: that card's own running kernel has IIO_ST_LSM6DSX,
 # IIO_ST_MAGN_3AXIS and IIO_ST_PRESS all unset, and two readings of 6.6.63-v8 on host
 # raspberrypi3-64 contradict each other, so a kernel version string plus a hostname does
-# not identify an image. What is left is four out-of-tree modules, or dropping the IIO path
-# for user-space I2C, which would touch the shared io.h and not only e07. The shield itself
+# not identify an image. **The out-of-tree route is measured and works**: st_lsm6dsx
+# built against the installed headers in one make on Friday 20 November 2026, bound to
+# 0x6B and produced an IIO accelerometer. st_magn and st_pressure are very probably the
+# same build and are the next thing to measure for this project, which needs four
+# drivers and not one. Dropping the IIO path for user-space I2C is no longer necessary. The shield itself
 # is fine: the IKS4A1 answered on all seven addresses on Friday 20 November 2026.
 # And from that day the IKS4A1 is THIS project's shield alone. Joseph moved the four
 # accelerometer projects e05, e09, e14 and e19 to the IKS5A1 on Friday 20 November 2026,

@@ -13,8 +13,8 @@ recorded in `PITFALLS.md`.
 
 | sitting | host and wiring | projects | reachable today |
 |---|---|---|---|
-| A | Pi 3B, bare header: **the IKS4A1 on four leads** (was the ADXL345), VL53L4CD, three LED modules | e03, e05 | e03 is done; **e05 part yes, driver no**: the IKS4A1 is wired and identified at the bus on Friday 20 November 2026, and no card here carries an ST IIO driver, so what is missing is the reading path and not the part; **e06 needs the ULD first** |
-| B | Pi 3B, the 3.5 inch panel on eleven jumpers, **the IKS4A1 on 17, 3, 5, 9** and LEDs re-pinned | e09 | **part yes, driver no**: the same four leads as sitting A, with 3V3 on 17 and GND on 9 because the panel takes 1 and 6, which this sheet already did for the ADXL345 |
+| A | Pi 3B+, bare header: **the IKS5A1 on four leads** (was the ADXL345), VL53L4CD, three LED modules | e03, e05 | e03 is done; **e05 part yes, driver yes**: the IKS5A1 is wired, identified and READ on Friday 20 November 2026, with the driver built out of tree; what is missing is a built binary on the board and the hundred hand-made events; **e06 needs the ULD first** |
+| B | Pi 3B+, the 3.5 inch panel on eleven jumpers, **the IKS5A1 on 17, 3, 5, 9** and LEDs re-pinned | e09 | **part yes, driver yes**: the same four leads as sitting A, with 3V3 on 17 and GND on 9 because the panel takes 1 and 6, which this sheet already did for the ADXL345 |
 | C | Pi 4B, no HAT | e04 | needs a second card |
 | D | Pi 4B card B, WS-28164 | e13, e14, e18 | yes |
 | E | Pi 3B+, bare header, IKS4A1 on flying leads | e07 | **no**, three of four drivers are absent on Pi OS trixie, the pressure one the rule reads included; the parts are present and the measurement is not reachable, see e07 evidence of Friday 13 November 2026 |
@@ -119,9 +119,13 @@ readings that carry the claim.
 **As of Thursday 19 November 2026 no card on this bench carries an ST IIO driver and none
 carries an IIO driver for the ADXL345 either.** Every sitting that reads an accelerometer, a
 magnetometer or a pressure part through IIO is blocked on an image and not on a shield, so
-choosing a different shield does not unblock it. The two routes left are an out-of-tree
-module build against the running kernel's headers, or a user-space I2C reader, which changes
-what `--live iio` means in e05, e07, e09 and e14 and touches the shared `io.h` backend.
+choosing a different shield does not unblock it. **The first of the two routes was measured on
+Friday 20 November 2026 and it works**: `st_lsm6dsx` builds out of tree against the installed
+headers in one `make`, binds to 0x6B and produces an IIO accelerometer that reads gravity to
+2.1 per cent. `--live iio` stays exactly as the chapters write it and the shared `io.h` is not
+touched. The reading path of this volume is therefore open, and what was called an image
+blocker was one line of a kernel package's configuration. The records are the two under
+`projects/e05-adxl345-events/evidence/` stamped 1214 and 1223.
 
 **Two traps live in that last line.** `iio/accel` holds `adxl355_core` and `adxl355_i2c`,
 one digit away from the part three of these projects read, so the directory listing looks

@@ -25,7 +25,19 @@ engine  = "cargo build --release --manifest-path projects/e05-adxl345-events/Car
 [run]
 stub   = "projects/e05-adxl345-events/target/debug/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --log /tmp/e05_stub.csv --stub"
 replay = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --replay projects/e05-adxl345-events/replay/adxl345_events.csv --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_replay.csv"
-live   = "projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --live iio /sys/bus/iio/devices/iio:device0:0.02 --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_run.csv"
+# The live line resolves the IIO device by its NAME and not by its number, which is
+# what e07's chapter has said since it was written and what the other sheets had not done.
+# Measured Friday 20 November 2026 on board B: st_lsm6dsx creates TWO devices for this part
+# and the accelerometer was iio:device1 while iio:device0 was the gyroscope, so the number
+# that stood here would have handed this project degrees per second where its rule decides
+# on g. The number depends on probe order and is not an identity.
+# TWO SETTINGS MUST BE MADE BEFORE A RUN, and wiring.md's pre-flight makes them:
+#   the range to +-4 g, because at the default +-2 g a 2 g threshold sits on the 16-bit
+#   rail and cannot be exceeded; and the output rate at or above the reader's poll
+#   interval, for which there is no exact 50 Hz or 10 Hz and 52 and 12.5 are the nearest
+#   above. The record is
+#   evidence/2026-11-20_1223_the-first-reading-and-the-rail_pi3bplus.md
+live   = "ACC=$(for d in /sys/bus/iio/devices/iio:device*; do grep -qx lsm6dso16is_accel $d/name && echo $d; done); projects/e05-adxl345-events/target/release/edgellm-e05 --project e05 --live iio $ACC:0.02 --grammar projects/e05-adxl345-events/grammar.gbnf --prompt projects/e05-adxl345-events/prompt.txt --n-predict 64 --model ~/models/SmolLM2-360M-Instruct-Q4_K_M.gguf --log projects/e05-adxl345-events/evidence/e05_run.csv"
 
 [oracle]
 expected = "tests/oracle/e05.expected.csv"
